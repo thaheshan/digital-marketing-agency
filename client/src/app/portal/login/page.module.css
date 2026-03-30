@@ -1,0 +1,181 @@
+.page { 
+  display: flex; 
+  min-height: 100vh; 
+  background: #fff; 
+  overflow: hidden; 
+}
+
+.leftPanel { 
+  flex: 0 0 550px; 
+  padding: 40px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.formContainer { 
+  width: 100%; 
+  max-width: 420px; 
+}
+
+.logoLink { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  text-decoration: none; 
+  margin-bottom: 60px; 
+}
+
+.logoIcon { 
+  width: 38px; 
+  height: 38px; 
+  background: #f8fafc; 
+  border-radius: 10px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  border: 1px solid #e2e8f0; 
+}
+
+.logoText { 
+  font-size: 22px; 
+  font-weight: 800; 
+  color: #0F172A; 
+  letter-spacing: -0.04em; 
+}
+.logoAccent { color: #06B6D4; }
+
+.formHeader { margin-bottom: 40px; }
+.headline { font-size: 32px; font-weight: 900; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.04em; }
+.subheadline { font-size: 15px; color: #64748b; font-weight: 500; }
+
+.form { display: flex; flex-direction: column; gap: 24px; }
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: 14px; font-weight: 700; color: #475569; }
+
+.inputWrap { 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+}
+
+.icon { 
+  position: absolute; 
+  left: 16px; 
+  color: #94a3b8; 
+}
+
+.input { 
+  width: 100%; 
+  background: #f8fafc; 
+  border: 1.5px solid #e2e8f0; 
+  border-radius: 12px; 
+  padding: 14px 16px 14px 48px; 
+  font-family: inherit; 
+  font-size: 15px; 
+  color: #0f172a; 
+  outline: none; 
+  transition: all 0.2s; 
+}
+
+.input:focus { border-color: #06b6d4; background: #fff; box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1); }
+
+.toggleBtn { 
+  position: absolute; 
+  right: 16px; 
+  background: none; 
+  border: none; 
+  color: #94a3b8; 
+  cursor: pointer; 
+}
+
+.formOptions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.checkboxLabel { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #64748b; }
+.forgot { font-size: 14px; font-weight: 700; color: #06b6d4; text-decoration: none; }
+
+.divider { 
+  display: flex; 
+  align-items: center; 
+  text-align: center; 
+  margin: 32px 0; 
+  color: #94a3b8; 
+  font-size: 13px; 
+  font-weight: 600; 
+}
+.divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #f1f5f9; }
+.divider span { margin: 0 16px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.socialAuth { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+.socialBtn { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 12px; 
+  padding: 14px; 
+  background: #fff; 
+  border: 1.5px solid #e2e8f0; 
+  border-radius: 12px; 
+  font-size: 14px; 
+  font-weight: 700; 
+  color: #0f172a; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+}
+.socialBtn:hover { border-color: #06b6d4; background: #f8fafc; }
+
+.securityNote { margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: #94a3b8; font-weight: 600; }
+
+/* Right Panel */
+.rightPanel { 
+  flex: 1; 
+  background: #0f172a; 
+  padding: 80px 100px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: #fff; 
+  background-image: radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), transparent),
+                    radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.1), transparent);
+}
+
+.rightContent { max-width: 600px; }
+
+.rightBadge { 
+  display: inline-block; 
+  padding: 6px 14px; 
+  background: rgba(255, 255, 255, 0.05); 
+  border: 1px solid rgba(255, 255, 255, 0.1); 
+  border-radius: 40px; 
+  font-size: 12px; 
+  font-weight: 800; 
+  color: #06b6d4; 
+  margin-bottom: 32px; 
+}
+
+.welcomeTitle { font-size: 40px; font-weight: 950; line-height: 1.2; margin-bottom: 24px; letter-spacing: -0.04em; }
+.welcomeText { font-size: 18px; color: #94a3b8; line-height: 1.6; margin-bottom: 48px; }
+
+.featuresList { display: flex; flex-direction: column; gap: 32px; margin-bottom: 60px; }
+.featureItem { display: flex; gap: 20px; }
+.featureIcon { width: 44px; height: 44px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #06b6d4; flex-shrink: 0; }
+.featureItem strong { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px; display: block; }
+.featureItem p { font-size: 14px; color: #64748b; line-height: 1.6; }
+
+.testimonial { 
+  background: rgba(255, 255, 255, 0.03); 
+  padding: 32px; 
+  border-radius: 24px; 
+  border: 1px solid rgba(255, 255, 255, 0.05); 
+}
+.testimonial p { font-size: 16px; font-style: italic; color: #cbd5e1; line-height: 1.8; margin-bottom: 24px; }
+
+.author { display: flex; align-items: center; gap: 16px; }
+.authorImg { width: 40px; height: 40px; background: #06b6d4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; }
+.author strong { display: block; font-size: 15px; color: #fff; }
+.author span { font-size: 13px; color: #64748b; }
+
+@media (max-width: 1024px) {
+  .rightPanel { display: none; }
+  .leftPanel { flex: 1; }
+}

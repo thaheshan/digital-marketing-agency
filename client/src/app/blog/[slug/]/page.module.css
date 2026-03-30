@@ -1,0 +1,202 @@
+.page { background: var(--color-background-primary); }
+
+.container { 
+  max-width: 1100px; 
+  margin: 0 auto; 
+  padding: 0 24px; 
+}
+
+/* Post Header */
+.header { 
+  padding: 100px 0 60px; 
+  text-align: center; 
+}
+
+.badge { 
+  background: #F1F5F9; 
+  color: var(--color-secondary); 
+  font-size: 12px; 
+  font-weight: 800; 
+  padding: 6px 14px; 
+  border-radius: 20px; 
+  text-transform: uppercase; 
+  letter-spacing: 0.1em; 
+  margin-bottom: 24px; 
+  display: inline-block; 
+}
+
+.title { 
+  font-size: 48px; 
+  font-weight: 900; 
+  color: var(--color-primary); 
+  letter-spacing: -0.04em; 
+  line-height: 1.1; 
+  margin-bottom: 32px; 
+  max-width: 900px; 
+  margin-inline: auto; 
+}
+
+.meta { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 32px; 
+}
+
+.author { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  text-align: left; 
+}
+
+.avatar { 
+  width: 40px; 
+  height: 40px; 
+  background: var(--color-secondary); 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: white; 
+  font-weight: 800; 
+  font-size: 14px; 
+}
+
+.author strong { display: block; font-size: 14px; color: var(--color-primary); }
+.author span { font-size: 12px; color: var(--color-neutral-400); }
+
+.date { 
+  font-size: 14px; 
+  color: var(--color-neutral-400); 
+  font-weight: 600; 
+}
+
+/* Visual Section */
+.visual { padding-bottom: 80px; }
+
+.heroBox { 
+  height: 400px; 
+  background: linear-gradient(135deg, #F8FAFC, #F1F5F9); 
+  border-radius: 40px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 160px; 
+  border: 1.5px solid var(--color-neutral-100); 
+}
+
+/* Content Body */
+.content { padding-bottom: 120px; }
+
+.contentGrid { 
+  display: grid; 
+  grid-template-columns: 1fr 300px; 
+  gap: 80px; 
+  align-items: start; 
+}
+
+.body { 
+  font-size: 18px; 
+  line-height: 1.8; 
+  color: var(--color-neutral-500, #6B7280); 
+}
+
+.body h2 { 
+  font-size: 28px; 
+  font-weight: 800; 
+  color: var(--color-primary); 
+  margin: 40px 0 20px; 
+}
+
+.body br { display: block; margin-bottom: 12px; height: 1px; content: ' '; }
+
+/* Sidebar */
+.sidebar { display: flex; flex-direction: column; gap: 32px; }
+
+.sidebarBox { 
+  padding: 24px; 
+  background: #F8FAFC; 
+  border-radius: 20px; 
+  border: 1.5px solid var(--color-neutral-100); 
+}
+
+.sidebarBox h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--color-primary); }
+
+.relatedList { display: flex; flex-direction: column; gap: 12px; }
+
+.relatedItem { 
+  font-size: 14px; 
+  font-weight: 600; 
+  color: var(--color-secondary); 
+  line-height: 1.4; 
+}
+
+.relatedItem:hover { text-decoration: underline; }
+
+.newsletter { 
+  padding: 24px; 
+  background: #0F172A; 
+  color: white; 
+  border-radius: 20px; 
+}
+
+.newsletter h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.newsletter p { font-size: 13px; opacity: 0.7; margin-bottom: 20px; line-height: 1.5; }
+
+.subInput { 
+  width: 100%; 
+  height: 48px; 
+  padding: 0 16px; 
+  background: rgba(255, 255, 255, 0.05); 
+  border: 1.5px solid rgba(255, 255, 255, 0.1); 
+  border-radius: 10px; 
+  color: white; 
+  font-size: 13px; 
+  margin-bottom: 12px; 
+  outline: none; 
+}
+
+.subBtn { 
+  width: 100%; 
+  height: 48px; 
+  background: var(--color-secondary); 
+  color: white; 
+  border: none; 
+  border-radius: 10px; 
+  font-family: var(--font-heading); 
+  font-weight: 700; 
+  cursor: pointer; 
+}
+
+/* Blog CTA */
+.blogCta { 
+  padding: 100px 0; 
+  background: var(--color-background-secondary); 
+  text-align: center; 
+}
+
+.ctaCard { 
+  background: var(--color-white); 
+  padding: 80px 40px; 
+  border-radius: 40px; 
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04); 
+}
+
+.ctaCard h2 { font-size: 36px; font-weight: 800; color: var(--color-primary); margin-bottom: 16px; }
+.ctaCard p { font-size: 18px; color: var(--color-neutral-400); margin-bottom: 40px; }
+
+.primary { 
+  padding: 16px 36px; 
+  background: var(--color-secondary); 
+  color: white; 
+  font-weight: 700; 
+  border-radius: 12px; 
+  display: inline-block; 
+}
+
+@media (max-width: 1024px) {
+  .contentGrid { grid-template-columns: 1fr; gap: 40px; }
+  .title { font-size: 36px; }
+  .heroBox { height: 280px; font-size: 100px; }
+}

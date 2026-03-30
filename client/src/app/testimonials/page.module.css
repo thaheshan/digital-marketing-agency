@@ -1,0 +1,190 @@
+.page { width: 100%; }
+.container { max-width: 1320px; margin: 0 auto; padding: 0 88px; }
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  padding: 100px 88px 80px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.heroTitle { font-size: var(--fs-h2); color: var(--color-white); position: relative; margin-bottom: 16px; }
+.heroSub { font-size: 20px; color: rgba(255,255,255,0.85); position: relative; max-width: 600px; margin: 0 auto; line-height: 1.7; }
+
+/* Metrics */
+.metricsBar { background: var(--color-white); padding: 60px 0; border-bottom: 1px solid var(--color-neutral-200); }
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.metricItem {
+  text-align: center;
+  padding: 20px 40px;
+  border-right: 1px solid var(--color-neutral-200);
+}
+
+.metricItem:last-child { border-right: none; }
+
+.metricValue {
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin-bottom: 6px;
+}
+
+.metricLabel { font-size: 15px; font-weight: 600; color: var(--color-primary); margin-bottom: 4px; }
+.metricSub { font-size: 13px; color: var(--color-neutral-400); }
+
+/* Testimonials */
+.testimonialsSection { background: var(--color-background-secondary); padding: 100px 0; }
+
+.testimonialsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.testimonialCard {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.testimonialCard:hover {
+  border-color: var(--color-secondary);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stars { color: var(--color-warning); font-size: 18px; letter-spacing: 2px; }
+
+.categoryTag {
+  background: #ECFEFF;
+  color: var(--color-secondary-hover);
+  border: 1px solid var(--color-secondary-light);
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quote {
+  font-size: 16px;
+  color: var(--color-neutral-700, #374151);
+  line-height: 1.75;
+  font-style: italic;
+  flex: 1;
+}
+
+.resultBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #F0FDF4;
+  border: 1px solid #86efac;
+  color: #15803D;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  align-self: flex-start;
+}
+
+.resultIcon { font-size: 16px; }
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-neutral-100);
+  margin-top: auto;
+}
+
+.avatarWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.authorInfo { display: flex; flex-direction: column; gap: 3px; }
+.authorName { font-size: 15px; font-weight: 700; color: var(--color-primary); }
+.authorRole { font-size: 13px; color: var(--color-neutral-400); }
+
+/* CTA */
+.ctaSection { background: var(--color-white); padding: 80px 0; }
+
+.ctaCard {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  border-radius: 24px;
+  padding: 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.ctaTitle { font-size: var(--fs-h2); color: var(--color-white); margin-bottom: 16px; position: relative; }
+.ctaSub { font-size: 20px; color: rgba(255,255,255,0.85); margin-bottom: 40px; position: relative; }
+
+.ctaBtns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .container { padding: 0 40px; }
+  .hero { padding: 80px 40px 60px; }
+  .testimonialsGrid { grid-template-columns: repeat(2, 1fr); }
+  .metricsGrid { grid-template-columns: repeat(2, 1fr); }
+  .metricItem:nth-child(2) { border-right: none; }
+  .metricItem:nth-child(3) { border-top: 1px solid var(--color-neutral-200); }
+  .metricItem:nth-child(4) { border-top: 1px solid var(--color-neutral-200); }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 0 20px; }
+  .hero { padding: 60px 20px; }
+  .heroTitle { font-size: 32px; }
+  .testimonialsGrid { grid-template-columns: 1fr; }
+  .metricsGrid { grid-template-columns: 1fr 1fr; }
+  .ctaCard { padding: 48px 24px; }
+  .ctaTitle { font-size: 28px; }
+}

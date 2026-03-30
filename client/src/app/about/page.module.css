@@ -1,0 +1,269 @@
+.page { width: 100%; }
+
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 88px;
+}
+
+.sectionHeader { text-align: center; margin-bottom: 64px; }
+.sectionTitle { font-size: var(--fs-h2); margin-bottom: 14px; }
+.sectionSub { font-size: 18px; color: var(--color-neutral-600); max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 60%, var(--color-primary) 100%);
+  padding: 120px 88px 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.heroContent { max-width: 700px; position: relative; }
+
+.heroTitle {
+  font-size: var(--fs-h1);
+  color: var(--color-white);
+  margin-bottom: 24px;
+  line-height: 1.1;
+}
+
+.heroSub {
+  font-size: 20px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.7;
+  margin-bottom: 40px;
+  max-width: 600px;
+}
+
+.heroCtas { display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* Stats */
+.statsSection {
+  background: var(--color-white);
+  padding: 72px 0;
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.statCard {
+  padding: 40px;
+  text-align: center;
+  border-right: 1px solid var(--color-neutral-200);
+}
+
+.statCard:last-child { border-right: none; }
+
+.statValue {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin-bottom: 8px;
+}
+
+.statLabel { font-size: 16px; color: var(--color-neutral-600); font-weight: 500; }
+
+/* Mission */
+.missionSection { padding: 100px 0; background: var(--color-background-secondary); }
+
+.missionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.overline {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  margin-bottom: 16px;
+}
+
+.missionTitle { font-size: var(--fs-h3); margin-bottom: 28px; color: var(--color-primary); }
+
+.missionDesc { font-size: 17px; color: var(--color-neutral-600); line-height: 1.75; margin-bottom: 20px; }
+
+.missionVisual {
+  position: relative;
+}
+
+.missionCard {
+  background: var(--color-white);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--color-neutral-200);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.missionTimelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--color-neutral-100);
+}
+
+.missionTimelineItem:last-child { border-bottom: none; padding-bottom: 0; }
+
+.year {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  background: #ECFEFF;
+  border: 1px solid var(--color-secondary-light);
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.missionTimelineItem p { font-size: 15px; color: var(--color-neutral-600); line-height: 1.5; padding-top: 4px; }
+
+/* Values */
+.valuesSection { padding: 100px 0; background: var(--color-white); }
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.valueCard {
+  background: var(--color-background-secondary);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: 18px;
+  padding: 40px 32px;
+  transition: all 0.35s ease;
+}
+
+.valueCard:hover {
+  border-color: var(--color-secondary);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-white);
+}
+
+.valueIcon { font-size: 44px; margin-bottom: 20px; }
+.valueTitle { font-size: 20px; font-weight: 700; color: var(--color-primary); margin-bottom: 12px; }
+.valueDesc { font-size: 15px; color: var(--color-neutral-600); line-height: 1.7; }
+
+/* Team */
+.teamSection { padding: 100px 0; background: var(--color-background-secondary); }
+
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.teamCard {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: 18px;
+  padding: 40px 28px;
+  text-align: center;
+  transition: all 0.35s ease;
+}
+
+.teamCard:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--color-secondary); }
+
+.teamAvatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(15,23,42,0.15);
+}
+
+.teamEmoji { font-size: 44px; }
+.teamName { font-size: 18px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.teamRole { font-size: 14px; color: var(--color-neutral-600); margin-bottom: 20px; }
+
+.teamLinks { display: flex; gap: 10px; justify-content: center; }
+
+.teamLink {
+  width: 36px;
+  height: 36px;
+  background: var(--color-background-secondary);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-neutral-600);
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.teamLink:hover { background: var(--color-secondary); border-color: var(--color-secondary); color: var(--color-white); }
+
+/* CTA */
+.ctaSection {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  padding: 100px 88px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaSection::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.ctaSection .container { position: relative; }
+
+.ctaTitle { font-size: var(--fs-h2); color: var(--color-white); margin-bottom: 16px; }
+.ctaSub { font-size: 20px; color: rgba(255,255,255,0.85); margin-bottom: 40px; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .valuesGrid, .teamGrid { grid-template-columns: repeat(2, 1fr); }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .statCard:nth-child(2) { border-right: none; }
+  .statCard:nth-child(3) { border-right: 1px solid var(--color-neutral-200); border-top: 1px solid var(--color-neutral-200); }
+  .statCard:nth-child(4) { border-top: 1px solid var(--color-neutral-200); }
+}
+
+@media (max-width: 1024px) {
+  .missionGrid { grid-template-columns: 1fr; }
+  .container { padding: 0 40px; }
+  .hero { padding: 100px 40px 80px; }
+  .ctaSection { padding: 80px 40px; }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 0 20px; }
+  .hero { padding: 80px 20px 60px; }
+  .heroTitle { font-size: 36px; }
+  .valuesGrid, .teamGrid { grid-template-columns: 1fr; }
+  .statsGrid { grid-template-columns: 1fr 1fr; }
+  .ctaSection { padding: 60px 20px; }
+}
