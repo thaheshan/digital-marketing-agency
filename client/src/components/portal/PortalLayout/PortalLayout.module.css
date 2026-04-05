@@ -315,13 +315,27 @@
 }
 
 @media (max-width: 1024px) {
-  .sidebar {
-    width: 88px;
-  }
-  .main {
-    margin-left: 88px;
-  }
-  .searchBar {
-    display: none;
-  }
+  .sidebar { width: 88px; }
+  .main { margin-left: 88px; }
+  .searchBar { display: none; }
 }
+
+/* Session Timeout */
+.timeoutOverlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.timeoutModal {
+  background: #fff; border-radius: 14px; padding: 36px 32px;
+  max-width: 380px; width: 90%; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.timeoutIcon { font-size: 36px; margin-bottom: 14px; }
+.timeoutModal h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.timeoutModal p { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.5; }
+.timeoutActions { display: flex; gap: 10px; justify-content: center; }
+.stayBtn { padding: 10px 20px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.stayBtn:hover { background: #1e293b; }
+.logoutNowBtn { padding: 10px 20px; background: transparent; color: #ef4444; border: 1px solid #fecaca; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.logoutNowBtn:hover { background: #fef2f2; }
+
