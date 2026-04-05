@@ -1,147 +1,231 @@
 'use client';
 
-import styles from './page.module.css';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-const stats = [
-  { icon: '👥', label: 'Total Clients', value: '84', change: '+6 this month', positive: true },
-  { icon: '📣', label: 'Active Campaigns', value: '47', change: '+3 this week', positive: true },
-  { icon: '💰', label: 'Monthly Revenue', value: '$218,400', change: '+18.3% vs last mo', positive: true },
-  { icon: '⚠️', label: 'Pending Reviews', value: '12', change: 'Requires attention', positive: false },
-];
-
-const recentClients = [
-  { name: 'RetailCo', plan: 'Enterprise', status: 'Active', spend: '$8,500', manager: 'Sarah K.', joined: 'Mar 15' },
-  { name: 'TechFlow', plan: 'Professional', status: 'Active', spend: '$4,200', manager: 'Marcus C.', joined: 'Mar 10' },
-  { name: 'HealthPlus', plan: 'Starter', status: 'Trial', spend: '$1,200', manager: 'Priya N.', joined: 'Mar 28' },
-  { name: 'FashionFirst', plan: 'Enterprise', status: 'Active', spend: '$12,000', manager: 'Sarah K.', joined: 'Feb 20' },
-  { name: 'GrowthMet', plan: 'Professional', status: 'Paused', spend: '$3,600', manager: 'James O.', joined: 'Jan 5' },
-];
-
-const pendingTasks = [
-  { task: 'Review March report for RetailCo', priority: 'High', due: 'Today' },
-  { task: 'Onboard HealthPlus — campaign setup', priority: 'High', due: 'Tomorrow' },
-  { task: 'Update TechFlow SEO strategy doc', priority: 'Medium', due: 'Apr 2' },
-  { task: 'Send Q1 invoices batch (12 clients)', priority: 'Medium', due: 'Apr 3' },
-  { task: 'Review GrowthMet pause request', priority: 'Low', due: 'Apr 5' },
-];
-
-const channelData = [
-  { channel: 'Social Media', clients: 38, revenue: '$82K', pct: 37 },
-  { channel: 'SEO', clients: 24, revenue: '$54K', pct: 25 },
-  { channel: 'PPC', clients: 19, revenue: '$48K', pct: 22 },
-  { channel: 'Content', clients: 12, revenue: '$20K', pct: 9 },
-  { channel: 'Email', clients: 8, revenue: '$14K', pct: 7 },
-];
+import { 
+  Users, 
+  Target, 
+  TrendingUp, 
+  AlertCircle, 
+  ArrowRight, 
+  CheckCircle2, 
+  Clock, 
+  Star,
+  FileText,
+  LayoutDashboard
+} from 'lucide-react';
+import { 
+  useAuthStore, 
+  useEnquiryStore, 
+  useCampaignStore, 
+  usePortfolioStore 
+} from '@/store';
+import styles from './page.module.css';
 
 export default function AdminDashboardPage() {
+  const { user } = useAuthStore();
+  const { enquiries } = useEnquiryStore();
+  const { campaigns } = useCampaignStore();
+  const { items: portfolioItems } = usePortfolioStore();
+  
+  const [greeting, setGreeting] = useState('Good morning');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 12 && hour < 17) setGreeting('Good afternoon');
+    else if (hour >= 17) setGreeting('Good evening');
+  }, []);
+
+  // Stats calculation
+  const totalLeads = enquiries.length;
+  const hotLeads = enquiries.filter(e => {
+    const total = Object.values(e.scoreBreakdown).reduce((a, b) => a + b, 0);
+    return total >= 70 && e.status === 'new';
+  }).length;
+  
+  const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
+  const publishedPortfolio = portfolioItems.filter(i => i.status === 'published').length;
+
+  const stats = [
+    { 
+      label: 'Hot Leads', 
+      value: hotLeads, 
+      sub: `${totalLeads} total enquiries`, 
+      icon: Star, 
+      color: '#F97316',
+      link: '/admin/enquiries'
+    },
+    { 
+      label: 'Active Campaigns', 
+      value: activeCampaigns, 
+      sub: 'Across 12 clients', 
+      icon: Target, 
+      color: '#06B6D4',
+      link: '/portal/campaigns' 
+    },
+    { 
+      label: 'Portfolio Items', 
+      value: publishedPortfolio, 
+      sub: `${portfolioItems.length} total entries`, 
+      icon: FileText, 
+      color: '#6366F1',
+      link: '/admin/portfolio'
+    },
+    { 
+      label: 'Team Members', 
+      value: 5, 
+      sub: '4 online now', 
+      icon: Users, 
+      color: '#22C55E',
+      link: '/admin/team'
+    },
+  ];
+
+  const recentHotLeads = enquiries
+    .filter(e => {
+      const total = Object.values(e.scoreBreakdown).reduce((a, b) => a + b, 0);
+      return total >= 70;
+    })
+    .slice(0, 4);
+
   return (
     <div className={styles.page}>
-      {/* Header */}
-      <div className={styles.pageHeader}>
-        <div>
-          <h1 className={styles.pageTitle}>Agency Overview</h1>
-          <p className={styles.pageSub}>Monday, March 30, 2026 — Week 13</p>
+      {/* Welcome Header */}
+      <div className={styles.welcomeRow}>
+        <div className={styles.welcomeText}>
+          <span className={styles.greeting}>{greeting}, {user?.name || 'Admin'}</span>
+          <h1 className={styles.pageTitle}>Dashboard Overview</h1>
+          <p className={styles.pageSub}>Here's what's happening with your agency today.</p>
         </div>
-        <div className={styles.headerActions}>
-          <Link href="/admin/clients" className={styles.btnSecondary}>+ Add Client</Link>
-          <Link href="/admin/reports" className={styles.btnPrimary}>📊 Generate Report</Link>
+        <div className={styles.dateBox}>
+          <Clock size={16} />
+          <span>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Grid */}
       <div className={styles.statsGrid}>
-        {stats.map(s => (
-          <div key={s.label} className={styles.statCard}>
-            <div className={styles.statTop}>
-              <span className={styles.statIcon}>{s.icon}</span>
+        {stats.map((s, i) => (
+          <Link href={s.link} key={i} className={styles.statCard}>
+            <div className={styles.statIcon} style={{ background: `${s.color}15`, color: s.color }}>
+              <s.icon size={24} />
             </div>
-            <div className={styles.statValue}>{s.value}</div>
-            <div className={styles.statLabel}>{s.label}</div>
-            <div className={`${styles.statChange} ${s.positive ? styles.pos : styles.neg}`}>{s.change}</div>
-          </div>
+            <div className={styles.statInfo}>
+              <div className={styles.statValue}>{s.value}</div>
+              <div className={styles.statLabel}>{s.label}</div>
+              <div className={styles.statSub}>{s.sub}</div>
+            </div>
+            <ArrowRight size={16} className={styles.statArrow} />
+          </Link>
         ))}
       </div>
 
-      {/* Two-column grid */}
-      <div className={styles.twoCol}>
-        {/* Client Table */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h3>Recent Clients</h3>
-            <Link href="/admin/clients" className={styles.viewAll}>View All →</Link>
-          </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Plan</th>
-                <th>Status</th>
-                <th>Monthly Spend</th>
-                <th>Manager</th>
-                <th>Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentClients.map(c => (
-                <tr key={c.name} className={styles.tr}>
-                  <td className={styles.clientName}>{c.name}</td>
-                  <td><span className={styles.planTag}>{c.plan}</span></td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles[`s${c.status}`]}`}>{c.status}</span>
-                  </td>
-                  <td className={styles.mono}>{c.spend}</td>
-                  <td>{c.manager}</td>
-                  <td className={styles.dateCell}>{c.joined}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Right Column */}
-        <div className={styles.rightCol}>
-          {/* Tasks */}
+      <div className={styles.mainGrid}>
+        {/* Left Column: Hot Leads & Recent Activity */}
+        <div className={styles.leftCol}>
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3>Pending Tasks</h3>
-              <span className={styles.taskCount}>{pendingTasks.length}</span>
+              <div className={styles.cardTitleLine}>
+                <Star size={18} color="#F97316" fill="#F97316" />
+                <h3>Urgent Hot Leads</h3>
+              </div>
+              <Link href="/admin/enquiries" className={styles.viewLink}>View all</Link>
             </div>
-            <div className={styles.taskList}>
-              {pendingTasks.map((t, i) => (
-                <div key={i} className={styles.taskItem}>
-                  <div className={styles.taskCheck}></div>
-                  <div className={styles.taskContent}>
-                    <p className={styles.taskText}>{t.task}</p>
-                    <div className={styles.taskMeta}>
-                      <span className={`${styles.priority} ${styles[`p${t.priority}`]}`}>{t.priority}</span>
-                      <span className={styles.dueDate}>Due: {t.due}</span>
+            <div className={styles.leadList}>
+              {recentHotLeads.length > 0 ? (
+                recentHotLeads.map(lead => (
+                  <Link href={`/admin/enquiries/${lead.id}`} key={lead.id} className={styles.leadItem}>
+                    <div className={styles.leadAvatar}>{lead.name[0]}</div>
+                    <div className={styles.leadInfo}>
+                      <strong>{lead.name}</strong>
+                      <span>{lead.company} · {lead.service}</span>
+                    </div>
+                    <div className={styles.leadScore}>
+                      <span className={styles.scoreLabel}>Score</span>
+                      <span className={styles.scoreValue}>{Object.values(lead.scoreBreakdown).reduce((a, b) => a + b, 0)}</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className={styles.emptyState}>No hot leads at the moment.</div>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitleLine}>
+                <LayoutDashboard size={18} color="#06B6D4" />
+                <h3>Active Campaigns Performance</h3>
+              </div>
+            </div>
+            <div className={styles.campaignMiniList}>
+              {campaigns.slice(0, 3).map(c => (
+                <div key={c.id} className={styles.campItem}>
+                  <div className={styles.campTop}>
+                    <strong>{c.name}</strong>
+                    <span className={styles.campStatus}>Active</span>
+                  </div>
+                  <div className={styles.campMetrics}>
+                    <div className={styles.miniMetric}>
+                      <span>CTR</span>
+                      <strong>{c.kpis.find(k => k.label === 'CTR')?.value || '2.4%'}</strong>
+                    </div>
+                    <div className={styles.miniMetric}>
+                      <span>Conv.</span>
+                      <strong>{c.kpis.find(k => k.label === 'Conversions')?.value || '142'}</strong>
+                    </div>
+                    <div className={styles.minibarOuter}>
+                      <div className={styles.minibarInner} style={{ width: '70%', background: '#06B6D4' }}></div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Channel Breakdown */}
+        {/* Right Column: Tasks & Alerts */}
+        <div className={styles.rightCol}>
           <div className={styles.card}>
-            <div className={styles.cardHeader}><h3>Revenue by Channel</h3></div>
-            <div className={styles.channelList}>
-              {channelData.map(ch => (
-                <div key={ch.channel} className={styles.channelItem}>
-                  <div className={styles.channelTop}>
-                    <span className={styles.channelName}>{ch.channel}</span>
-                    <span className={styles.channelRevenue}>{ch.revenue}</span>
-                  </div>
-                  <div className={styles.channelBar}>
-                    <div className={styles.channelFill} style={{ width: `${ch.pct}%` }}></div>
-                  </div>
-                  <div className={styles.channelMeta}>
-                    <span>{ch.clients} clients</span>
-                    <span>{ch.pct}%</span>
-                  </div>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitleLine}>
+                <CheckCircle2 size={18} color="#22C55E" />
+                <h3>Agency Tasks</h3>
+              </div>
+            </div>
+            <div className={styles.todoList}>
+              {[
+                { text: 'Review new portfolio submissions', priority: 'High', done: false },
+                { text: 'Update monthly client reports', priority: 'Medium', done: true },
+                { text: 'Respond to Chatbot leads (3)', priority: 'High', done: false },
+                { text: 'Check campaign budget alerts', priority: 'Medium', done: false },
+              ].map((t, i) => (
+                <div key={i} className={`${styles.todoItem} ${t.done ? styles.todoDone : ''}`}>
+                  <div className={styles.todoCheck} />
+                  <span className={styles.todoText}>{t.text}</span>
+                  {!t.done && <span className={`${styles.prioTag} ${styles[t.priority.toLowerCase()]}`}>{t.priority}</span>}
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className={styles.alertCard}>
+            <AlertCircle size={20} />
+            <div className={styles.alertContent}>
+              <strong>System Update</strong>
+              <p>AI content generation tool is now available for all portfolio items.</p>
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h3>Quick Actions</h3>
+            </div>
+            <div className={styles.quickActions}>
+              <Link href="/admin/portfolio/new" className={styles.actionBtn}>New Portfolio Item</Link>
+              <Link href="/admin/blog/new" className={styles.actionBtn}>Write Blog Post</Link>
+              <Link href="/audit" className={styles.actionBtnSecondary}>Run Website Audit</Link>
             </div>
           </div>
         </div>

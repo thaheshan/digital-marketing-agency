@@ -1,0 +1,63 @@
+.page { display: flex; flex-direction: column; gap: 24px; }
+.pageHeader { display: flex; justify-content: space-between; align-items: flex-start; }
+.pageTitle { font-size: 22px; font-weight: 700; color: var(--color-neutral-950); margin-bottom: 2px; }
+.pageSub { font-size: 13px; color: var(--color-neutral-600); }
+
+/* Hot leads */
+.hotSection { background: #fff; border: 1px solid var(--color-neutral-200); border-radius: 12px; padding: 20px 24px; }
+.hotTitle { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--color-neutral-800); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
+.hotGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.hotCard { background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; transition: border-color 0.15s, box-shadow 0.15s; position: relative; }
+.hotCard:hover { border-color: var(--color-secondary); box-shadow: 0 2px 8px rgba(6,182,212,0.1); }
+.hotCardTop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.hotAvatar { width: 36px; height: 36px; background: var(--color-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-secondary); font-size: 13px; font-weight: 700; }
+.hotName { font-size: 14px; font-weight: 600; color: var(--color-neutral-950); }
+.hotCompany { font-size: 12px; color: var(--color-neutral-600); }
+.hotService { font-size: 12px; color: var(--color-neutral-400); margin-top: 2px; }
+.hotBudget { font-size: 12px; font-weight: 600; color: var(--color-secondary); margin-top: 4px; }
+.hotArrow { position: absolute; top: 16px; right: 16px; color: var(--color-neutral-400); }
+
+/* Score badge */
+.scoreBadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.hot { background: #fef2f2; color: #dc2626; }
+.warm { background: #fffbeb; color: #d97706; }
+.cold { background: var(--color-neutral-100); color: var(--color-neutral-600); }
+
+/* Table card */
+.card { background: #fff; border: 1px solid var(--color-neutral-200); border-radius: 12px; overflow: hidden; }
+.tableHeader { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--color-neutral-200); gap: 16px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 4px; }
+.tab { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--color-neutral-600); background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.tab:hover { background: var(--color-neutral-100); color: var(--color-neutral-950); }
+.tabActive { background: var(--color-primary); color: #fff; }
+.tabActive:hover { background: var(--color-primary-light); }
+.tabCount { font-size: 11px; background: rgba(255,255,255,0.25); padding: 1px 5px; border-radius: 10px; }
+.tabActive .tabCount { background: rgba(255,255,255,0.25); }
+.tab:not(.tabActive) .tabCount { background: var(--color-neutral-200); color: var(--color-neutral-600); }
+.searchWrap { display: flex; align-items: center; gap: 8px; background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); border-radius: 8px; padding: 7px 12px; }
+.searchIcon { color: var(--color-neutral-400); flex-shrink: 0; }
+.searchInput { border: none; outline: none; background: transparent; font-size: 13px; color: var(--color-neutral-950); width: 200px; }
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--color-neutral-600); text-transform: uppercase; letter-spacing: 0.04em; background: var(--color-neutral-50); border-bottom: 1px solid var(--color-neutral-200); white-space: nowrap; }
+.tr { border-bottom: 1px solid var(--color-neutral-100); transition: background 0.1s; }
+.tr:hover { background: var(--color-neutral-50); }
+.tr td { padding: 12px 16px; font-size: 13px; color: var(--color-neutral-800); vertical-align: middle; }
+.nameCell { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 32px; height: 32px; background: var(--color-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-secondary); font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.nameCell strong { display: block; font-size: 13px; font-weight: 600; color: var(--color-neutral-950); }
+.nameCell span { font-size: 12px; color: var(--color-neutral-500); }
+.serviceCell { color: var(--color-neutral-700); }
+.budgetCell { font-weight: 500; color: var(--color-neutral-950); white-space: nowrap; }
+.sourceCell { font-size: 12px; color: var(--color-neutral-500); }
+.dateCell { font-size: 12px; color: var(--color-neutral-500); white-space: nowrap; }
+.statusCell { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-neutral-700); white-space: nowrap; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dotHot { background: #ef4444; }
+.dotWarm { background: #f59e0b; }
+.dotCold { background: var(--color-neutral-400); }
+.dotConverted { background: #22c55e; }
+.dotArchived { background: var(--color-neutral-300); }
+.viewBtn { font-size: 12px; font-weight: 500; color: var(--color-secondary); text-decoration: none; padding: 5px 10px; border: 1px solid var(--color-secondary); border-radius: 6px; white-space: nowrap; transition: all 0.15s; }
+.viewBtn:hover { background: var(--color-secondary); color: #fff; }
+.empty { padding: 48px; text-align: center; color: var(--color-neutral-400); font-size: 14px; }
