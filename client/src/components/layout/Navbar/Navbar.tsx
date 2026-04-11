@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { TrendingUp, Menu, X, ArrowRight } from 'lucide-react';
 import styles from './Navbar.module.css';
 import { Button } from '../../common/Button/Button';
 
 export const Navbar = () => {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -19,10 +21,10 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
+    { name: 'Home', href: '/' },
     { name: 'Services', href: '/services' },
     { name: 'Portfolio', href: '/portfolio' },
-    { name: 'About', href: '/about' },
-    { name: 'ROI Calculator', href: '/roi-calculator' },
+    { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -31,9 +33,6 @@ export const Navbar = () => {
       <div className={styles.container}>
         <div className={styles.logo}>
           <Link href="/">
-             <div className={styles.logoIcon}>
-                <TrendingUp size={22} color="#06B6D4" strokeWidth={3} />
-             </div>
              <span className={styles.logoText}>Digital<span className={styles.logoAccent}>Pulse</span></span>
           </Link>
         </div>
@@ -41,19 +40,28 @@ export const Navbar = () => {
         {/* Desktop Navigation */}
         <nav className={styles.desktopNav}>
           <ul className={styles.navLinks}>
-            {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link href={link.href} className={styles.navLink}>
-                  {link.name}
-                </Link>
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <li key={link.name}>
+                  <Link 
+                    href={link.href} 
+                    className={`${styles.navLink} ${isActive ? styles.active : ''}`}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
-          <Link href="/portal/login" className={styles.portalLink}>Client Portal</Link>
-          <Button variant="primary" size="medium" className={styles.headerBtn}>
-             Get Started <ArrowRight size={16} />
-          </Button>
         </nav>
+
+        <div className={styles.headerActions}>
+           <Link href="/portal/login" className={styles.loginLink}>Login</Link>
+           <Button variant="primary" size="medium" className={styles.headerBtn}>
+              Get Started
+           </Button>
+        </div>
 
         {/* Mobile menu button */}
         <button 

@@ -59,22 +59,43 @@ export default function Home() {
       id: 1, 
       title: 'Fashion Retailer Campaign', 
       category: 'E-commerce', 
-      image: '/hero_dashboard_mockup_1774897876378.png', // Fallback to generated asset path if served
+      image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=800', 
       stats: '312% ROI · 1.2M Reach'
     },
     { 
       id: 2, 
       title: 'Fitness App Launch', 
       category: 'Mobile Marketing', 
-      image: '/hero_dashboard_mockup_1774897876378.png', 
+      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800', 
       stats: '150k Installs · 18% CTR'
     },
     { 
       id: 3, 
       title: 'Restaurant Chain Rebrand', 
       category: 'Brand Strategy', 
-      image: '/hero_dashboard_mockup_1774897876378.png', 
+      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800', 
       stats: '45% Revenue Jump'
+    },
+    { 
+      id: 4, 
+      title: 'Tech Startup Growth', 
+      category: 'B2B Marketing', 
+      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=800', 
+      stats: '220% Lead Growth · 3x Pipeline'
+    },
+    { 
+      id: 5, 
+      title: 'Beauty Brand Awareness', 
+      category: 'Social Media', 
+      image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=800', 
+      stats: '2.5M Impressions · 9% Engagement'
+    },
+    { 
+      id: 6, 
+      title: 'Real Estate Digital Push', 
+      category: 'PPC Advertising', 
+      image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800', 
+      stats: '180% ROI · 540 Qualified Leads'
     },
   ];
 
@@ -106,42 +127,28 @@ export default function Home() {
         <div className={styles.container}>
           <div className={styles.heroLayout}>
             <div className={styles.heroLeft}>
-              <div className={styles.badge}>ROI-Focused Digital Agency</div>
               <h1 className={styles.heroHeadline}>
                 Transform Your <br />
-                <span className={styles.textAccent}>Digital Presence</span>
+                Digital Presence
               </h1>
-              <p className={styles.heroSubheadline}>
-                We combine data-driven strategy with award-winning creative to deliver marketing that actually grows your business.
+              <h2 className={styles.heroSubheadlineMain}>
+                ROI-Driven Marketing That Delivers Results
+              </h2>
+              <p className={styles.heroDescription}>
+                We combine data-driven strategy with creative excellence to help businesses grow their online presence and achieve measurable success.
               </p>
               <div className={styles.heroCtas}>
-                <Button variant="primary" size="large" className={styles.mainCta}>Get Started</Button>
-                <Button variant="outline" size="large" className={styles.secondaryCta}>View Our Work</Button>
-              </div>
-              <div className={styles.heroTrust}>
-                 <div className={styles.trustAvatars}>
-                    <div className={styles.avatar}></div>
-                    <div className={styles.avatar}></div>
-                    <div className={styles.avatar}></div>
-                 </div>
-                 <span>Trusted by 250+ global brands</span>
+                <Button variant="primary" size="medium" className={styles.mainCta}>Get Started</Button>
+                <Button variant="outline" size="medium" className={styles.secondaryCta}>How We Work</Button>
               </div>
             </div>
             <div className={styles.heroRight}>
                <div className={styles.imageContainer}>
-                  {/* Note: In a real app, we'd use the proper path or public URL */}
                    <img 
-                    src="/hero_dashboard_mockup_1774897876378.png" 
-                    alt="Dashboard Analytics Mockup" 
+                    src="/home-img.png" 
+                    alt="Digital Presence Analytics" 
                     className={styles.heroImage}
                   />
-                  <div className={styles.floatStat}>
-                     <TrendingUp color="#06B6D4" size={20} />
-                     <div>
-                        <strong>+184%</strong>
-                        <span>Avg. Conversion Lift</span>
-                     </div>
-                  </div>
                </div>
             </div>
           </div>
@@ -149,19 +156,19 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section className={styles.servicesSection}>
+      <section className={styles.servicesSection} id="services">
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionUpper}>Our Services</span>
             <h2 className={styles.sectionTitle}>What We Offer</h2>
-            <p className={styles.sectionDescription}>Strategic digital solutions designed to outperform your competition.</p>
+            <p className={styles.sectionDescription}>Transform your company&apos;s potential with tailored digital marketing solutions that drive growth and results.</p>
           </div>
           <div className={styles.servicesGrid}>
             {services.map((service, idx) => {
               const Icon = service.icon;
               return (
                 <div key={idx} className={styles.serviceCard}>
-                  <div className={styles.iconWrap} style={{ background: `${service.color}15`, color: service.color }}>
+                  <div className={styles.iconWrap}>
                     <Icon size={24} />
                   </div>
                   <h4 className={styles.serviceTitle}>{service.title}</h4>
@@ -174,25 +181,21 @@ export default function Home() {
       </section>
 
       {/* Portfolio Section */}
-      <section className={styles.portfolioSection}>
+      <section className={styles.portfolioSection} id="portfolio">
         <div className={styles.container}>
-          <div className={styles.headerRow}>
-            <div className={styles.sectionHeader}>
-               <span className={styles.sectionUpper}>Portfolio</span>
-               <h2 className={styles.sectionTitle}>Our Success Stories</h2>
-            </div>
-            <Link href="/portfolio" className={styles.viewMoreLink}>
-               View All Projects <ChevronRight size={16} />
-            </Link>
+          <div className={styles.sectionHeader}>
+            <span className={`${styles.sectionUpper} ${styles.sectionUpperOrange}`}>Portfolio</span>
+            <h2 className={styles.sectionTitle}>Our Success Stories</h2>
+            <p className={styles.sectionDescription}>Success stories from brands we&apos;ve helped grow</p>
           </div>
           <div className={styles.portfolioGrid}>
             {portfolio.map((item) => (
               <div key={item.id} className={styles.portfolioCard}>
                 <div className={styles.portfolioImageWrap}>
                    <img src={item.image} alt={item.title} className={styles.portfolioImage} />
-                   <span className={styles.portfolioBadge}>{item.category}</span>
                 </div>
                 <div className={styles.portfolioContent}>
+                   <span className={styles.portfolioCategory}>{item.category}</span>
                    <h4 className={styles.portfolioTitle}>{item.title}</h4>
                    <p className={styles.portfolioStats}>{item.stats}</p>
                 </div>
@@ -208,6 +211,7 @@ export default function Home() {
              <div className={styles.sectionHeader}>
                 <span className={styles.sectionUpper}>Testimonials</span>
                 <h2 className={styles.sectionTitle}>What Our Clients Say</h2>
+                <p className={styles.sectionDescription}>Don&apos;t just take our word for it</p>
              </div>
              <div className={styles.testimonialsGrid}>
                 {testimonials.map((t, idx) => (
@@ -215,9 +219,11 @@ export default function Home() {
                       <div className={styles.stars}>
                          {[...Array(t.rating)].map((_, i) => <Star key={i} size={14} fill="#F97316" color="#F97316" />)}
                       </div>
-                      <p className={styles.testimonialText}>"{t.text}"</p>
+                      <p className={styles.testimonialText}>&ldquo;{t.text}&rdquo;</p>
                       <div className={styles.testimonialAuthor}>
-                         <div className={styles.authorAvatar}>{t.name[0]}</div>
+                         <div className={styles.authorAvatar}>
+                            <img src={`https://i.pravatar.cc/150?u=${t.name}`} alt={t.name} />
+                         </div>
                          <div>
                             <strong>{t.name}</strong>
                             <span>{t.role}</span>
@@ -232,21 +238,15 @@ export default function Home() {
       {/* Footer CTA */}
       <section className={styles.footerCta}>
          <div className={styles.container}>
-            <div className={styles.ctaCard}>
-               <h2>Ready to Grow Your Business?</h2>
-               <p>Let's build a performance marketing strategy that delivers measurable results.</p>
-               <div className={styles.ctaRow}>
-                  <Button variant="primary" size="large" className={styles.ctaPrimary}>Schedule Free Consultation</Button>
-                  <Button variant="outline" size="large" className={styles.ctaSecondary}>View Pricing</Button>
-               </div>
+            <h2 className={styles.ctaTitle}>Ready to Grow Your Business?</h2>
+            <p className={styles.ctaDescription}>Let&apos;s build a performance marketing strategy that delivers measurable results for your business.</p>
+            <div className={styles.ctaRow}>
+               <Button variant="primary" size="large" className={styles.ctaPrimary}>Schedule Free Consultation</Button>
+               <Button variant="outline" size="large" className={styles.ctaSecondary}>View Pricing</Button>
             </div>
          </div>
       </section>
 
-      {/* Floating Chatbot */}
-      <div className={styles.chatbotBtn}>
-         <MessageCircle size={28} />
-      </div>
     </div>
   );
 }
