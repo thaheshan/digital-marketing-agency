@@ -40,6 +40,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'A';
 
+  const isLoginPage = pathname === '/admin/login';
+
+  if (isLoginPage) {
+    return <RouteGuard>{children}</RouteGuard>;
+  }
+
   return (
     <RouteGuard allowedRoles={['admin', 'staff']}>
       <div className={`${styles.layout} ${!sidebarOpen ? styles.collapsed : ''}`}>

@@ -63,10 +63,10 @@ export default function AdminLoginPage() {
             <ArrowLeft size={16} /> Back to website
           </Link>
 
-          <div className={styles.logo}>
+          <Link href="/" className={styles.logo}>
             <div className={styles.logoIcon}><Shield size={20} /></div>
             <span>Admin <span className={styles.accent}>Panel</span></span>
-          </div>
+          </Link>
 
           {step === 'credentials' ? (
             <>

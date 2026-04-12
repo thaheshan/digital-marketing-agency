@@ -58,9 +58,11 @@ export const Navbar = () => {
 
         <div className={styles.headerActions}>
            <Link href="/portal/login" className={styles.loginLink}>Login</Link>
-           <Button variant="primary" size="medium" className={styles.headerBtn}>
-              Get Started
-           </Button>
+           <Link href="/register">
+             <Button variant="primary" size="medium" className={styles.headerBtn}>
+                Get Started
+             </Button>
+           </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -89,7 +91,9 @@ export const Navbar = () => {
             ))}
           </ul>
           <div className={styles.mobileFooter}>
-             <Button variant="primary" fullWidth size="large">Get Started</Button>
+             <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+               <Button variant="primary" fullWidth size="large">Get Started</Button>
+             </Link>
              <Link href="/portal/login" className={styles.portalLinkMob}>Client Portal</Link>
           </div>
         </div>

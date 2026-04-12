@@ -16,12 +16,29 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // 1. Initial check
+    const publicPaths = ['/admin/login', '/portal/login'];
+    const isPublicPath = publicPaths.includes(pathname);
+
     const checkAuth = () => {
-      // If not authenticated, redirect to login
+      // 1. If hitting a public path (like login)
+      if (isPublicPath) {
+        if (isAuthenticated) {
+          // If already logged in, redirect to dashboard
+          if (user?.role === 'admin' || user?.role === 'staff') {
+            router.push('/admin/dashboard');
+          } else {
+            router.push('/portal/dashboard');
+          }
+          return;
+        }
+        // If not logged in, they are authorized to see the public page
+        setAuthorized(true);
+        return;
+      }
+
+      // 2. Initial check for protected routes
       if (!isAuthenticated) {
         setAuthorized(false);
-        // Determine where to redirect based on the path
         if (pathname.startsWith('/admin')) {
           router.push('/admin/login');
         } else {
@@ -30,10 +47,9 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
         return;
       }
 
-      // 2. Role check if allowedRoles provided
+      // 3. Role check if allowedRoles provided
       if (allowedRoles && user && !allowedRoles.includes(user.role)) {
         setAuthorized(false);
-        // Redirect to their respective dashboard if they hit a wrong role page
         if (user.role === 'admin' || user.role === 'staff') {
           router.push('/admin/dashboard');
         } else {

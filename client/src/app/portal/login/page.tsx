@@ -24,6 +24,7 @@ export default function ClientLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [attempts, setAttempts] = useState(5);
 
   const { login } = useAuthStore();
   const router = useRouter();
@@ -34,29 +35,23 @@ export default function ClientLoginPage() {
     setError('');
 
     // Simulate network delay
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 800));
 
-    // Basic validation
-    if (!email.includes('@')) {
-      setError('Please enter a valid email address.');
+    // Basic validation / Mock failure check
+    if (email !== 'client@example.com' || password !== 'success') {
+      const nextAttempts = attempts - 1;
+      setAttempts(nextAttempts > 0 ? nextAttempts : 0);
+      setError('Invalid email or password. Please try again.');
       setLoading(false);
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      setLoading(false);
-      return;
-    }
-
-    // Mock Login Logic
-    // In this simulation, we accept any valid-looking credentials
     login({
       id: 'c_mock_1',
-      name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
+      name: 'Michael',
       email: email,
       role: 'client',
-      company: 'DigitalPulse Client',
+      company: 'Growth Dynamics',
     });
 
     router.push('/portal/dashboard');
@@ -64,42 +59,47 @@ export default function ClientLoginPage() {
   };
 
   const features = [
-    { icon: TrendingUp, title: 'Real-Time Analytics', desc: 'Track your campaign performance with live, data-driven insights.' },
-    { icon: FileText, title: 'Detailed Reports', desc: 'Download comprehensive monthly summaries of your ROI and reach.' },
-    { icon: MessageSquare, title: 'Direct Access', desc: 'Communicate instantly with your dedicated account management team.' },
+    { icon: TrendingUp, title: 'Real-Time Analytics', desc: 'Live campaign metrics updated every 15 minutes', color: '#06B6D4' },
+    { icon: FileText, title: 'Comprehensive Reports', desc: 'Download detailed performance reports anytime', color: '#3B82F6' },
+    { icon: MessageSquare, title: 'Direct Communication', desc: 'Message your account manager instantly', color: '#0891B2' },
   ];
 
   return (
     <div className={styles.page}>
+      {/* Absolute Header Logo */}
+      <Link href="/" className={styles.headerLogo}>
+        <span className={styles.logoText}>Digital <span className={styles.logoPulse}>Pulse</span></span>
+      </Link>
+
       <div className={styles.leftPanel}>
         <div className={styles.formContainer}>
-          <Link href="/" className={styles.logoLink}>
-            <div className={styles.logoIcon}><TrendingUp size={22} color="#06B6D4" /></div>
-            <span className={styles.logoText}>Digital<span className={styles.logoAccent}>Pulse</span></span>
-          </Link>
-
           <header className={styles.formHeader}>
             <h1 className={styles.headline}>Client Portal</h1>
-            <p className={styles.subheadline}>Welcome back! Sign in to manage your campaigns.</p>
+            <p className={styles.subheadline}>Welcome back! Sign in to view your campaigns</p>
           </header>
 
           {error && (
-            <div className={styles.errorBox}>
-              <AlertCircle size={16} />
-              <span>{error}</span>
+            <div className={styles.errorAlert}>
+              <div className={styles.errorContent}>
+                <AlertCircle size={20} className={styles.errorIcon} />
+                <div className={styles.errorText}>
+                  {error}
+                </div>
+              </div>
+              <button className={styles.closeError} onClick={() => setError('')}><X size={16} /></button>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.field}>
               <label className={styles.label}>Email Address</label>
-              <div className={styles.inputWrap}>
+              <div className={`${styles.inputWrap} ${error ? styles.inputError : ''}`}>
                 <Mail size={18} className={styles.icon} />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="name@company.com"
+                  placeholder="your.email@company.com"
                   className={styles.input}
                   required
                 />
@@ -108,13 +108,13 @@ export default function ClientLoginPage() {
 
             <div className={styles.field}>
               <label className={styles.label}>Password</label>
-              <div className={styles.inputWrap}>
+              <div className={`${styles.inputWrap} ${error ? styles.inputError : ''}`}>
                 <Lock size={18} className={styles.icon} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   className={styles.input}
                   required
                 />
@@ -122,69 +122,64 @@ export default function ClientLoginPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {error && (
+                <div className={styles.attemptsWarn}>
+                  <AlertCircle size={14} /> Attempts remaining: {attempts}/5
+                </div>
+              )}
             </div>
 
             <div className={styles.formOptions}>
               <label className={styles.checkboxLabel}>
                 <input type="checkbox" className={styles.checkbox} />
-                <span>Keep me signed in</span>
+                <span>Remember me</span>
               </label>
               <Link href="#" className={styles.forgot}>Forgot password?</Link>
             </div>
 
-            <Button type="submit" variant="primary" size="large" fullWidth disabled={loading}>
-              {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
+            <Button type="submit" variant="primary" size="large" fullWidth className={styles.signInBtn} disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className={styles.divider}><span>or continue with</span></div>
+          <div className={styles.divider}><span>or</span></div>
 
-          <div className={styles.socialAuth}>
-             <button className={styles.socialBtn}>Google</button>
-             <button className={styles.socialBtn}>GitHub</button>
-          </div>
+          <button className={styles.googleBtn}>
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" height="18" />
+            Sign in with Google
+          </button>
 
           <div className={styles.securityNote}>
-            <ShieldCheck size={14} />
-            <span>Secure 256-bit SSL encrypted connection</span>
+            <ShieldCheck size={16} />
+            <span>256-bit SSL Encrypted</span>
           </div>
 
-          <div className={styles.adminLink}>
-            Are you a staff member? <Link href="/admin/login">Admin Login</Link>
+          <div className={styles.signupBox}>
+            Don&apos;t have an account? <Link href="/register">Sign up here</Link>
           </div>
         </div>
       </div>
 
       <div className={styles.rightPanel}>
         <div className={styles.rightContent}>
-          <div className={styles.rightBadge}>Client Portal Access</div>
-          <h2 className={styles.welcomeTitle}>Manage Your Marketing ROI Like Never Before</h2>
-          <p className={styles.welcomeText}>The DigitalPulse portal gives you total transparency into every dollar spent and every lead generated.</p>
+          <h2 className={styles.welcomeTitle}>Welcome to Your Marketing Command Center</h2>
+          <p className={styles.welcomeText}>Track performance, access reports, and communicate with your dedicated team—all in one place.</p>
 
           <div className={styles.featuresList}>
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
                 <div key={i} className={styles.featureItem}>
-                  <div className={styles.featureIcon}><Icon size={20} /></div>
-                  <div>
+                  <div className={styles.featureIcon} style={{ color: f.color }}>
+                    <Icon size={20} />
+                  </div>
+                  <div className={styles.featureText}>
                     <strong>{f.title}</strong>
                     <p>{f.desc}</p>
                   </div>
                 </div>
               );
             })}
-          </div>
-
-          <div className={styles.testimonial}>
-            <p>&ldquo;The portal transformed how we track our growth. Total transparency on every campaign.&rdquo;</p>
-            <div className={styles.author}>
-               <div className={styles.authorImg}>MS</div>
-               <div>
-                  <strong>Mark Simmons</strong>
-                  <span>Director, TechBound</span>
-               </div>
-            </div>
           </div>
         </div>
       </div>
