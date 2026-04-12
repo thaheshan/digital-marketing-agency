@@ -16,45 +16,42 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    const publicPaths = ['/admin/login', '/portal/login'];
-    const isPublicPath = publicPaths.includes(pathname);
-
     const checkAuth = () => {
-      // 1. If hitting a public path (like login)
-      if (isPublicPath) {
+      const normalizedPath = pathname.replace(/\/$/, '') || '/';
+      // Path verification: checking if current path is public
+      const isPublic = 
+        ['', '/', '/admin/login', '/portal/login', '/register'].includes(normalizedPath) || 
+        normalizedPath.startsWith('/register');
+
+      // 1. Immediate authorization for public paths
+      if (isPublic) {
         if (isAuthenticated) {
-          // If already logged in, redirect to dashboard
-          if (user?.role === 'admin' || user?.role === 'staff') {
-            router.push('/admin/dashboard');
+          // If already logged in, redirect away from login/register to dashboard
+          const dest = (user?.role === 'admin' || user?.role === 'staff') ? '/admin/dashboard' : '/portal/dashboard';
+          if (['/admin/login', '/portal/login', '/register'].includes(normalizedPath)) {
+            router.push(dest);
           } else {
-            router.push('/portal/dashboard');
+            setAuthorized(true);
           }
           return;
         }
-        // If not logged in, they are authorized to see the public page
         setAuthorized(true);
         return;
       }
 
-      // 2. Initial check for protected routes
+      // 2. Strict check for protected routes
       if (!isAuthenticated) {
         setAuthorized(false);
-        if (pathname.startsWith('/admin')) {
-          router.push('/admin/login');
-        } else {
-          router.push('/portal/login');
-        }
+        const loginPath = pathname.startsWith('/admin') ? '/admin/login' : '/portal/login';
+        router.push(loginPath);
         return;
       }
 
-      // 3. Role check if allowedRoles provided
+      // 3. Role-based access control
       if (allowedRoles && user && !allowedRoles.includes(user.role)) {
         setAuthorized(false);
-        if (user.role === 'admin' || user.role === 'staff') {
-          router.push('/admin/dashboard');
-        } else {
-          router.push('/portal/dashboard');
-        }
+        const dashPath = (user.role === 'admin' || user.role === 'staff') ? '/admin/dashboard' : '/portal/dashboard';
+        router.push(dashPath);
         return;
       }
 
