@@ -1,33 +1,45 @@
 .page { width: 100%; }
 
-/* Hero */
-.hero {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-  padding: 100px 28px 80px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+/* ── Hero Banner ── */
+.heroBanner { 
+  padding: 110px 0 60px; 
+  background: #0F172A; 
+  color: #fff;
 }
 
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #94A3B8;
+  margin-bottom: 20px;
 }
 
-.heroContent { position: relative; max-width: 700px; margin: 0 auto; }
+.breadcrumb a {
+  color: #94A3B8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.breadcrumb a:hover { color: #06B6D4; }
+
+.breadSep { color: #475569; }
+.breadCurrent { color: #fff; font-weight: 600; }
 
 .heroTitle {
-  font-size: var(--fs-h2);
-  color: var(--color-white);
+  font-size: 52px;
+  font-weight: 800;
+  color: #ffffff;
   margin-bottom: 16px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
-.heroSub {
-  font-size: 20px;
-  color: rgba(255,255,255,0.85);
+.heroSubtitle {
+  font-size: 18px;
+  color: #94A3B8;
+  max-width: 560px;
   line-height: 1.6;
 }
 
@@ -38,9 +50,9 @@
 }
 
 .container {
-  max-width: 1320px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 88px;
+  padding: 0 24px;
 }
 
 .layout {
@@ -144,7 +156,13 @@
   gap: 16px;
 }
 
-.infoIcon { font-size: 28px; flex-shrink: 0; }
+.infoIcon { 
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
 
 .infoItem strong {
   display: block;
@@ -182,6 +200,14 @@
   padding: 16px 0;
   border-bottom: 1px solid var(--color-neutral-100);
   font-size: 22px;
+}
+
+.contactDetailIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding-top: 1px;
 }
 
 .contactItem:last-child { border-bottom: none; }

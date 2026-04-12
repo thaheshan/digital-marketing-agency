@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { CheckCircle2, Zap, Target, TrendingUp, Users, Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import styles from './page.module.css';
 import { Button } from '@/components/common/Button/Button';
 
@@ -21,11 +23,18 @@ export default function ContactPage() {
 
   return (
     <div className={styles.page}>
-      {/* Hero */}
-      <section className={styles.hero}>
-        <div className={styles.heroContent}>
+      {/* ── Hero Banner ── */}
+      <section className={styles.heroBanner}>
+        <div className={styles.container}>
+          <nav className={styles.breadcrumb}>
+            <Link href="/">Home</Link>
+            <span className={styles.breadSep}>/</span>
+            <span className={styles.breadCurrent}>Contact Us</span>
+          </nav>
           <h1 className={styles.heroTitle}>Let&apos;s Grow Together</h1>
-          <p className={styles.heroSub}>Tell us about your goals and we&apos;ll craft a strategy tailored to your business.</p>
+          <p className={styles.heroSubtitle}>
+            Tell us about your goals and we&apos;ll craft a strategy tailored to your business.
+          </p>
         </div>
       </section>
 
@@ -37,7 +46,7 @@ export default function ContactPage() {
             <div className={styles.formWrap}>
               {submitted ? (
                 <div className={styles.successState}>
-                  <div className={styles.successIcon}>✅</div>
+                  <div className={styles.successIcon}><CheckCircle2 size={72} color="#22C55E" /></div>
                   <h2>Thank You!</h2>
                   <p>We&apos;ve received your message and will get back to you within 24 hours.</p>
                   <Button variant="primary" size="medium" onClick={() => setSubmitted(false)}>Send Another Message</Button>
@@ -93,7 +102,11 @@ export default function ContactPage() {
                     <label className={styles.label}>Tell Us About Your Goals *</label>
                     <textarea name="message" value={formState.message} onChange={handleChange} required placeholder="What are you hoping to achieve? What challenges are you facing?" className={styles.textarea} rows={5} />
                   </div>
-                  <Button type="submit" variant="primary" size="large" fullWidth>Send Message 🚀</Button>
+                  <Button type="submit" variant="primary" size="large" fullWidth>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      Send Message <Send size={18} />
+                    </span>
+                  </Button>
                 </form>
               )}
             </div>
@@ -104,38 +117,44 @@ export default function ContactPage() {
                 <h3 className={styles.infoTitle}>Why Work With Us?</h3>
                 <div className={styles.infoList}>
                   {[
-                    { icon: '⚡', title: 'Fast Response', desc: 'We reply to all inquiries within 24 hours.' },
-                    { icon: '🎯', title: 'Strategy First', desc: 'Every campaign starts with a data-driven roadmap.' },
-                    { icon: '📈', title: 'Proven ROI', desc: 'Average 180% ROI across our client base.' },
-                    { icon: '🤝', title: 'Dedicated Team', desc: 'Your own account manager from day one.' },
-                  ].map((item) => (
-                    <div key={item.title} className={styles.infoItem}>
-                      <span className={styles.infoIcon}>{item.icon}</span>
-                      <div>
-                        <strong>{item.title}</strong>
-                        <p>{item.desc}</p>
+                    { icon: Zap, title: 'Fast Response', desc: 'We reply to all inquiries within 24 hours.' },
+                    { icon: Target, title: 'Strategy First', desc: 'Every campaign starts with a data-driven roadmap.' },
+                    { icon: TrendingUp, title: 'Proven ROI', desc: 'Average 180% ROI across our client base.' },
+                    { icon: Users, title: 'Dedicated Team', desc: 'Your own account manager from day one.' },
+                  ].map((item, idx) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={idx} className={styles.infoItem}>
+                        <span className={styles.infoIcon}><Icon size={24} color="#fff" /></span>
+                        <div>
+                          <strong>{item.title}</strong>
+                          <p>{item.desc}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
               <div className={styles.contactDetails}>
                 <h4 className={styles.contactTitle}>Direct Contact</h4>
                 {[
-                  { icon: '📧', label: 'Email', value: 'hello@digitalagency.com' },
-                  { icon: '📞', label: 'Phone', value: '+1 (555) 123-4567' },
-                  { icon: '📍', label: 'Office', value: '123 Marketing Lane, NY 10001' },
-                  { icon: '⏰', label: 'Hours', value: 'Mon–Fri, 9am–6pm EST' },
-                ].map((c) => (
-                  <div key={c.label} className={styles.contactItem}>
-                    <span>{c.icon}</span>
-                    <div>
-                      <span className={styles.contactLabel}>{c.label}</span>
-                      <span className={styles.contactValue}>{c.value}</span>
+                  { icon: Mail, label: 'Email', value: 'hello@digitalagency.com' },
+                  { icon: Phone, label: 'Phone', value: '+1 (555) 123-4567' },
+                  { icon: MapPin, label: 'Office', value: '123 Marketing Lane, NY 10001' },
+                  { icon: Clock, label: 'Hours', value: 'Mon–Fri, 9am–6pm EST' },
+                ].map((c, idx) => {
+                  const Icon = c.icon;
+                  return (
+                    <div key={idx} className={styles.contactItem}>
+                      <span className={styles.contactDetailIcon}><Icon size={20} color="#06B6D4" /></span>
+                      <div>
+                        <span className={styles.contactLabel}>{c.label}</span>
+                        <span className={styles.contactValue}>{c.value}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </aside>
           </div>
