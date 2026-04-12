@@ -1,0 +1,608 @@
+.wizardContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.backBtn {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 32px;
+  transition: color 0.2s;
+}
+
+.backBtn:hover {
+  color: #06b6d4;
+}
+
+.wizardHeader {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 36px;
+}
+
+.iconCircle {
+  width: 80px;
+  height: 80px;
+  background: #ecfeff;
+  border: 2px solid #22d3ee;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.wizardTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+.wizardSub {
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.6;
+  max-width: 400px;
+}
+
+.staffBadge {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ecfeff;
+  border: 1px solid #22d3ee;
+  color: #0891b2;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.stepContent {
+  width: 100%;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.optional {
+  font-size: 11px;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fieldIcon {
+  position: absolute;
+  left: 16px;
+  color: #94a3b8;
+}
+
+.inputWrap input, 
+.inputWrap select {
+  width: 100%;
+  height: 52px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0 16px 0 48px;
+  font-size: 15px;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.inputWrap input:focus,
+.inputWrap select:focus {
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+}
+
+.helper {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.continueBtn {
+  margin-top: 32px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footerLinks {
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.footerLinks a {
+  color: #06b6d4;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Role Selection */
+.roleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.roleCard {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.roleCard:hover {
+  border-color: #22d3ee;
+  background: #f0fdfe;
+}
+
+.roleSelected {
+  background: #ecfeff;
+  border-color: #06b6d4;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.1);
+}
+
+.roleIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.roleCard h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.roleCard p {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* Password Step */
+.eyeBtn {
+  position: absolute;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.strengthContainer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.strengthBars {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+}
+
+.strengthBar {
+  height: 4px;
+  flex: 1;
+  background: #e2e8f0;
+  border-radius: 2px;
+}
+
+.activeStrength {
+  background: #06b6d4;
+}
+
+.strengthText {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  min-width: 40px;
+}
+
+.requirements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.reqItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.reqMet {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.terms input {
+  margin-top: 4px;
+}
+
+.terms label {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.terms a {
+  color: #06b6d4;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* OTP Pulse Styles */
+.iconPulse {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 32px;
+}
+
+.pulseRing {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(6, 182, 212, 0.2);
+  animation: pulse 2s infinite;
+}
+
+.resend {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.resend button {
+  background: none;
+  border: none;
+  color: #06b6d4;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 0 4px;
+}
+
+.timer {
+  display: block;
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.securityNotice {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Timeline Styles */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 32px;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-left: 2px dashed #e2e8f0;
+  margin-left: 10px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.timelineItem::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 20px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+}
+
+.done::before { background: #22c55e; border-color: #22c55e; }
+.active::before { background: #d97706; border-color: #d97706; }
+
+.timelineIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #94a3b8;
+}
+
+.done .timelineIcon { background: #ecfdf5; color: #22c55e; }
+.active .timelineIcon { background: #fffbeb; color: #d97706; }
+
+.timelineTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressBadge {
+  font-size: 10px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #d97706;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.timelineSub {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.spinning {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.infoBox {
+  background: #f0fdfa;
+  border: 1px solid #5eead4;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  margin-bottom: 32px;
+}
+
+.infoBox h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #115e59;
+  margin-bottom: 4px;
+}
+
+.infoBox ul {
+  padding-left: 16px;
+  margin: 0;
+  font-size: 13px;
+  color: #134e4a;
+}
+
+/* Success Styles */
+.confetti {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.iconCircleSuccess {
+  width: 96px;
+  height: 96px;
+  background: #ecfdf5;
+  border: 2px solid #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.badgeRow {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.badgeCyan, .badgePurple, .badgeGreen {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.badgeCyan { background: #ecfeff; border: 1px solid #22d3ee; color: #0891b2; }
+.badgePurple { background: #f5f3ff; border: 1px solid #c4b5fd; color: #7c3aed; }
+.badgeGreen { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
+
+.quickActions h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.actionCard {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionCard:hover {
+  border-color: #06b6d4;
+  background: #f0fdfe;
+  transform: translateY(-4px);
+}
+
+.actionCard h4 {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.actionCard p {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.stepCounter {
+  margin-top: 24px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.helpFab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s;
+}
+
+.helpFab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.15);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@media (max-width: 640px) {
+  .formRow { grid-template-columns: 1fr; }
+  .roleGrid { grid-template-columns: repeat(2, 1fr); }
+  .actionGrid { grid-template-columns: 1fr; }
+  .requirements { grid-template-columns: 1fr; }
+}

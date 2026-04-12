@@ -19,7 +19,7 @@ export default function RegisterSelectionPage() {
         </header>
 
         <div className={styles.selectionGrid}>
-          <Link href="/portal/register" className={styles.selectionCard}>
+          <Link href="/register/client" className={styles.selectionCard}>
             <div className={styles.cardIcon}>
               <Users size={32} color="#06B6D4" />
             </div>
@@ -32,7 +32,7 @@ export default function RegisterSelectionPage() {
             </div>
           </Link>
 
-          <Link href="/admin/register" className={styles.selectionCard}>
+          <Link href="/register/staff" className={styles.selectionCard}>
             <div className={styles.cardIcon}>
               <Shield size={32} color="#06B6D4" />
             </div>
