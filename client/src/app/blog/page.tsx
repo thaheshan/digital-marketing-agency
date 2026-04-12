@@ -1,10 +1,9 @@
-import styles from './page.module.css';
-import Link from 'next/link';
+'use client';
 
-export const metadata = {
-  title: 'Blog | Digital Marketing Agency',
-  description: 'Expert insights, strategies, and trends in digital marketing to help your business grow.',
-};
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import styles from './page.module.css';
 
 const posts = [
   {
@@ -14,8 +13,7 @@ const posts = [
     category: 'SEO',
     readTime: '7 min',
     date: 'Mar 28, 2026',
-    emoji: '🔍',
-    color: '#ECFEFF',
+    image: 'https://picsum.photos/seed/seo/800/600',
     featured: true,
   },
   {
@@ -25,8 +23,7 @@ const posts = [
     category: 'Social Media',
     readTime: '9 min',
     date: 'Mar 25, 2026',
-    emoji: '📱',
-    color: '#FFF7ED',
+    image: 'https://picsum.photos/seed/social/800/600',
     featured: false,
   },
   {
@@ -36,8 +33,7 @@ const posts = [
     category: 'PPC',
     readTime: '6 min',
     date: 'Mar 22, 2026',
-    emoji: '🎯',
-    color: '#FEF2F2',
+    image: 'https://picsum.photos/seed/ppc/800/600',
     featured: false,
   },
   {
@@ -47,8 +43,7 @@ const posts = [
     category: 'Content',
     readTime: '11 min',
     date: 'Mar 19, 2026',
-    emoji: '✍️',
-    color: '#F5F3FF',
+    image: 'https://picsum.photos/seed/content/800/600',
     featured: false,
   },
   {
@@ -58,8 +53,7 @@ const posts = [
     category: 'Email',
     readTime: '8 min',
     date: 'Mar 15, 2026',
-    emoji: '📧',
-    color: '#FDF2F8',
+    image: 'https://picsum.photos/seed/email/800/600',
     featured: false,
   },
   {
@@ -69,32 +63,52 @@ const posts = [
     category: 'Branding',
     readTime: '10 min',
     date: 'Mar 12, 2026',
-    emoji: '🏆',
-    color: '#F0FDF4',
+    image: 'https://picsum.photos/seed/brand/800/600',
     featured: false,
   },
 ];
 
 const categories = ['All', 'SEO', 'Social Media', 'PPC', 'Content', 'Email', 'Branding'];
 
-const featured = posts.find(p => p.featured);
-const regular = posts.filter(p => !p.featured);
-
 export default function BlogPage() {
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  const filteredPosts = useMemo(() => {
+    if (activeCategory === 'All') return posts;
+    return posts.filter(p => p.category === activeCategory);
+  }, [activeCategory]);
+
+  const featured = filteredPosts.find(p => p.featured);
+  const regular = filteredPosts.filter(p => !p.featured);
   return (
     <div className={styles.page}>
-      {/* Hero */}
-      <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>Marketing Insights</h1>
-        <p className={styles.heroSub}>Expert strategies, trends, and tutorials to grow your business online</p>
+      {/* ── Hero Banner ── */}
+      <section className={styles.heroBanner}>
+        <div className={styles.container}>
+          <nav className={styles.breadcrumb}>
+            <Link href="/">Home</Link>
+            <span className={styles.breadSep}>/</span>
+            <span className={styles.breadCurrent}>Blog</span>
+          </nav>
+          <h1 className={styles.heroTitle}>Marketing Insights</h1>
+          <p className={styles.heroSubtitle}>
+            Expert strategies, trends, and tutorials to grow your business online
+          </p>
+        </div>
       </section>
 
-      {/* Category Tabs — static for server component */}
+      {/* Category Tabs */}
       <div className={styles.categoryBar}>
         <div className={styles.container}>
           <div className={styles.categoryTabs}>
-            {categories.map((cat, i) => (
-              <span key={cat} className={`${styles.catTab} ${i === 0 ? styles.catActive : ''}`}>{cat}</span>
+            {categories.map((cat) => (
+              <button 
+                key={cat} 
+                className={`${styles.catTab} ${activeCategory === cat ? styles.catActive : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
             ))}
           </div>
         </div>
@@ -105,21 +119,21 @@ export default function BlogPage() {
         {featured && (
           <section className={styles.featuredSection}>
             <Link href={`/blog/${featured.slug}`} className={styles.featuredCard}>
-              <div className={styles.featuredIllustration} style={{ background: featured.color }}>
-                <span className={styles.featuredEmoji}>{featured.emoji}</span>
+              <div className={styles.featuredIllustration}>
+                <img src={featured.image} alt={featured.title} className={styles.coverImage} referrerPolicy="no-referrer" />
                 <span className={styles.featuredBadge}>Featured Article</span>
               </div>
               <div className={styles.featuredContent}>
-                <span className={styles.categoryTag} style={{ background: featured.color }}>
+                <span className={styles.categoryTag}>
                   {featured.category}
                 </span>
                 <h2 className={styles.featuredTitle}>{featured.title}</h2>
                 <p className={styles.featuredExcerpt}>{featured.excerpt}</p>
                 <div className={styles.postMeta}>
-                  <span className={styles.metaItem}>📅 {featured.date}</span>
-                  <span className={styles.metaItem}>⏱ {featured.readTime} read</span>
+                  <span className={styles.metaItem}><Calendar size={14} /> {featured.date}</span>
+                  <span className={styles.metaItem}><Clock size={14} /> {featured.readTime} read</span>
                 </div>
-                <span className={styles.readMore}>Read Article →</span>
+                <span className={styles.readMore}>Read Article <ArrowRight size={15} /></span>
               </div>
             </Link>
           </section>
@@ -127,26 +141,34 @@ export default function BlogPage() {
 
         {/* Regular Posts Grid */}
         <section className={styles.postsSection}>
-          <h3 className={styles.gridTitle}>Latest Articles</h3>
-          <div className={styles.postsGrid}>
-            {regular.map(post => (
-              <Link key={post.slug} href={`/blog/${post.slug}`} className={styles.postCard}>
-                <div className={styles.postIllustration} style={{ background: post.color }}>
-                  <span className={styles.postEmoji}>{post.emoji}</span>
-                </div>
-                <div className={styles.postContent}>
-                  <span className={styles.postCategory}>{post.category}</span>
-                  <h4 className={styles.postTitle}>{post.title}</h4>
-                  <p className={styles.postExcerpt}>{post.excerpt}</p>
-                  <div className={styles.postMeta}>
-                    <span className={styles.metaItem}>📅 {post.date}</span>
-                    <span className={styles.metaItem}>⏱ {post.readTime}</span>
+          {regular.length > 0 && <h3 className={styles.gridTitle}>{activeCategory === 'All' ? 'Latest Articles' : `${activeCategory} Articles`}</h3>}
+          
+          {regular.length > 0 ? (
+            <div className={styles.postsGrid}>
+              {regular.map(post => (
+                <Link key={post.slug} href={`/blog/${post.slug}`} className={styles.postCard}>
+                  <div className={styles.postIllustration}>
+                    <img src={post.image} alt={post.title} className={styles.coverImage} referrerPolicy="no-referrer" />
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                  <div className={styles.postContent}>
+                    <span className={styles.postCategory}>{post.category}</span>
+                    <h4 className={styles.postTitle}>{post.title}</h4>
+                    <p className={styles.postExcerpt}>{post.excerpt}</p>
+                    <div className={styles.postMeta}>
+                      <span className={styles.metaItem}><Calendar size={14} /> {post.date}</span>
+                      <span className={styles.metaItem}><Clock size={14} /> {post.readTime}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <p>No articles found for the {activeCategory} category.</p>
+            </div>
+          )}
         </section>
+
       </div>
     </div>
   );

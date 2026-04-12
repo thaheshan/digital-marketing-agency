@@ -1,0 +1,440 @@
+.page {
+  width: 100%;
+  background: var(--color-background-secondary);
+  padding-bottom: 120px;
+}
+
+/* \u2500\u2500 Hero Banner \u2500\u2500 */
+.heroBanner {
+  background: #0F172A;
+  color: #fff;
+  padding: 120px 0 160px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #94A3B8;
+  margin-bottom: 24px;
+}
+
+.breadcrumb a {
+  color: #94A3B8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: #fff;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 16px;
+  line-height: 1.15;
+}
+
+.heroSub {
+  font-size: 18px;
+  color: #94A3B8;
+}
+
+/* \u2500\u2500 Main Case Study Card \u2500\u2500 */
+.mainCard {
+  max-width: 1000px;
+  margin: -80px auto 0;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  padding: 64px;
+  position: relative;
+  z-index: 10;
+}
+
+/* 2-Column Intro */
+.introSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 64px;
+}
+
+.introSection h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 16px;
+}
+
+.introSection p {
+  color: #475569;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.execPill {
+  display: inline-block;
+  background: #E0F2FE;
+  color: #0284C7;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.checkList {
+  list-style: none;
+  padding: 0;
+  margin-top: 16px;
+}
+
+.checkList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #334155;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.checkIcon {
+  color: #10B981;
+}
+
+/* \u2500\u2500 Approach Timeline \u2500\u2500 */
+.sectionTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 64px 0 32px;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 24px;
+  background: #F8FAFC;
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+}
+
+.timelineNum {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #0284C7;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.timelineContent h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 8px;
+}
+
+.timelineContent p {
+  color: #475569;
+  line-height: 1.6;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.timelineLink {
+  color: #0284C7;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* \u2500\u2500 Implementation Details \u2500\u2500 */
+.hugeImageWrapper {
+  width: 100%;
+  height: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 32px 0;
+}
+
+.hugeImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* \u2500\u2500 Results & Impact \u2500\u2500 */
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.impactCard {
+  background: #0F172A;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.impactIcon {
+  color: #38BDF8;
+  margin-bottom: 16px;
+}
+
+.impactValue {
+  font-size: 48px;
+  font-weight: 800;
+  color: #38BDF8;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.impactLabel {
+  font-size: 15px;
+  color: #94A3B8;
+}
+
+/* Visual Bar Chart Skeleton */
+.barChartContainer {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 64px;
+}
+
+.chartTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #334155;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.chartArea {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 200px;
+  border-bottom: 2px solid #E2E8F0;
+  padding-bottom: 16px;
+}
+
+.chartBarGroup {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.bar {
+  width: 32px;
+  border-radius: 4px 4px 0 0;
+}
+
+.barGray {
+  background: #CBD5E1;
+  height: 60px; /* will be dynamically overridden inline */
+}
+
+.barCyan {
+  background: #06B6D4;
+}
+
+.chartLabels {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 16px;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* \u2500\u2500 Quote / Testimonial \u2500\u2500 */
+.testimonialBlock {
+  background: #F8FAFC;
+  border-left: 4px solid #06B6D4;
+  padding: 32px;
+  border-radius: 0 16px 16px 0;
+  margin-bottom: 48px;
+}
+
+.testiText {
+  font-size: 18px;
+  font-style: italic;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.testiAuthor {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.testiAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.testiInfo strong {
+  display: block;
+  font-size: 15px;
+  color: #0F172A;
+}
+
+.testiInfo span {
+  font-size: 13px;
+  color: #64748B;
+}
+
+/* \u2500\u2500 Key Takeaways \u2500\u2500 */
+.takeawayList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.takeawayItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #FFF7ED;
+  border: 1px solid #FFEDD5;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.takeawayIcon {
+  color: #F97316;
+  flex-shrink: 0;
+}
+
+.takeawayItem p {
+  color: #431407;
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* \u2500\u2500 Related Projects \u2500\u2500 */
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.relatedItem {
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.relatedItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.relatedImg {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.relatedInfo {
+  padding: 16px;
+}
+
+.relatedInfo h4 {
+  font-size: 15px;
+  color: #0F172A;
+  margin-bottom: 4px;
+}
+
+.relatedInfo p {
+  font-size: 12px;
+  color: #64748B;
+}
+
+/* \u2500\u2500 CTA Footer \u2500\u2500 */
+.ctaFooter {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border-radius: 24px;
+  padding: 64px 40px;
+  text-align: center;
+  color: #fff;
+  margin-top: 80px;
+}
+
+.ctaTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.ctaSub {
+  font-size: 16px;
+  color: #94A3B8;
+  margin-bottom: 32px;
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0284C7;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px 40px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.ctaBtn:hover {
+  background: #0369A1;
+}
+
+@media (max-width: 768px) {
+  .mainCard { padding: 32px; margin-top: -40px; }
+  .introSection { grid-template-columns: 1fr; }
+  .impactGrid { grid-template-columns: 1fr; }
+  .relatedGrid { grid-template-columns: 1fr; }
+  .chartBarGroup { gap: 4px; }
+  .bar Cyan, .barGray { width: 16px; }
+}
