@@ -78,6 +78,12 @@ export function PortalLayout({ children }: { children: React.ReactNode }) {
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'JD';
 
+  const isLoginPage = pathname === '/portal/login';
+
+  if (isLoginPage) {
+    return <RouteGuard>{children}</RouteGuard>;
+  }
+
   return (
     <RouteGuard allowedRoles={['client', 'admin']}>
       <div className={`${styles.layout} ${collapsed ? styles.collapsed : ''}`}>

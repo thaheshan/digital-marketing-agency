@@ -138,7 +138,9 @@ export default function Home() {
                 We combine data-driven strategy with creative excellence to help businesses grow their online presence and achieve measurable success.
               </p>
               <div className={styles.heroCtas}>
-                <Button variant="primary" size="medium" className={styles.mainCta}>Get Started</Button>
+                <Link href="/register">
+                  <Button variant="primary" size="medium" className={styles.mainCta}>Get Started</Button>
+                </Link>
                 <Button variant="outline" size="medium" className={styles.secondaryCta}>How We Work</Button>
               </div>
             </div>
