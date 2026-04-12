@@ -21,6 +21,7 @@ export default function ROICalculatorPage() {
     budgetStep1: '',
     
     targetConversion: 5.0,
+    targetRevenueIncrease: 25,
     timeframe: '',
     primaryPriority: 'Increase Revenue',
     additionalBudget: 2000,
@@ -429,7 +430,17 @@ export default function ROICalculatorPage() {
                   <label className={styles.label}>Monthly Revenue <span style={{color: '#E11D48'}}>*</span> <Info size={14} color="#CBD5E1"/></label>
                   <span className={styles.labelVal}>${form.revenue.toLocaleString()}</span>
                 </div>
-                <input type="range" name="revenue" min={10000} max={200000} step={5000} value={form.revenue} onChange={setNumberVal} className={styles.sliderTrack} />
+                <input 
+                  type="range" 
+                  name="revenue" 
+                  min={10000} 
+                  max={200000} 
+                  step={5000} 
+                  value={form.revenue} 
+                  onChange={setNumberVal} 
+                  className={styles.sliderTrack} 
+                  style={{ background: `linear-gradient(to right, #06B6D4 ${(form.revenue - 10000) / (200000 - 10000) * 100}%, #E2E8F0 0)` }}
+                />
               </div>
 
               <div className={styles.field}>
@@ -465,9 +476,18 @@ export default function ROICalculatorPage() {
               <div className={styles.field}>
                 <div className={styles.labelWrapper}>
                   <label className={styles.label}>Target Revenue Increase (%) <span style={{color: '#E11D48'}}>*</span> <Info size={14} color="#CBD5E1"/></label>
-                  <span className={styles.labelVal}>+{Math.round((form.revenue / 200000) * 100)}%</span>
+                  <span className={styles.labelVal}>+{form.targetRevenueIncrease}%</span>
                 </div>
-                <input type="range" min={10} max={200} defaultValue={25} className={styles.sliderTrack} />
+                <input 
+                  type="range" 
+                  name="targetRevenueIncrease" 
+                  min={10} 
+                  max={200} 
+                  value={form.targetRevenueIncrease} 
+                  onChange={setNumberVal} 
+                  className={styles.sliderTrack} 
+                  style={{ background: `linear-gradient(to right, #06B6D4 ${(form.targetRevenueIncrease - 10) / (200 - 10) * 100}%, #E2E8F0 0)` }}
+                />
                 <div className={styles.sliderLimits}><span>10%</span><span>100%</span><span>200%</span></div>
               </div>
 
@@ -476,7 +496,17 @@ export default function ROICalculatorPage() {
                   <label className={styles.label}>Conversion Rate Goal (%) <span style={{color: '#E11D48'}}>*</span> <Info size={14} color="#CBD5E1"/></label>
                   <span className={styles.labelVal}>{form.targetConversion.toFixed(1)}%</span>
                 </div>
-                <input type="range" name="targetConversion" min={1} max={15} step={0.5} value={form.targetConversion} onChange={setNumberVal} className={styles.sliderTrack} />
+                <input 
+                  type="range" 
+                  name="targetConversion" 
+                  min={1} 
+                  max={15} 
+                  step={0.5} 
+                  value={form.targetConversion} 
+                  onChange={setNumberVal} 
+                  className={styles.sliderTrack} 
+                  style={{ background: `linear-gradient(to right, #06B6D4 ${(form.targetConversion - 1) / (15 - 1) * 100}%, #E2E8F0 0)` }}
+                />
                 <div className={styles.sliderLimits}><span>1%</span><span>8%</span><span>15%</span></div>
                 <p style={{fontSize: '12px', color: '#F59E0B', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px'}}>
                   <Lightbulb size={14} /> Current conversion rate: {form.conversionRateStep1 || '2.5'}% (from Step 1)
@@ -536,7 +566,17 @@ export default function ROICalculatorPage() {
                   <label className={styles.label}>Additional Budget Investment <Info size={14} color="#CBD5E1"/></label>
                   <span className={styles.labelVal}>+${form.additionalBudget.toLocaleString()}</span>
                 </div>
-                <input type="range" name="additionalBudget" min={0} max={10000} step={500} value={form.additionalBudget} onChange={setNumberVal} className={styles.sliderTrack} />
+                <input 
+                  type="range" 
+                  name="additionalBudget" 
+                  min={0} 
+                  max={10000} 
+                  step={500} 
+                  value={form.additionalBudget} 
+                  onChange={setNumberVal} 
+                  className={styles.sliderTrack} 
+                  style={{ background: `linear-gradient(to right, #06B6D4 ${(form.additionalBudget - 0) / (10000 - 0) * 100}%, #E2E8F0 0)` }}
+                />
                 <div className={styles.sliderLimits}><span>$0</span><span>$10,000</span></div>
               </div>
 

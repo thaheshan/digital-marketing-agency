@@ -70,6 +70,18 @@
   color: #06B6D4; 
 }
 
+.navLink.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #06B6D4;
+  border-radius: 2px;
+  animation: scaleIn 0.3s ease-out;
+}
+
 .headerActions {
   display: flex;
   align-items: center;
