@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Trained model files (too large for git)
+models/*.pkl
+models/*.h5
+models/*.joblib
+
+# Data files (too large for git)
+data/*.csv
+data/*.json
+
+# Environment
+.env
+.env.local
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
