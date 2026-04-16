@@ -14,15 +14,33 @@ export const register = async (input: RegisterInput) => {
 
   const user = await prisma.user.create({
     data: {
-      email: input.email, passwordHash,
-      firstName: input.firstName, lastName: input.lastName,
-      phone: input.phone, role: "client", status: "pending_verification", emailVerified: false,
+      email:         input.email,
+      passwordHash,
+      firstName:     input.firstName,
+      lastName:      input.lastName,
+      phone:         input.phone,
+      role:          "client",
+      status:        "pending_verification",
+      emailVerified: false,
+    },
+  });
+
+  // Create client profile with extra fields
+  await prisma.clientProfile.create({
+    data: {
+      userId:         user.id,
+      companyName:    input.companyName || `${input.firstName} ${input.lastName}`,
+      industry:       input.industry,
+      companySize:    input.companySize,
+      websiteUrl:     input.websiteUrl,
+      referralSource: input.referralSource,
     },
   });
 
   await prisma.emailVerificationToken.create({
     data: {
-      userId: user.id, otpCode: otp,
+      userId:    user.id,
+      otpCode:   otp,
       linkToken: crypto.randomBytes(32).toString("hex"),
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     },
@@ -30,9 +48,12 @@ export const register = async (input: RegisterInput) => {
 
   await sendOtpEmail(user.email, otp, user.firstName);
 
-  return { message: "Registration successful. Check your email for OTP.", userId: user.id, email: user.email };
+  return {
+    message: "Registration successful. Check your email for OTP.",
+    userId:  user.id,
+    email:   user.email,
+  };
 };
-
 export const verifyEmail = async (email: string, otp: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error("User not found");

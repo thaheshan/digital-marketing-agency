@@ -1,14 +1,19 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  firstName: z.string().min(1).max(100),
-  lastName:  z.string().min(1).max(100),
-  email:     z.string().email(),
-  password:  z.string().min(8).max(100)
+  firstName:      z.string().min(1).max(100),
+  lastName:       z.string().min(1).max(100),
+  email:          z.string().email(),
+  password:       z.string().min(8).max(100)
     .regex(/[A-Z]/, "Must contain uppercase")
     .regex(/[0-9]/, "Must contain number")
     .regex(/[^a-zA-Z0-9]/, "Must contain special character"),
-  phone: z.string().optional(),
+  phone:          z.string().optional(),
+  companyName:    z.string().optional(),
+  companySize:    z.string().optional(),
+  industry:       z.string().optional(),
+  websiteUrl:     z.string().optional(),
+  referralSource: z.string().optional(),
 });
 
 export const loginSchema = z.object({
