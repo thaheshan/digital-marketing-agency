@@ -1,0 +1,26 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+export const env = {
+  NODE_ENV: process.env.NODE_ENV || "development",
+  PORT: Number(process.env.PORT) || 5001,
+  DATABASE_URL: process.env.DATABASE_URL!,
+  JWT_SECRET: process.env.JWT_SECRET!,
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "15m",
+  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+  CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:3000",
+  REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+  SMTP_HOST: process.env.SMTP_HOST!,
+  SMTP_PORT: Number(process.env.SMTP_PORT) || 587,
+  SMTP_USER: process.env.SMTP_USER!,
+  SMTP_PASS: process.env.SMTP_PASS!,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL!,
+  AWS_REGION: process.env.AWS_REGION!,
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID!,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY!,
+  S3_BUCKET: process.env.S3_BUCKET!,
+  RECAPTCHA_SECRET_KEY: process.env.RECAPTCHA_SECRET_KEY!,
+  ML_SERVICE_URL: process.env.ML_SERVICE_URL || "http://localhost:8000",
+  CLAUDE_API_KEY: process.env.CLAUDE_API_KEY,
+} as const;

@@ -1,0 +1,22 @@
+import express from "express";
+import "dotenv/config";
+import { applySecurity }   from "./middlewares/security.middleware";
+import { httpLogger }      from "./middlewares/httpLogger.middleware";
+import { sanitizeInput }   from "./middlewares/sanitize.middleware";
+import { globalRateLimit } from "./middlewares/rateLimit.middleware";
+import { registerRoutes }  from "./routes/index";
+import { errorMiddleware } from "./middlewares/error.middleware";
+import { notFound }        from "./middlewares/notFound.middleware";
+
+const app = express();
+applySecurity(app);
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(httpLogger);
+app.use(sanitizeInput);
+app.use(globalRateLimit);
+app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+registerRoutes(app);
+app.use(notFound);
+app.use(errorMiddleware);
+export default app;

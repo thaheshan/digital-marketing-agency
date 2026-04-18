@@ -1,0 +1,1101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin
+  content_manager
+  client
+}
+
+enum UserStatus {
+  pending_verification
+  active
+  suspended
+  deactivated
+}
+
+enum CampaignStatus {
+  draft
+  live
+  paused
+  completed
+  cancelled
+}
+
+enum EnquiryStatus {
+  new
+  contacted
+  qualified
+  converted
+  closed_lost
+}
+
+enum LeadTemperature {
+  hot
+  warm
+  cold
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  cancelled
+}
+
+enum MessageThreadStatus {
+  open
+  resolved
+}
+
+enum ChatbotSessionStatus {
+  active
+  closed
+  escalated_to_human
+}
+
+enum DripEmailStatus {
+  queued
+  sent
+  failed
+  cancelled
+}
+
+enum GoalStatus {
+  not_started
+  on_track
+  exceeding
+  needs_attention
+  missed
+}
+
+enum ReportType {
+  monthly_performance
+  quarterly
+  ad_hoc
+  audit
+}
+
+enum DocumentType {
+  contract
+  proposal
+  brief
+  asset
+  other
+}
+
+enum Platform {
+  Facebook
+  Instagram
+  Google
+  LinkedIn
+  TikTok
+}
+
+enum AdType {
+  image
+  video
+  carousel
+  story
+}
+
+enum MediaType {
+  image
+  video
+  document
+  creative
+}
+
+enum ScoreCategory {
+  behaviour
+  form
+}
+
+enum Portal {
+  client
+  staff
+  system
+}
+
+model User {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String      @unique @db.VarChar(255)
+  passwordHash      String      @map("password_hash") @db.VarChar(255)
+  role              Role
+  firstName         String      @map("first_name") @db.VarChar(100)
+  lastName          String      @map("last_name") @db.VarChar(100)
+  phone             String?     @db.VarChar(50)
+  profilePhotoUrl   String?     @map("profile_photo_url") @db.VarChar(500)
+  status            UserStatus  @default(pending_verification)
+  emailVerified     Boolean     @default(false) @map("email_verified")
+  twoFaEnabled      Boolean     @default(false) @map("two_fa_enabled")
+  twoFaSecret       String?     @map("two_fa_secret") @db.VarChar(255)
+  failedLoginCount  Int         @default(0) @map("failed_login_count")
+  lockedUntil       DateTime?   @map("locked_until") @db.Timestamptz
+  lastLoginAt       DateTime?   @map("last_login_at") @db.Timestamptz
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+  staffProfile          StaffProfile?
+  staffPermissions      StaffPermissions?
+  clientProfile         ClientProfile?
+  passwordResetTokens   PasswordResetToken[]
+  emailVerifyTokens     EmailVerificationToken[]
+  sessions              Session[]
+  assignedEnquiries     Enquiry[]          @relation("AssignedEnquiries")
+  convertedEnquiries    Enquiry[]          @relation("ConvertedEnquiries")
+  clientCampaigns       Campaign[]         @relation("ClientCampaigns")
+  createdCampaigns      Campaign[]         @relation("CreatedCampaigns")
+  managedClients        ClientProfile[]    @relation("AccountManager")
+  reports               Report[]           @relation("GeneratedReports")
+  clientReports         Report[]           @relation("ClientReports")
+  clientDocuments       ClientDocument[]   @relation("ClientDocuments")
+  uploadedDocuments     ClientDocument[]   @relation("UploadedDocuments")
+  clientInvoices        Invoice[]          @relation("ClientInvoices")
+  createdInvoices       Invoice[]          @relation("CreatedInvoices")
+  messageThreads        MessageThread[]
+  sentMessages          Message[]
+  notifications         Notification[]
+  portfolioItems        PortfolioItem[]    @relation("CreatedPortfolio")
+  services              Service[]          @relation("CreatedServices")
+  blogPosts             BlogPost[]
+  mediaUploads          MediaLibrary[]
+  approvedTestimonials  Testimonial[]      @relation("ApprovedTestimonials")
+  enquiryNotes          EnquiryNote[]
+  enquiryStatusChanges  EnquiryStatusHistory[]
+  aiGenerations         AiDescriptionGeneration[] @relation("TriggeredGenerations")
+  activityLogs          ActivityLog[]
+  updatedSettings       SystemSetting[]
+  chatbotKnowledge      ChatbotKnowledgeBase[]
+  contentScoreHistory   ContentScoreHistory[]
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model StaffProfile {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String   @unique @map("user_id") @db.Uuid
+  department          String?  @db.VarChar(100)
+  jobTitle            String?  @map("job_title") @db.VarChar(100)
+  bio                 String?  @db.Text
+  displayOnAboutPage  Boolean  @default(false) @map("display_on_about_page")
+  linkedinUrl         String?  @map("linkedin_url") @db.VarChar(500)
+  twitterUrl          String?  @map("twitter_url") @db.VarChar(500)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("staff_profiles")
+}
+
+model StaffPermissions {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String   @unique @map("user_id") @db.Uuid
+  canManagePortfolio    Boolean  @default(false) @map("can_manage_portfolio")
+  canManageBlog         Boolean  @default(false) @map("can_manage_blog")
+  canManageTestimonials Boolean  @default(false) @map("can_manage_testimonials")
+  canViewEnquiries      Boolean  @default(false) @map("can_view_enquiries")
+  canManageEnquiries    Boolean  @default(false) @map("can_manage_enquiries")
+  canViewClients        Boolean  @default(false) @map("can_view_clients")
+  canManageClients      Boolean  @default(false) @map("can_manage_clients")
+  canViewAnalytics      Boolean  @default(false) @map("can_view_analytics")
+  canManageServices     Boolean  @default(false) @map("can_manage_services")
+  canManageChatbot      Boolean  @default(false) @map("can_manage_chatbot")
+  canManageTeam         Boolean  @default(false) @map("can_manage_team")
+  canManageSettings     Boolean  @default(false) @map("can_manage_settings")
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("staff_permissions")
+}
+
+model ClientProfile {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String    @unique @map("user_id") @db.Uuid
+  companyName         String    @map("company_name") @db.VarChar(255)
+  industry            String?   @db.VarChar(100)
+  companySize         String?   @map("company_size") @db.VarChar(50)
+  websiteUrl          String?   @map("website_url") @db.VarChar(500)
+  accountManagerId    String?   @map("account_manager_id") @db.Uuid
+  contractStartDate   DateTime? @map("contract_start_date") @db.Date
+  contractEndDate     DateTime? @map("contract_end_date") @db.Date
+  monthlyBudgetPence  Int?      @map("monthly_budget_pence")
+  currency            String    @default("GBP") @db.Char(3)
+  portalAccess        Boolean   @default(true) @map("portal_access")
+  notes               String?   @db.Text
+  referralSource      String?   @map("referral_source") @db.VarChar(100)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  user           User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountManager User? @relation("AccountManager", fields: [accountManagerId], references: [id])
+  @@map("client_profiles")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  otpCode    String   @map("otp_code") @db.Char(6)
+  linkToken  String   @map("link_token") @db.VarChar(255)
+  attempts   Int      @default(0)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  verified   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("email_verification_tokens")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  portal    String   @db.VarChar(20)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Service {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                  String   @unique @db.VarChar(100)
+  name                  String   @db.VarChar(200)
+  tagline               String?  @db.VarChar(300)
+  description           String?  @db.Text
+  iconName              String?  @map("icon_name") @db.VarChar(100)
+  iconGradientStart     String?  @map("icon_gradient_start") @db.Char(6)
+  iconGradientEnd       String?  @map("icon_gradient_end") @db.Char(6)
+  priceFromPence        Int?     @map("price_from_pence")
+  priceBasicPence       Int?     @map("price_basic_pence")
+  priceProPence         Int?     @map("price_pro_pence")
+  priceEnterprisePence  Int?     @map("price_enterprise_pence")
+  featuresBasic         Json?    @map("features_basic")
+  featuresPro           Json?    @map("features_pro")
+  featuresEnterprise    Json?    @map("features_enterprise")
+  sortOrder             Int      @default(0) @map("sort_order")
+  isPublished           Boolean  @default(false) @map("is_published")
+  projectsCompleted     Int      @default(0) @map("projects_completed")
+  avgRoiPercent         Int      @default(0) @map("avg_roi_percent")
+  createdBy             String?  @map("created_by") @db.Uuid
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  creator        User?             @relation("CreatedServices", fields: [createdBy], references: [id])
+  portfolioItems PortfolioItem[]
+  campaigns      Campaign[]
+  pricingItems   PricingQuoteItem[]
+  @@map("services")
+}
+
+model PortfolioItem {
+  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                String        @unique @db.VarChar(150)
+  title               String        @db.VarChar(300)
+  clientName          String        @map("client_name") @db.VarChar(200)
+  clientIndustry      String?       @map("client_industry") @db.VarChar(100)
+  serviceId           String?       @map("service_id") @db.Uuid
+  serviceCategory     String?       @map("service_category") @db.VarChar(100)
+  description         String?       @db.Text
+  challengeText       String?       @map("challenge_text") @db.Text
+  solutionText        String?       @map("solution_text") @db.Text
+  campaignStartDate   DateTime?     @map("campaign_start_date") @db.Date
+  campaignEndDate     DateTime?     @map("campaign_end_date") @db.Date
+  channelsUsed        Json?         @map("channels_used")
+  aiGeneratedOption1  String?       @map("ai_generated_option_1") @db.Text
+  aiGeneratedOption2  String?       @map("ai_generated_option_2") @db.Text
+  aiGeneratedOption3  String?       @map("ai_generated_option_3") @db.Text
+  selectedAiOption    Int?          @map("selected_ai_option") @db.SmallInt
+  contentScore        Int?          @map("content_score") @db.SmallInt
+  status              ContentStatus @default(draft)
+  isFeatured          Boolean       @default(false) @map("is_featured")
+  sortOrder           Int           @default(0) @map("sort_order")
+  viewsCount          Int           @default(0) @map("views_count")
+  createdBy           String?       @map("created_by") @db.Uuid
+  publishedAt         DateTime?     @map("published_at") @db.Timestamptz
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  service             Service?                  @relation(fields: [serviceId], references: [id])
+  creator             User?                     @relation("CreatedPortfolio", fields: [createdBy], references: [id])
+  images              PortfolioImage[]
+  metrics             PortfolioMetric[]
+  testimonials        Testimonial[]
+  aiGenerations       AiDescriptionGeneration[]
+  contentScoreRecord  ContentScore?             @relation("PortfolioContentScore")
+  contentScoreHistory ContentScoreHistory[]
+  @@index([status])
+  @@index([serviceCategory])
+  @@index([isFeatured])
+  @@map("portfolio_items")
+}
+
+model PortfolioImage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  portfolioItemId String   @map("portfolio_item_id") @db.Uuid
+  url             String   @db.VarChar(500)
+  altText         String?  @map("alt_text") @db.VarChar(300)
+  isFeatured      Boolean  @default(false) @map("is_featured")
+  sortOrder       Int      @default(0) @map("sort_order")
+  widthPx         Int?     @map("width_px")
+  heightPx        Int?     @map("height_px")
+  fileSizeBytes   Int?     @map("file_size_bytes")
+  uploadedAt      DateTime @default(now()) @map("uploaded_at") @db.Timestamptz
+  portfolioItem PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  @@map("portfolio_images")
+}
+
+model PortfolioMetric {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  portfolioItemId String  @map("portfolio_item_id") @db.Uuid
+  metricLabel     String  @map("metric_label") @db.VarChar(100)
+  metricValue     String  @map("metric_value") @db.VarChar(100)
+  metricPrefix    String? @map("metric_prefix") @db.VarChar(20)
+  metricSuffix    String? @map("metric_suffix") @db.VarChar(20)
+  sortOrder       Int     @default(0) @map("sort_order")
+  portfolioItem PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  @@map("portfolio_metrics")
+}
+
+model Testimonial {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientName      String         @map("client_name") @db.VarChar(200)
+  clientTitle     String?        @map("client_title") @db.VarChar(200)
+  clientCompany   String?        @map("client_company") @db.VarChar(200)
+  clientPhotoUrl  String?        @map("client_photo_url") @db.VarChar(500)
+  reviewText      String         @map("review_text") @db.Text
+  rating          Int            @db.SmallInt
+  platform        String?        @db.VarChar(50)
+  portfolioItemId String?        @map("portfolio_item_id") @db.Uuid
+  servicesUsed    Json?          @map("services_used")
+  isVerified      Boolean        @default(false) @map("is_verified")
+  isFeatured      Boolean        @default(false) @map("is_featured")
+  approvalStatus  ApprovalStatus @default(pending) @map("approval_status")
+  approvedBy      String?        @map("approved_by") @db.Uuid
+  videoUrl        String?        @map("video_url") @db.VarChar(500)
+  sortOrder       Int            @default(0) @map("sort_order")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  portfolioItem PortfolioItem? @relation(fields: [portfolioItemId], references: [id])
+  approver      User?          @relation("ApprovedTestimonials", fields: [approvedBy], references: [id])
+  @@map("testimonials")
+}
+
+model BlogPost {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String        @unique @db.VarChar(200)
+  title            String        @db.VarChar(400)
+  excerpt          String?       @db.VarChar(500)
+  content          String?       @db.Text
+  featuredImageUrl String?       @map("featured_image_url") @db.VarChar(500)
+  authorId         String?       @map("author_id") @db.Uuid
+  status           ContentStatus @default(draft)
+  contentScore     Int?          @map("content_score") @db.SmallInt
+  seoTitle         String?       @map("seo_title") @db.VarChar(300)
+  seoDescription   String?       @map("seo_description") @db.VarChar(400)
+  readTimeMinutes  Int?          @map("read_time_minutes") @db.SmallInt
+  viewsCount       Int           @default(0) @map("views_count")
+  publishedAt      DateTime?     @map("published_at") @db.Timestamptz
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  author             User?               @relation(fields: [authorId], references: [id])
+  categories         BlogPostCategory[]
+  contentScoreRecord ContentScore?       @relation("BlogContentScore")
+  scoreHistory       ContentScoreHistory[]
+  @@map("blog_posts")
+}
+
+model BlogCategory {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String @unique @db.VarChar(100)
+  slug     String @unique @db.VarChar(100)
+  colorHex String @map("color_hex") @db.Char(6)
+  posts BlogPostCategory[]
+  @@map("blog_categories")
+}
+
+model BlogPostCategory {
+  postId     String @map("post_id") @db.Uuid
+  categoryId String @map("category_id") @db.Uuid
+  post     BlogPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@id([postId, categoryId])
+  @@map("blog_post_categories")
+}
+
+model MediaLibrary {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filename      String    @db.VarChar(300)
+  url           String    @db.VarChar(500)
+  thumbnailUrl  String?   @map("thumbnail_url") @db.VarChar(500)
+  mimeType      String?   @map("mime_type") @db.VarChar(100)
+  fileSizeBytes Int?      @map("file_size_bytes")
+  mediaType     MediaType @map("media_type")
+  altText       String?   @map("alt_text") @db.VarChar(300)
+  uploadedBy    String?   @map("uploaded_by") @db.Uuid
+  uploadedAt    DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz
+  uploader User? @relation(fields: [uploadedBy], references: [id])
+  @@map("media_library")
+}
+
+model SiteVisitor {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionToken         String   @unique @map("session_token") @db.VarChar(255)
+  ipAddress            String?  @map("ip_address") @db.VarChar(45)
+  userAgent            String?  @map("user_agent") @db.Text
+  referrerUrl          String?  @map("referrer_url") @db.VarChar(1000)
+  utmSource            String?  @map("utm_source") @db.VarChar(200)
+  utmMedium            String?  @map("utm_medium") @db.VarChar(200)
+  utmCampaign          String?  @map("utm_campaign") @db.VarChar(200)
+  firstSeenAt          DateTime @default(now()) @map("first_seen_at") @db.Timestamptz
+  lastSeenAt           DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
+  totalPageViews       Int      @default(0) @map("total_page_views")
+  totalSessions        Int      @default(1) @map("total_sessions")
+  convertedToEnquiry   Boolean  @default(false) @map("converted_to_enquiry")
+  enquiryId            String?  @map("enquiry_id") @db.Uuid
+  events            VisitorEvent[]
+  enquiry           Enquiry?          @relation(fields: [enquiryId], references: [id])
+  chatbotSessions   ChatbotSession[]
+  roiResults        RoiCalculatorResult[]
+  auditResults      AuditToolResult[]
+  pricingQuotes     PricingQuote[]
+  @@map("site_visitors")
+}
+
+model VisitorEvent {
+  id                  BigInt   @id @default(autoincrement())
+  visitorId           String   @map("visitor_id") @db.Uuid
+  eventType           String   @map("event_type") @db.VarChar(100)
+  pageUrl             String?  @map("page_url") @db.VarChar(1000)
+  pageTitle           String?  @map("page_title") @db.VarChar(500)
+  resourceId          String?  @map("resource_id") @db.Uuid
+  timeOnPageSeconds   Int?     @map("time_on_page_seconds")
+  scoreContribution   Int?     @map("score_contribution") @db.SmallInt
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  visitor SiteVisitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  @@index([visitorId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("visitor_events")
+}
+
+model Enquiry {
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitorId            String?          @map("visitor_id") @db.Uuid
+  firstName            String           @map("first_name") @db.VarChar(100)
+  lastName             String           @map("last_name") @db.VarChar(100)
+  email                String           @db.VarChar(255)
+  phone                String?          @db.VarChar(50)
+  companyName          String?          @map("company_name") @db.VarChar(255)
+  companySize          String?          @map("company_size") @db.VarChar(50)
+  websiteUrl           String?          @map("website_url") @db.VarChar(500)
+  serviceInterest      Json?            @map("service_interest")
+  budgetRange          String?          @map("budget_range") @db.VarChar(100)
+  timeline             String?          @db.VarChar(100)
+  message              String?          @db.Text
+  source               String?          @db.VarChar(50)
+  leadScore            Int?             @map("lead_score") @db.SmallInt
+  leadTemperature      LeadTemperature? @map("lead_temperature")
+  status               EnquiryStatus    @default(new)
+  assignedTo           String?          @map("assigned_to") @db.Uuid
+  convertedToClientId  String?          @map("converted_to_client_id") @db.Uuid
+  recaptchaScore       Decimal?         @map("recaptcha_score") @db.Decimal(3, 2)
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+  assignedStaff    User?                  @relation("AssignedEnquiries", fields: [assignedTo], references: [id])
+  convertedClient  User?                  @relation("ConvertedEnquiries", fields: [convertedToClientId], references: [id])
+  leadScore_       EnquiryLeadScore?
+  notes            EnquiryNote[]
+  statusHistory    EnquiryStatusHistory[]
+  chatbotSession   ChatbotSession?
+  dripQueue        EmailDripQueue[]
+  dripLog          EmailDripLog[]
+  siteVisitors     SiteVisitor[]
+  @@index([status])
+  @@index([leadTemperature])
+  @@index([assignedTo])
+  @@index([leadScore(sort: Desc)])
+  @@map("enquiries")
+}
+
+model EnquiryLeadScore {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enquiryId      String   @unique @map("enquiry_id") @db.Uuid
+  behaviourScore Int      @map("behaviour_score") @db.SmallInt
+  formScore      Int      @map("form_score") @db.SmallInt
+  totalScore     Int      @map("total_score") @db.SmallInt
+  scoreBreakdown Json     @map("score_breakdown")
+  calculatedAt   DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  enquiry Enquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  @@map("enquiry_lead_scores")
+}
+
+model LeadScoreFactor {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  factorKey    String        @unique @map("factor_key") @db.VarChar(100)
+  factorLabel  String        @map("factor_label") @db.VarChar(200)
+  category     ScoreCategory
+  maxPoints    Int           @map("max_points") @db.SmallInt
+  isActive     Boolean       @default(true) @map("is_active")
+  @@map("lead_score_factors")
+}
+
+model EnquiryNote {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enquiryId  String   @map("enquiry_id") @db.Uuid
+  authorId   String   @map("author_id") @db.Uuid
+  noteText   String   @map("note_text") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  enquiry Enquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+  @@map("enquiry_notes")
+}
+
+model EnquiryStatusHistory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enquiryId   String   @map("enquiry_id") @db.Uuid
+  changedBy   String   @map("changed_by") @db.Uuid
+  fromStatus  String   @map("from_status") @db.VarChar(30)
+  toStatus    String   @map("to_status") @db.VarChar(30)
+  changedAt   DateTime @default(now()) @map("changed_at") @db.Timestamptz
+  enquiry       Enquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  changedByUser User    @relation(fields: [changedBy], references: [id])
+  @@map("enquiry_status_history")
+}
+
+model ChatbotSession {
+  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitorId               String?              @map("visitor_id") @db.Uuid
+  enquiryId               String?              @unique @map("enquiry_id") @db.Uuid
+  status                  ChatbotSessionStatus @default(active)
+  capturedName            String?              @map("captured_name") @db.VarChar(200)
+  capturedEmail           String?              @map("captured_email") @db.VarChar(255)
+  capturedPhone           String?              @map("captured_phone") @db.VarChar(50)
+  capturedServiceInterest String?              @map("captured_service_interest") @db.VarChar(200)
+  capturedBudget          String?              @map("captured_budget") @db.VarChar(100)
+  scoreAdded              Int?                 @map("score_added") @db.SmallInt
+  startedAt               DateTime             @default(now()) @map("started_at") @db.Timestamptz
+  endedAt                 DateTime?            @map("ended_at") @db.Timestamptz
+  durationSeconds         Int?                 @map("duration_seconds")
+  visitor  SiteVisitor?     @relation(fields: [visitorId], references: [id])
+  enquiry  Enquiry?         @relation(fields: [enquiryId], references: [id])
+  messages ChatbotMessage[]
+  @@map("chatbot_sessions")
+}
+
+model ChatbotMessage {
+  id             BigInt   @id @default(autoincrement())
+  sessionId      String   @map("session_id") @db.Uuid
+  sender         String   @db.VarChar(10)
+  messageText    String   @map("message_text") @db.Text
+  intentDetected String?  @map("intent_detected") @db.VarChar(100)
+  scoreDelta     Int      @default(0) @map("score_delta") @db.SmallInt
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  session ChatbotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  @@index([sessionId])
+  @@map("chatbot_messages")
+}
+
+model ChatbotKnowledgeBase {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category    String   @db.VarChar(100)
+  question    String   @db.Text
+  answer      String   @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdBy   String?  @map("created_by") @db.Uuid
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  creator User? @relation(fields: [createdBy], references: [id])
+  @@map("chatbot_knowledge_base")
+}
+
+model Campaign {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId            String         @map("client_id") @db.Uuid
+  name                String         @db.VarChar(300)
+  serviceId           String?        @map("service_id") @db.Uuid
+  objective           String?        @db.VarChar(200)
+  status              CampaignStatus @default(draft)
+  dailyBudgetPence    Int?           @map("daily_budget_pence")
+  totalBudgetPence    Int?           @map("total_budget_pence")
+  totalSpentPence     Int            @default(0) @map("total_spent_pence")
+  startDate           DateTime       @map("start_date") @db.Date
+  endDate             DateTime?      @map("end_date") @db.Date
+  targetConversions   Int?           @map("target_conversions")
+  targetCpaPence      Int?           @map("target_cpa_pence")
+  targetRoasX100      Int?           @map("target_roas_x100")
+  createdBy           String?        @map("created_by") @db.Uuid
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  client     User     @relation("ClientCampaigns", fields: [clientId], references: [id])
+  creator    User?    @relation("CreatedCampaigns", fields: [createdBy], references: [id])
+  service    Service? @relation(fields: [serviceId], references: [id])
+  platforms        CampaignPlatform[]
+  metricsDaily     CampaignMetricsDaily[]
+  audiences        CampaignAudience[]
+  creatives        CampaignCreative[]
+  goals            CampaignGoal[]
+  reports          Report[]
+  messageThreads   MessageThread[]
+  invoices         Invoice[]
+  @@map("campaigns")
+}
+
+model CampaignPlatform {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId         String   @map("campaign_id") @db.Uuid
+  platform           Platform
+  externalCampaignId String?  @map("external_campaign_id") @db.VarChar(200)
+  isActive           Boolean  @default(true) @map("is_active")
+  dailyBudgetPence   Int?     @map("daily_budget_pence")
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  @@map("campaign_platforms")
+}
+
+model CampaignMetricsDaily {
+  id           BigInt   @id @default(autoincrement())
+  campaignId   String   @map("campaign_id") @db.Uuid
+  platform     String   @db.VarChar(50)
+  metricDate   DateTime @map("metric_date") @db.Date
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  conversions  Int      @default(0)
+  spendPence   Int      @default(0) @map("spend_pence")
+  reach        Int      @default(0)
+  ctrX10000    Int      @default(0) @map("ctr_x10000")
+  cpaPence     Int?     @map("cpa_pence")
+  roasX100     Int?     @map("roas_x100")
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  @@unique([campaignId, platform, metricDate])
+  @@index([campaignId, metricDate(sort: Desc)])
+  @@map("campaign_metrics_daily")
+}
+
+model CampaignAudience {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId        String   @map("campaign_id") @db.Uuid
+  age1317           Decimal? @map("age_13_17") @db.Decimal(5, 2)
+  age1824           Decimal? @map("age_18_24") @db.Decimal(5, 2)
+  age2534           Decimal? @map("age_25_34") @db.Decimal(5, 2)
+  age3544           Decimal? @map("age_35_44") @db.Decimal(5, 2)
+  age4554           Decimal? @map("age_45_54") @db.Decimal(5, 2)
+  age55Plus         Decimal? @map("age_55_plus") @db.Decimal(5, 2)
+  genderMalePct     Decimal? @map("gender_male_pct") @db.Decimal(5, 2)
+  genderFemalePct   Decimal? @map("gender_female_pct") @db.Decimal(5, 2)
+  genderOtherPct    Decimal? @map("gender_other_pct") @db.Decimal(5, 2)
+  topInterests      Json?    @map("top_interests")
+  topLocations      Json?    @map("top_locations")
+  deviceMobilePct   Decimal? @map("device_mobile_pct") @db.Decimal(5, 2)
+  deviceDesktopPct  Decimal? @map("device_desktop_pct") @db.Decimal(5, 2)
+  deviceTabletPct   Decimal? @map("device_tablet_pct") @db.Decimal(5, 2)
+  snapshotDate      DateTime @map("snapshot_date") @db.Date
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  @@map("campaign_audiences")
+}
+
+model CampaignCreative {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId   String   @map("campaign_id") @db.Uuid
+  name         String   @db.VarChar(300)
+  platform     String   @db.VarChar(50)
+  adType       AdType   @map("ad_type")
+  headline     String?  @db.VarChar(300)
+  bodyCopy     String?  @map("body_copy") @db.Text
+  ctaText      String?  @map("cta_text") @db.VarChar(100)
+  creativeUrl  String?  @map("creative_url") @db.VarChar(500)
+  thumbnailUrl String?  @map("thumbnail_url") @db.VarChar(500)
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  conversions  Int      @default(0)
+  spendPence   Int      @default(0) @map("spend_pence")
+  abTestGroup  String?  @map("ab_test_group") @db.VarChar(20)
+  status       String   @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  @@map("campaign_creatives")
+}
+
+model CampaignGoal {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId    String     @map("campaign_id") @db.Uuid
+  metricName    String     @map("metric_name") @db.VarChar(100)
+  targetValue   Decimal    @map("target_value") @db.Decimal(12, 2)
+  currentValue  Decimal    @default(0) @map("current_value") @db.Decimal(12, 2)
+  unit          String     @db.VarChar(30)
+  period        String     @db.VarChar(20)
+  status        GoalStatus @default(not_started)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  @@map("campaign_goals")
+}
+
+model Report {
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId          String     @map("client_id") @db.Uuid
+  campaignId        String?    @map("campaign_id") @db.Uuid
+  title             String     @db.VarChar(300)
+  reportType        ReportType @map("report_type")
+  periodStart       DateTime   @map("period_start") @db.Date
+  periodEnd         DateTime   @map("period_end") @db.Date
+  fileUrl           String?    @map("file_url") @db.VarChar(500)
+  fileSizeBytes     Int?       @map("file_size_bytes")
+  generatedBy       String?    @map("generated_by") @db.Uuid
+  isVisibleToClient Boolean    @default(false) @map("is_visible_to_client")
+  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  client    User      @relation("ClientReports", fields: [clientId], references: [id])
+  campaign  Campaign? @relation(fields: [campaignId], references: [id])
+  generator User?     @relation("GeneratedReports", fields: [generatedBy], references: [id])
+  downloads ReportDownload[]
+  @@map("reports")
+}
+
+model ReportDownload {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reportId     String   @map("report_id") @db.Uuid
+  downloadedAt DateTime @default(now()) @map("downloaded_at") @db.Timestamptz
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  @@map("report_downloads")
+}
+
+model ClientDocument {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId          String       @map("client_id") @db.Uuid
+  uploadedBy        String?      @map("uploaded_by") @db.Uuid
+  title             String       @db.VarChar(300)
+  description       String?      @db.Text
+  fileUrl           String       @map("file_url") @db.VarChar(500)
+  fileName          String?      @map("file_name") @db.VarChar(300)
+  fileSizeBytes     Int?         @map("file_size_bytes")
+  mimeType          String?      @map("mime_type") @db.VarChar(100)
+  documentType      DocumentType @map("document_type")
+  isVisibleToClient Boolean      @default(true) @map("is_visible_to_client")
+  uploadedAt        DateTime     @default(now()) @map("uploaded_at") @db.Timestamptz
+  client   User  @relation("ClientDocuments", fields: [clientId], references: [id])
+  uploader User? @relation("UploadedDocuments", fields: [uploadedBy], references: [id])
+  @@map("client_documents")
+}
+
+model Invoice {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceNumber  String        @unique @map("invoice_number") @db.VarChar(50)
+  clientId       String        @map("client_id") @db.Uuid
+  campaignId     String?       @map("campaign_id") @db.Uuid
+  issueDate      DateTime      @map("issue_date") @db.Date
+  dueDate        DateTime      @map("due_date") @db.Date
+  subtotalPence  Int           @map("subtotal_pence")
+  taxPence       Int           @default(0) @map("tax_pence")
+  totalPence     Int           @map("total_pence")
+  currency       String        @default("GBP") @db.Char(3)
+  status         InvoiceStatus @default(draft)
+  paymentDate    DateTime?     @map("payment_date") @db.Date
+  notes          String?       @db.Text
+  pdfUrl         String?       @map("pdf_url") @db.VarChar(500)
+  createdBy      String?       @map("created_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  client    User      @relation("ClientInvoices", fields: [clientId], references: [id])
+  campaign  Campaign? @relation(fields: [campaignId], references: [id])
+  creator   User?     @relation("CreatedInvoices", fields: [createdBy], references: [id])
+  lineItems InvoiceLineItem[]
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId      String  @map("invoice_id") @db.Uuid
+  description    String  @db.VarChar(500)
+  quantity       Decimal @default(1) @db.Decimal(8, 2)
+  unitPricePence Int     @map("unit_price_pence")
+  totalPence     Int     @map("total_pence")
+  sortOrder      Int     @default(0) @map("sort_order")
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  @@map("invoice_line_items")
+}
+
+model MessageThread {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId      String              @map("client_id") @db.Uuid
+  campaignId    String?             @map("campaign_id") @db.Uuid
+  subject       String              @db.VarChar(300)
+  status        MessageThreadStatus @default(open)
+  lastMessageAt DateTime            @default(now()) @map("last_message_at") @db.Timestamptz
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  client   User      @relation(fields: [clientId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
+  messages Message[]
+  @@map("message_threads")
+}
+
+model Message {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId  String    @map("thread_id") @db.Uuid
+  senderId  String    @map("sender_id") @db.Uuid
+  body      String    @db.Text
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  thread      MessageThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender      User               @relation(fields: [senderId], references: [id])
+  attachments MessageAttachment[]
+  @@index([threadId, createdAt])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  messageId     String  @map("message_id") @db.Uuid
+  fileUrl       String  @map("file_url") @db.VarChar(500)
+  fileName      String? @map("file_name") @db.VarChar(300)
+  fileSizeBytes Int?    @map("file_size_bytes")
+  mimeType      String? @map("mime_type") @db.VarChar(100)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  @@map("message_attachments")
+}
+
+model AiDescriptionGeneration {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  portfolioItemId String   @map("portfolio_item_id") @db.Uuid
+  triggeredBy     String?  @map("triggered_by") @db.Uuid
+  inputPayload    Json     @map("input_payload")
+  option1Text     String?  @map("option_1_text") @db.Text
+  option2Text     String?  @map("option_2_text") @db.Text
+  option3Text     String?  @map("option_3_text") @db.Text
+  selectedOption  Int?     @map("selected_option") @db.SmallInt
+  tokensUsed      Int?     @map("tokens_used")
+  generationMs    Int?     @map("generation_ms")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  portfolioItem PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  trigger       User?         @relation("TriggeredGenerations", fields: [triggeredBy], references: [id])
+  @@map("ai_description_generations")
+}
+
+model ContentScore {
+  id                     String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contentType            String        @map("content_type") @db.VarChar(30)
+  portfolioItemId        String?       @unique @map("portfolio_item_id") @db.Uuid
+  blogPostId             String?       @unique @map("blog_post_id") @db.Uuid
+  totalScore             Int           @map("total_score") @db.SmallInt
+  readabilityScore       Int           @map("readability_score") @db.SmallInt
+  keywordScore           Int           @map("keyword_score") @db.SmallInt
+  resultsEvidenceScore   Int           @map("results_evidence_score") @db.SmallInt
+  emotionalTriggersScore Int           @map("emotional_triggers_score") @db.SmallInt
+  suggestions            Json?
+  calculatedAt           DateTime      @map("calculated_at") @db.Timestamptz
+  portfolioItem PortfolioItem? @relation("PortfolioContentScore", fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  blogPost      BlogPost?      @relation("BlogContentScore", fields: [blogPostId], references: [id], onDelete: Cascade)
+  @@map("content_scores")
+}
+
+model ContentScoreHistory {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contentType     String   @map("content_type") @db.VarChar(30)
+  portfolioItemId String?  @map("portfolio_item_id") @db.Uuid
+  blogPostId      String?  @map("blog_post_id") @db.Uuid
+  scoreSnapshot   Int      @map("score_snapshot") @db.SmallInt
+  wordCount       Int?     @map("word_count")
+  savedBy         String?  @map("saved_by") @db.Uuid
+  savedAt         DateTime @default(now()) @map("saved_at") @db.Timestamptz
+  saver         User?          @relation(fields: [savedBy], references: [id])
+  portfolioItem PortfolioItem? @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  blogPost      BlogPost?      @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  @@map("content_score_history")
+}
+
+model EmailDripSequence {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String  @db.VarChar(200)
+  isActive Boolean @default(true) @map("is_active")
+  queue EmailDripQueue[]
+  @@map("email_drip_sequences")
+}
+
+model EmailDripQueue {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enquiryId    String          @map("enquiry_id") @db.Uuid
+  sequenceId   String?         @map("sequence_id") @db.Uuid
+  sequenceStep Int             @map("sequence_step") @db.SmallInt
+  templateKey  String          @map("template_key") @db.VarChar(100)
+  scheduledAt  DateTime        @map("scheduled_at") @db.Timestamptz
+  status       DripEmailStatus @default(queued)
+  sentAt       DateTime?       @map("sent_at") @db.Timestamptz
+  enquiry  Enquiry            @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  sequence EmailDripSequence? @relation(fields: [sequenceId], references: [id])
+  @@index([scheduledAt])
+  @@map("email_drip_queue")
+}
+
+model EmailDripLog {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enquiryId    String    @map("enquiry_id") @db.Uuid
+  templateKey  String    @map("template_key") @db.VarChar(100)
+  toEmail      String    @map("to_email") @db.VarChar(255)
+  subject      String    @db.VarChar(400)
+  sentAt       DateTime  @default(now()) @map("sent_at") @db.Timestamptz
+  openedAt     DateTime? @map("opened_at") @db.Timestamptz
+  clickedAt    DateTime? @map("clicked_at") @db.Timestamptz
+  bounced      Boolean   @default(false)
+  unsubscribed Boolean   @default(false)
+  enquiry Enquiry @relation(fields: [enquiryId], references: [id])
+  @@map("email_drip_log")
+}
+
+model PricingQuote {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteNumber        String   @unique @map("quote_number") @db.VarChar(50)
+  visitorId          String?  @map("visitor_id") @db.Uuid
+  email              String?  @db.VarChar(255)
+  billingFrequency   String   @map("billing_frequency") @db.VarChar(20)
+  subtotalPence      Int      @map("subtotal_pence")
+  discountPence      Int      @default(0) @map("discount_pence")
+  totalPence         Int      @map("total_pence")
+  expiresAt          DateTime @map("expires_at") @db.Timestamptz
+  convertedToEnquiry Boolean  @default(false) @map("converted_to_enquiry")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  visitor SiteVisitor?       @relation(fields: [visitorId], references: [id])
+  items   PricingQuoteItem[]
+  @@map("pricing_quotes")
+}
+
+model PricingQuoteItem {
+  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteId        String @map("quote_id") @db.Uuid
+  serviceId      String @map("service_id") @db.Uuid
+  tier           String @db.VarChar(20)
+  unitPricePence Int    @map("unit_price_pence")
+  sortOrder      Int    @default(0) @map("sort_order")
+  quote   PricingQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  service Service      @relation(fields: [serviceId], references: [id])
+  @@map("pricing_quote_items")
+}
+
+model RoiCalculatorResult {
+  id                             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitorId                      String?  @map("visitor_id") @db.Uuid
+  industry                       String?  @db.VarChar(100)
+  monthlyRevenuePence            Int?     @map("monthly_revenue_pence")
+  conversionRateX100             Int?     @map("conversion_rate_x100")
+  monthlyTraffic                 Int?     @map("monthly_traffic")
+  monthlyBudgetPence             Int?     @map("monthly_budget_pence")
+  projectedRoiConservative       Int?     @map("projected_roi_conservative")
+  projectedRoiRealistic          Int?     @map("projected_roi_realistic")
+  projectedRoiOptimistic         Int?     @map("projected_roi_optimistic")
+  projectedRevenueRealisticPence Int?     @map("projected_revenue_realistic_pence")
+  pdfDownloaded                  Boolean  @default(false) @map("pdf_downloaded")
+  createdAt                      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  visitor SiteVisitor? @relation(fields: [visitorId], references: [id])
+  @@map("roi_calculator_results")
+}
+
+model AuditToolResult {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitorId        String?  @map("visitor_id") @db.Uuid
+  websiteUrl       String   @map("website_url") @db.VarChar(500)
+  email            String?  @db.VarChar(255)
+  overallScore     Int?     @map("overall_score") @db.SmallInt
+  performanceScore Int?     @map("performance_score") @db.SmallInt
+  seoScore         Int?     @map("seo_score") @db.SmallInt
+  mobileScore      Int?     @map("mobile_score") @db.SmallInt
+  securityScore    Int?     @map("security_score") @db.SmallInt
+  issuesCount      Int?     @map("issues_count")
+  criticalCount    Int?     @map("critical_count")
+  highCount        Int?     @map("high_count")
+  mediumCount      Int?     @map("medium_count")
+  lowCount         Int?     @map("low_count")
+  fullReport       Json?    @map("full_report")
+  pageLoadMs       Int?     @map("page_load_ms")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  visitor SiteVisitor? @relation(fields: [visitorId], references: [id])
+  @@map("audit_tool_results")
+}
+
+model Notification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String    @db.VarChar(100)
+  title     String    @db.VarChar(300)
+  body      String?   @db.Text
+  linkUrl   String?   @map("link_url") @db.VarChar(500)
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("notifications")
+}
+
+model SystemSetting {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  settingKey   String   @unique @map("setting_key") @db.VarChar(200)
+  settingValue String?  @map("setting_value") @db.Text
+  settingGroup String   @map("setting_group") @db.VarChar(100)
+  label        String   @db.VarChar(300)
+  isSensitive  Boolean  @default(false) @map("is_sensitive")
+  updatedBy    String?  @map("updated_by") @db.Uuid
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  updater User? @relation(fields: [updatedBy], references: [id])
+  @@map("system_settings")
+}
+
+model ActivityLog {
+  id           BigInt   @id @default(autoincrement())
+  userId       String?  @map("user_id") @db.Uuid
+  portal       Portal
+  action       String   @db.VarChar(200)
+  resourceType String?  @map("resource_type") @db.VarChar(100)
+  resourceId   String?  @map("resource_id") @db.Uuid
+  oldValue     Json?    @map("old_value")
+  newValue     Json?    @map("new_value")
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  userAgent    String?  @map("user_agent") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  user User? @relation(fields: [userId], references: [id])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@map("activity_log")
+}
+
+model AnalyticsSnapshot {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  snapshotDate    DateTime @unique @map("snapshot_date") @db.Date
+  totalVisitors   Int      @default(0) @map("total_visitors")
+  totalPageViews  Int      @default(0) @map("total_page_views")
+  totalEnquiries  Int      @default(0) @map("total_enquiries")
+  hotLeadsCount   Int      @default(0) @map("hot_leads_count")
+  warmLeadsCount  Int      @default(0) @map("warm_leads_count")
+  coldLeadsCount  Int      @default(0) @map("cold_leads_count")
+  chatbotSessions Int      @default(0) @map("chatbot_sessions")
+  roiCalcUses     Int      @default(0) @map("roi_calc_uses")
+  auditToolUses   Int      @default(0) @map("audit_tool_uses")
+  portfolioViews  Int      @default(0) @map("portfolio_views")
+  topPages        Json?    @map("top_pages")
+  trafficSources  Json?    @map("traffic_sources")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  @@map("analytics_snapshots")
+}
