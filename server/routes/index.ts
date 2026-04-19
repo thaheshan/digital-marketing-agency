@@ -15,7 +15,7 @@ export const registerRoutes = (app: Application) => {
   app.use("/api/portal", portalRoutes);
   app.use("/api/contact", contactRoutes);
   app.use("/api/portfolio", portfolioRoutes);
-  app.use("/api/admin/enquiries", leadsRoutes); // Admin leads routes
+  app.use("/api/admin/enquiries", leadsRoutes);
   app.use("/api/chatbot", chatbotRoutes);
   app.use("/api/analytics", analyticsRoutes);
   app.use("/api/tools", toolsRoutes);
