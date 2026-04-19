@@ -1,35 +1,69 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePortfolioStore } from '@/store/portfolioStore';
+import { ArrowLeft } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function CaseStudyOverview() {
   const params = useParams();
   const slug = params?.slug as string;
   
-  const { items } = usePortfolioStore();
-  const item = items.find(i => i.id.toString() === slug || i.slug === slug);
+  const [project, setProject] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // If item not found (or while loading), show fallback. 
-  // We mock a highly detailed fallback project as in screenshot for id=5.
-  const project = item || {
-    id: 5,
-    title: 'Social Media Growth Campaign',
-    category: 'Social Media Marketing',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200',
-    description: 'A comprehensive social media campaign designed to increase brand awareness and drive engagement for a leading e-commerce platform. Our strategic approach combined organic content with targeted paid advertising across multiple platforms to achieve exceptional results within a 90-day period.',
-    challenge: "The client struggled with low engagement rates and minimal brand visibility on social platforms. Their content wasn't resonating with their target audience, and they needed a strategic overhaul to compete in a saturated market.",
-    solution: "We developed a multi-platform content strategy focusing on authentic storytelling and user-generated content. Combined with data-driven paid campaigns targeting high-intent audiences, we created a cohesive brand presence that resonated with their ideal customers.",
-    metrics: {
-      engagement: '287%',
-      followers: '45K',
-      conversion: '4.8%',
-      revenue: '$2.1M'
-    },
-    technologies: ['Facebook Ads', 'Instagram', 'LinkedIn', 'Google Analytics', 'Hootsuite', 'Canva']
-  };
+  useEffect(() => {
+    async function fetchProject() {
+      try {
+        const res = await api.get<any>(`/portfolio/public/${slug}`);
+        if(res.item) {
+          const item = res.item;
+          setProject({
+            id: item.id,
+            title: item.title,
+            category: item.serviceCategory,
+            image: item.images?.[0]?.url || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200',
+            description: item.description || 'A comprehensive digital marketing campaign designed to increase brand awareness and drive engagement.',
+            challenge: item.challengeText || 'The client struggled with low engagement rates and minimal brand visibility on social platforms.',
+            solution: item.solutionText || 'We developed a multi-platform content strategy focusing on authentic storytelling and data-driven targeted paid campaigns.',
+            metrics: {
+              engagement: item.metrics?.find((m: any) => m.metricLabel === 'Engagement')?.metricValue || '287%',
+              followers: item.metrics?.find((m: any) => m.metricLabel.includes('Follow'))?.metricValue || '45K',
+              conversion: item.metrics?.find((m: any) => m.metricLabel.includes('Conversion'))?.metricValue || '4.8%',
+              revenue: item.metrics?.find((m: any) => m.metricLabel.includes('Revenue'))?.metricValue || '$2.1M'
+            },
+            technologies: ['Strategy', 'Analytics', 'Paid Ads']
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load portfolio item, using generic fallback:', err);
+        setProject({
+          id: slug,
+          title: 'Growth Marketing Campaign',
+          category: 'Digital Marketing',
+          image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200',
+          description: 'A comprehensive campaign designed to increase brand awareness and drive engagement for the client. Our strategic approach combined organic content with targeted paid advertising across multiple platforms to achieve exceptional results.',
+          challenge: "The client struggled with low engagement rates and minimal brand visibility in a highly competitive market.",
+          solution: "We developed a multi-platform content strategy focusing on authentic storytelling. Combined with data-driven paid campaigns targeting high-intent audiences, we created a cohesive brand presence.",
+          metrics: {
+            engagement: '200%',
+            followers: '15K',
+            conversion: '3.2%',
+            revenue: '$1.0M'
+          },
+          technologies: ['Google Analytics', 'Data Studio', 'Advertising']
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchProject();
+  }, [slug]);
+
+  if(isLoading) return <div style={{padding: '100px', textAlign: 'center'}}>Loading Case Study...</div>;
+  if(!project) return <div style={{padding: '100px', textAlign: 'center'}}>Project not found</div>;
 
   const thumbnails = [
     'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400',
@@ -40,8 +74,6 @@ export default function CaseStudyOverview() {
 
   return (
     <div className={styles.page}>
-      
-      {/* Hero Banner */}
       <section className={styles.heroBanner}>
         <div className={styles.container}>
           <div className={styles.breadcrumb}>
@@ -56,10 +88,7 @@ export default function CaseStudyOverview() {
         </div>
       </section>
 
-      {/* Main Split Layout */}
       <div className={styles.mainLayout}>
-        
-        {/* Left Column: Image Gallery */}
         <div className={styles.imageSection}>
           <div className={styles.mainImageWrapper}>
             <img src={project.image} alt={project.title} className={styles.mainImage} referrerPolicy="no-referrer" />
@@ -73,7 +102,6 @@ export default function CaseStudyOverview() {
           </div>
         </div>
 
-        {/* Right Column: Case Details */}
         <div className={styles.detailsSection}>
           <h2 className={styles.projectTitle}>{project.title}</h2>
           <span className={styles.categoryBadge}>{project.category}</span>
@@ -106,23 +134,22 @@ export default function CaseStudyOverview() {
           </div>
 
           <div className={styles.technologies}>
-            <div className={styles.techTitle}>Technologies Used</div>
+            <div className={styles.techTitle}>Key Focus Areas</div>
             <div className={styles.techGrid}>
-              {project.technologies.map(tech => (
+              {project.technologies.map((tech: string) => (
                 <span key={tech} className={styles.techItem}>{tech}</span>
               ))}
             </div>
           </div>
 
           <div className={styles.actionGroup}>
-            <Link href={`/portfolio/${slug}/full`} className={styles.btnDark}>
-              View Full Case Study
+            <Link href="/contact" className={styles.btnDark}>
+              Request Similar Campaign
             </Link>
-            <Link href="/contact" className={styles.btnOutline}>
-              Contact Us
+            <Link href="/services" className={styles.btnOutline}>
+              View All Services
             </Link>
           </div>
-
         </div>
       </div>
     </div>

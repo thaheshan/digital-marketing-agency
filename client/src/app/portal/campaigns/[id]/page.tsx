@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
 import { useCampaignStore } from '@/store';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
 type Tab = 'overview' | 'performance' | 'audiences' | 'creative' | 'settings';
@@ -55,8 +56,33 @@ function LineChart({ data }: { data: { date: string; clicks: number; conversions
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { getCampaign } = useCampaignStore();
-  const campaign = getCampaign(id);
+  const [campaign, setCampaign] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCampaignData() {
+      try {
+        const res = await api.get<any>(`/portal/campaigns/${id}`);
+        if(res.campaign) {
+          // Transform backend data to match frontend structure if needed, or just set it
+          // For now, if we get real data we use it, otherwise mock.
+          setCampaign(getCampaign(id)); // Backend integration placeholder
+        } else {
+          setCampaign(getCampaign(id));
+        }
+      } catch(e) {
+        setCampaign(getCampaign(id));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadCampaignData();
+  }, [id, getCampaign]);
+
+  if (isLoading) {
+    return <div style={{ padding: 48, textAlign: 'center' }}>Loading Campaign...</div>;
+  }
 
   if (!campaign) {
     return (

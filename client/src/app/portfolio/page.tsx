@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, LayoutGrid, List, X, Check } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
 type Category = 'All' | 'Social Media' | 'SEO' | 'Branding' | 'PPC' | 'Content Marketing' | 'Email Marketing';
@@ -47,6 +48,8 @@ const INITIAL_VISIBLE = 6;
 const LOAD_MORE_COUNT = 6;
 
 export default function PortfolioPage() {
+  const [items, setItems] = useState<any[]>(ALL_ITEMS);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
@@ -55,6 +58,30 @@ export default function PortfolioPage() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [pendingSort, setPendingSort] = useState<SortOption>('newest');
   const [pendingCats, setPendingCats] = useState<Set<Category>>(new Set(['All']));
+
+  useEffect(() => {
+    async function loadPortfolio() {
+      try {
+        const res = await api.get<any>('/portfolio/public');
+        if (res.items && res.items.length > 0) {
+          const mapped = res.items.map((i: any) => ({
+            id: i.slug || i.id,
+            title: i.title,
+            category: i.serviceCategory || 'Digital Marketing',
+            image: i.images?.[0]?.url || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800',
+            height: Math.random() > 0.5 ? 'tall' : 'medium',
+            year: new Date(i.createdAt).getFullYear()
+          }));
+          setItems(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load portfolio:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadPortfolio();
+  }, []);
 
   /* Apply filters */
   const applyFilters = () => {
@@ -80,20 +107,20 @@ export default function PortfolioPage() {
   };
 
   const filtered = useMemo(() => {
-    let items = ALL_ITEMS.filter((item) => {
+    let currentItems = items.filter((item) => {
       const matchCat = activeCategory === 'All' || item.category === activeCategory;
       const matchSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
 
     switch (sortBy) {
-      case 'newest': items = [...items].sort((a, b) => b.year - a.year); break;
-      case 'oldest': items = [...items].sort((a, b) => a.year - b.year); break;
-      case 'a-z':    items = [...items].sort((a, b) => a.title.localeCompare(b.title)); break;
-      case 'z-a':    items = [...items].sort((a, b) => b.title.localeCompare(a.title)); break;
+      case 'newest': currentItems = [...currentItems].sort((a, b) => b.year - a.year); break;
+      case 'oldest': currentItems = [...currentItems].sort((a, b) => a.year - b.year); break;
+      case 'a-z':    currentItems = [...currentItems].sort((a, b) => a.title.localeCompare(b.title)); break;
+      case 'z-a':    currentItems = [...currentItems].sort((a, b) => b.title.localeCompare(a.title)); break;
     }
-    return items;
-  }, [activeCategory, searchQuery, sortBy]);
+    return currentItems;
+  }, [items, activeCategory, searchQuery, sortBy]);
 
   const visibleItems = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;

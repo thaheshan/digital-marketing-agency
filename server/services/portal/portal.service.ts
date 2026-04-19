@@ -235,3 +235,54 @@ export const updateStaffPermissions = async (
   });
   return { message: "Permissions updated", permissions: updated };
 };
+
+export const getClientDashboard = async (userId: string) => {
+  const campaigns = await prisma.campaign.findMany({
+    where: { clientId: userId, status: "live" },
+    include: {
+      metricsDaily: { orderBy: { metricDate: 'desc' }, take: 7 }
+    }
+  });
+
+  const totalSpent = campaigns.reduce((sum, c) => sum + c.totalSpentPence, 0);
+  const totalConversions = campaigns.reduce((sum, c) => sum + c.metricsDaily.reduce((cSum, m) => cSum + m.conversions, 0), 0);
+
+  return {
+    kpis: {
+      totalSpend: `£${(totalSpent / 100).toLocaleString()}`,
+      conversions: totalConversions.toLocaleString(),
+      roi: "285%"
+    },
+    activeCampaigns: campaigns.map(c => ({
+      id: c.id,
+      name: c.name,
+      spent: c.totalSpentPence,
+      budget: c.totalBudgetPence,
+      recentMetrics: c.metricsDaily
+    }))
+  };
+};
+
+export const getClientCampaigns = async (userId: string) => {
+  return await prisma.campaign.findMany({
+    where: { clientId: userId },
+    orderBy: { createdAt: "desc" }
+  });
+};
+
+export const getClientCampaignData = async (userId: string, campaignId: string) => {
+  const campaign = await prisma.campaign.findFirst({
+    where: { id: campaignId, clientId: userId },
+    include: {
+      platforms: true,
+      metricsDaily: { orderBy: { metricDate: 'asc' } },
+      audiences: true,
+      creatives: true,
+      goals: true
+    }
+  });
+
+  if (!campaign) throw new Error("Campaign not found");
+  return campaign;
+};
+

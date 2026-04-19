@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ConditionalShell } from "@/components/layout/ConditionalShell/ConditionalShell";
+import ChatbotWidget from "@/components/common/ChatbotWidget/ChatbotWidget";
+import { AuthProvider } from "@/components/common/AuthProvider/AuthProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -33,7 +35,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable} ${ibmPlexMono.variable}`}>
       <body className="antialiased">
-        <ConditionalShell>{children}</ConditionalShell>
+        <AuthProvider>
+          <ConditionalShell>{children}</ConditionalShell>
+          <ChatbotWidget />
+        </AuthProvider>
       </body>
     </html>
   );

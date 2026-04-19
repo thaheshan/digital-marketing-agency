@@ -1,113 +1,101 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '@/lib/api';
 
-export type UserRole = 'admin' | 'staff' | 'client';
+export type UserRole = 'admin' | 'content_manager' | 'client';
 
 export interface User {
   id: string;
-  name: string;
   email: string;
+  firstName: string;
+  lastName: string;
   role: UserRole;
-  company?: string;
-  jobTitle?: string;
-  phone?: string;
-  avatar?: string;
-  staffRole?: 'Content Manager' | 'Account Manager' | 'Analyst';
+  status: string;
+  // Derived helpers for UI convenience
+  name: string;        // `${firstName} ${lastName}`
+  company?: string;    // from clientProfile
+  jobTitle?: string;   // from staffProfile
 }
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
-  twoFARequired: boolean;
-  twoFAVerified: boolean;
+  isLoading: boolean;
+  error: string | null;
 
-  login: (email: string, password: string, role: UserRole) => Promise<{ success: boolean; requiresTwoFA?: boolean }>;
-  verifyTwoFA: (code: string) => boolean;
-  logout: () => void;
-  register: (data: Partial<User> & { password: string }) => Promise<boolean>;
-  updateUser: (data: Partial<User>) => void;
+  login:      (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout:     () => void;
+  loadFromToken: () => Promise<void>;
+  clearError: () => void;
 }
-
-// Mock user database
-const MOCK_USERS: Record<string, { user: User; password: string }> = {
-  'admin@digitalpulse.com': {
-    password: 'admin123',
-    user: { id: 'u1', name: 'Priya Nanthakumar', email: 'admin@digitalpulse.com', role: 'admin', jobTitle: 'Founder & CEO' },
-  },
-  'tom@digitalpulse.com': {
-    password: 'staff123',
-    user: { id: 'u2', name: 'Tom Bradley', email: 'tom@digitalpulse.com', role: 'staff', jobTitle: 'Content Manager', staffRole: 'Content Manager' },
-  },
-  'james@company.com': {
-    password: 'client123',
-    user: { id: 'u3', name: 'James Okoro', email: 'james@company.com', role: 'client', company: 'TechFlow SaaS', jobTitle: 'Marketing Director' },
-  },
-  'sarah@skincare.com': {
-    password: 'client123',
-    user: { id: 'u4', name: 'Sarah Thompson', email: 'sarah@skincare.com', role: 'client', company: 'Glow Skincare', jobTitle: 'Founder' },
-  },
-};
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      user: null,
+      user:            null,
+      token:           null,
       isAuthenticated: false,
-      twoFARequired: false,
-      twoFAVerified: false,
+      isLoading:       false,
+      error:           null,
 
-      login: async (email, password, role) => {
-        await new Promise(r => setTimeout(r, 900));
-        const record = MOCK_USERS[email.toLowerCase()];
-        if (!record || record.password !== password) {
-          return { success: false };
-        }
-        if (record.user.role !== role && !(role === 'staff' && record.user.role === 'staff')) {
-          if (role === 'admin' && record.user.role !== 'admin') return { success: false };
-          if (role === 'client' && record.user.role !== 'client') return { success: false };
-        }
-        // Admin requires 2FA
-        if (record.user.role === 'admin') {
-          set({ twoFARequired: true, twoFAVerified: false, user: record.user });
-          return { success: true, requiresTwoFA: true };
-        }
-        set({ user: record.user, isAuthenticated: true, twoFARequired: false });
-        return { success: true };
-      },
+      login: async (email, password) => {
+        set({ isLoading: true, error: null });
+        try {
+          const data = await api.post<{
+            accessToken: string;
+            user: { id: string; email: string; firstName: string; lastName: string; role: UserRole; status: string };
+          }>('/auth/login', { email, password });
 
-      verifyTwoFA: (code) => {
-        // Mock: accept "123456"
-        if (code === '123456') {
-          set({ twoFAVerified: true, isAuthenticated: true, twoFARequired: false });
-          return true;
+          const user: User = {
+            ...data.user,
+            name: `${data.user.firstName} ${data.user.lastName}`,
+          };
+
+          // Persist token for API calls
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('token', data.accessToken);
+          }
+
+          set({ user, token: data.accessToken, isAuthenticated: true, isLoading: false });
+          return { success: true };
+        } catch (err: any) {
+          const msg = err?.message || 'Invalid email or password';
+          set({ error: msg, isLoading: false });
+          return { success: false, error: msg };
         }
-        return false;
       },
 
       logout: () => {
-        set({ user: null, isAuthenticated: false, twoFARequired: false, twoFAVerified: false });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+        }
+        // Fire-and-forget logout to invalidate server session
+        api.post('/auth/logout', {}).catch(() => {});
+        set({ user: null, token: null, isAuthenticated: false, error: null });
       },
 
-      register: async (data) => {
-        await new Promise(r => setTimeout(r, 800));
-        const newUser: User = {
-          id: `u${Date.now()}`,
-          name: data.name || '',
-          email: data.email || '',
-          role: data.role || 'client',
-          company: data.company,
-          jobTitle: data.jobTitle,
-          staffRole: data.staffRole,
-        };
-        set({ user: newUser, isAuthenticated: true });
-        return true;
+      loadFromToken: async () => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) return;
+
+        try {
+          const data = await api.get<{ user: { id: string; email: string; firstName: string; lastName: string; role: UserRole; status: string } }>('/auth/me');
+          const user: User = { ...data.user, name: `${data.user.firstName} ${data.user.lastName}` };
+          set({ user, token, isAuthenticated: true });
+        } catch {
+          // Token invalid — clear state
+          localStorage.removeItem('token');
+          set({ user: null, token: null, isAuthenticated: false });
+        }
       },
 
-      updateUser: (data) => {
-        const current = get().user;
-        if (current) set({ user: { ...current, ...data } });
-      },
+      clearError: () => set({ error: null }),
     }),
-    { name: 'dp-auth' }
+    {
+      name:    'dp-auth',
+      // Only persist token — re-validate on load
+      partialize: (state) => ({ token: state.token }),
+    }
   )
 );

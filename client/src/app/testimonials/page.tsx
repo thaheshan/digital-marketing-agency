@@ -1,153 +1,108 @@
+import { Star, Quote } from 'lucide-react';
 import styles from './page.module.css';
-import Link from 'next/link';
-import { Button } from '@/components/common/Button/Button';
-
-export const metadata = {
-  title: 'Testimonials | Digital Marketing Agency',
-  description: 'See what our clients say about the results we\'ve delivered for their businesses.',
-};
 
 const testimonials = [
   {
     id: 1,
-    name: 'Sarah Mitchell',
-    role: 'CEO',
-    company: 'RetailCo',
-    avatar: '👩‍💼',
+    quote: "DigitalPulse completely transformed our approach to online marketing. Their data-driven strategy increased our booked appointments by 215% in just six months.",
+    author: "Sarah Jenkins",
+    role: "Marketing Director at HealthFirst",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200",
     rating: 5,
-    category: 'Social Media',
-    quote: 'Working with DigitalAgency transformed our social media presence. Our engagement went up 320% in the first 60 days, and we\'ve seen a 2.5x increase in online sales directly attributed to their campaigns.',
-    result: '+320% Engagement',
+    metrics: "215% Increase in Leads"
   },
   {
     id: 2,
-    name: 'Marcus Chen',
-    role: 'Founder',
-    company: 'TechFlow Solutions',
-    avatar: '👨‍💻',
+    quote: "The ROI we've seen from their SEO and content marketing campaigns is staggering. They don't just chase traffic; they chase revenue.",
+    author: "David Chen",
+    role: "CEO of TechGrowth",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200",
     rating: 5,
-    category: 'SEO',
-    quote: 'We\'ve tried three other SEO agencies before. None came close. Within 4 months, we were ranking on page 1 for 47 of our target keywords. Our organic traffic tripled.',
-    result: '3x Organic Traffic',
+    metrics: "$1.2M Attributed Revenue"
   },
   {
     id: 3,
-    name: 'Priya Patel',
-    role: 'CMO',
-    company: 'HealthPlus',
-    avatar: '👩‍⚕️',
+    quote: "What sets them apart is their transparency. The dashboard gives us real-time insights, and their team is always proactively suggesting optimizations.",
+    author: "Elena Rodriguez",
+    role: "Founder of StyleBrand",
+    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200",
     rating: 5,
-    category: 'Content Marketing',
-    quote: 'The content team truly understands our industry. They produce articles that rank AND convert. Our lead quality from content has improved dramatically.',
-    result: '+65% Lead Quality',
+    metrics: "45% Lower CPA"
   },
   {
     id: 4,
-    name: 'James Okafor',
-    role: 'Marketing Director',
-    company: 'Propel Finance',
-    avatar: '👨‍💼',
+    quote: "We were struggling to scale our paid ad campaigns without seeing diminishing returns. DigitalPulse cracked the code and helped us expand into two new markets.",
+    author: "Marcus Thompson",
+    role: "VP of Sales, EcoHome",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200",
     rating: 5,
-    category: 'PPC',
-    quote: 'We cut our cost-per-acquisition by 40% while doubling volume. Their Google Ads team is exceptional — real experts who test constantly and explain their reasoning clearly.',
-    result: '-40% CPA',
+    metrics: "3x ROAS"
   },
   {
     id: 5,
-    name: 'Emily Nakamura',
-    role: 'E-commerce Manager',
-    company: 'FashionFirst',
-    avatar: '👩‍🎨',
+    quote: "The chatbot implementation alone saved our customer service team 40 hours a week while capturing leads we previously would have lost.",
+    author: "Rebecca Liu",
+    role: "Operations Manager",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
     rating: 5,
-    category: 'Social Media',
-    quote: 'Our Instagram-driven revenue went from $0 to $85K per month in 6 months. The content they create for us consistently stops the scroll. Absolutely remarkable ROI.',
-    result: '$85K/mo from Instagram',
+    metrics: "40 hrs/wk Saved"
   },
   {
     id: 6,
-    name: 'David Okonkwo',
-    role: 'CEO',
-    company: 'Buildscape',
-    avatar: '👨‍🔧',
+    quote: "A true partner in our growth. They immersed themselves in our industry and delivered a comprehensive strategy that touched every point of the customer journey.",
+    author: "James Wilson",
+    role: "Managing Partner",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
     rating: 5,
-    category: 'Branding',
-    quote: 'We rebranded and relaunched with their help. The new identity resonates perfectly with our target market. We\'ve closed three enterprise deals citing our polished brand as a key factor.',
-    result: '3 Enterprise Deals Won',
-  },
-];
-
-const metrics = [
-  { value: '4.9/5', label: 'Average Rating', sub: 'Across 250+ reviews' },
-  { value: '98%', label: 'Client Retention', sub: 'Year-over-year' },
-  { value: '180%', label: 'Average ROI', sub: 'Across all campaigns' },
-  { value: '24hr', label: 'Response Time', sub: 'Guaranteed for all clients' },
+    metrics: "180% YOY Growth"
+  }
 ];
 
 export default function TestimonialsPage() {
   return (
     <div className={styles.page}>
-      {/* Hero */}
-      <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>What Our Clients Say</h1>
-        <p className={styles.heroSub}>Real results from real businesses. Here&apos;s what our clients have to say about working with us.</p>
-      </section>
-
-      {/* Metrics Bar */}
-      <section className={styles.metricsBar}>
-        <div className={styles.container}>
-          <div className={styles.metricsGrid}>
-            {metrics.map(m => (
-              <div key={m.label} className={styles.metricItem}>
-                <div className={styles.metricValue}>{m.value}</div>
-                <div className={styles.metricLabel}>{m.label}</div>
-                <div className={styles.metricSub}>{m.sub}</div>
-              </div>
-            ))}
-          </div>
+      <header className={styles.hero}>
+        <div className={styles.heroContent}>
+          <h1>Client <span className={styles.highlight}>Success Stories</span></h1>
+          <p>Don't just take our word for it. Explore how we've helped ambitious brands scale their digital presence and dominate their markets.</p>
         </div>
-      </section>
+      </header>
 
-      {/* Testimonials Grid */}
-      <section className={styles.testimonialsSection}>
-        <div className={styles.container}>
-          <div className={styles.testimonialsGrid}>
-            {testimonials.map(t => (
-              <div key={t.id} className={styles.testimonialCard}>
-                <div className={styles.cardTop}>
-                  <div className={styles.stars}>{'★'.repeat(t.rating)}</div>
-                  <span className={styles.categoryTag}>{t.category}</span>
+      <section className={styles.gridSection}>
+        <div className={styles.grid}>
+          {testimonials.map((t) => (
+            <div key={t.id} className={styles.card}>
+              <div className={styles.cardTop}>
+                <div className={styles.rating}>
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} size={16} fill="currentColor" color="#f59e0b" />
+                  ))}
                 </div>
-                <blockquote className={styles.quote}>&ldquo;{t.quote}&rdquo;</blockquote>
-                <div className={styles.resultBadge}>
-                  <span className={styles.resultIcon}>📈</span>
-                  <span>{t.result}</span>
-                </div>
-                <div className={styles.author}>
-                  <div className={styles.avatarWrap}>
-                    <span className={styles.avatar}>{t.avatar}</span>
-                  </div>
-                  <div className={styles.authorInfo}>
-                    <strong className={styles.authorName}>{t.name}</strong>
-                    <span className={styles.authorRole}>{t.role}, {t.company}</span>
-                  </div>
+                <div className={styles.metricBadge}>{t.metrics}</div>
+              </div>
+              
+              <div className={styles.quoteBox}>
+                <Quote size={32} className={styles.quoteIcon} />
+                <p>"{t.quote}"</p>
+              </div>
+
+              <div className={styles.authorArea}>
+                <img src={t.image} alt={t.author} className={styles.avatar} />
+                <div>
+                  <strong>{t.author}</strong>
+                  <span>{t.role}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className={styles.ctaSection}>
-        <div className={styles.container}>
-          <div className={styles.ctaCard}>
-            <h2 className={styles.ctaTitle}>Ready to Be Our Next Success Story?</h2>
-            <p className={styles.ctaSub}>Join 250+ businesses that have transformed their digital presence with us.</p>
-            <div className={styles.ctaBtns}>
-              <Link href="/contact"><Button variant="primary" size="large">Start Your Journey</Button></Link>
-              <Link href="/roi-calculator"><Button variant="outline" size="medium">Calculate Your ROI</Button></Link>
             </div>
-          </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.cta}>
+        <div className={styles.ctaContent}>
+          <h2>Ready to be our next success story?</h2>
+          <p>Let's build a custom growth strategy tailored to your exact business goals.</p>
+          <a href="/contact" className={styles.ctaBtn}>Start Your Journey</a>
         </div>
       </section>
     </div>
