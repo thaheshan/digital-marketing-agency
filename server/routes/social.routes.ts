@@ -1,10 +1,8 @@
 import { Router } from "express";
+import * as socialController from "../controllers/social.controller";
 
 const router = Router();
 
-// Placeholder for social integration routes
-router.get("/", (req, res) => {
-  res.json({ message: "Social routes coming soon" });
-});
+router.get("/", socialController.getFeed);
 
 export default router;

@@ -80,7 +80,7 @@ export const updatePermissions = async (req: Request, res: Response, next: NextF
   try {
     const { userId } = req.params;
     const permissions = updatePermissionsSchema.parse(req.body);
-    const result = await portalService.updateStaffPermissions(userId, permissions);
+    const result = await portalService.updateStaffPermissions(userId as string, permissions);
     ok(res, result);
   } catch (e) { err(next, e); }
 };
@@ -104,7 +104,7 @@ export const getClientCampaigns = async (req: Request, res: Response, next: Next
 export const getClientCampaignData = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).userId;
-    const campaign = await portalService.getClientCampaignData(userId, req.params.id);
+    const campaign = await portalService.getClientCampaignData(userId as string, req.params.id as string);
     ok(res, { campaign });
   } catch (e) { err(next, e); }
 };

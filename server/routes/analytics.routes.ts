@@ -1,14 +1,13 @@
 import { Router } from "express";
 import * as analyticsController from "../controllers/analytics.controller";
-import { requireAuth, requireRole } from "../middlewares/auth.middleware";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRole } from "../middlewares/auth.middleware";
 
 const router = Router();
+router.use(requireAuth);
 
-// All analytics are admin restricted
-router.use(requireAuth, requireRole("admin"));
-
-router.get("/overview", analyticsController.getOverview);
-router.get("/campaigns/:id", analyticsController.getCampaignAnalytics);
-router.get("/content-performance", analyticsController.getContentPerformance);
+router.get("/dashboard",          analyticsController.getDashboard);
+router.get("/campaigns/:id",      analyticsController.getCampaignAnalytics);
+router.get("/snapshot",           requireRole("admin"), analyticsController.getSnapshot);
 
 export default router;
