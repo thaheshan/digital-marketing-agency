@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 import { Calculator, CheckCircle2, ShieldCheck, Info, Search, TrendingUp, Users, Heart, Lightbulb, Rocket, Star, ChevronRight, Download, FileText, Table } from 'lucide-react';
 
@@ -612,7 +613,14 @@ export default function ROICalculatorPage() {
               {step < 3 ? (
                 <button className={styles.btnNext} onClick={() => setStep(s => (s + 1) as Step)}>Next Step <span style={{marginLeft: '8px'}}>➔</span></button>
               ) : (
-                <button className={styles.btnNext} onClick={() => setShowResults(true)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>Calculate My ROI <Rocket size={18} /></button>
+                <button className={styles.btnNext} onClick={async () => {
+                  try {
+                    await api.post('/tools/roi', { ...form, ...calculateMetrics() });
+                  } catch(e) {
+                    // Ignore fail to save for demo gracefully
+                  }
+                  setShowResults(true);
+                }} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>Calculate My ROI <Rocket size={18} /></button>
               )}
             </div>
           </div>

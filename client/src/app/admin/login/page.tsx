@@ -1,171 +1,169 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, Shield, TrendingUp, Users, BarChart2, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  ShieldCheck, 
+  TrendingUp, 
+  Users, 
+  BarChart2, 
+  ChevronLeft,
+  AlertCircle,
+  Shield,
+  Zap,
+  Fingerprint
+} from 'lucide-react';
 import { useAuthStore } from '@/store';
+import { Button } from '@/components/common/Button/Button';
 import styles from './page.module.css';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login, verifyTwoFA } = useAuthStore();
+  const { login, isLoading } = useAuthStore();
 
-  const [step, setStep] = useState<'credentials' | 'twofa'>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-    const result = await login(email, password, 'admin');
-    setLoading(false);
+    const result = await login(email, password);
     if (!result.success) {
-      setError('Invalid credentials. Try admin@digitalpulse.com / admin123');
+      setError(result.error || 'Invalid credentials. Please verify your email and password.');
       return;
     }
-    if (result.requiresTwoFA) {
-      setStep('twofa');
-    } else {
+    router.push('/admin/dashboard');
+  };
+
+  const handleSampleAccess = async () => {
+    setError('');
+    // Demo shortcut — uses the seeded admin account
+    const result = await login('admin@agency.com', 'Admin@1234');
+    if (result.success) {
       router.push('/admin/dashboard');
+    } else {
+      setError(result.error || 'Demo login failed.');
     }
   };
 
-  const handleCodeChange = (val: string, idx: number) => {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...code];
-    next[idx] = val;
-    setCode(next);
-    if (val && idx < 5) {
-      document.getElementById(`otp-${idx + 1}`)?.focus();
-    }
-  };
-
-  const handleTwoFA = (e: React.FormEvent) => {
-    e.preventDefault();
-    const fullCode = code.join('');
-    if (fullCode.length < 6) { setError('Enter the 6-digit code'); return; }
-    const ok = verifyTwoFA(fullCode);
-    if (ok) { router.push('/admin/dashboard'); }
-    else { setError('Invalid code. Use 123456 for demo.'); }
-  };
+  const features = [
+    { icon: Users, title: 'Lead Intelligence', desc: 'Predictive lead scoring and automated pipeline management.' },
+    { icon: TrendingUp, title: 'Agency Analytics', desc: 'Holistic performance tracking across every active campaign.' },
+    { icon: BarChart2, title: 'Command Center', desc: 'Real-time resource allocation and team workload insights.' },
+  ];
 
   return (
     <div className={styles.page}>
       <div className={styles.leftPanel}>
+        {/* Absolute Header Logo */}
+        <Link href="/" className={styles.headerLogo}>
+          <div className={styles.logoIcon}><Zap size={18} /></div>
+          <span className={styles.logoText}>Digital <span className={styles.logoAccent}>Pulse</span></span>
+        </Link>
+
         <div className={styles.inner}>
-          <Link href="/" className={styles.backLink}>
-            <ArrowLeft size={16} /> Back to website
-          </Link>
+          <>
+              <header className={styles.heading}>
+                <h1>Admin Command</h1>
+                <p>Secure authentication for agency leadership</p>
+              </header>
 
-          <Link href="/" className={styles.logo}>
-            <div className={styles.logoIcon}><Shield size={20} /></div>
-            <span>Admin <span className={styles.accent}>Panel</span></span>
-          </Link>
-
-          {step === 'credentials' ? (
-            <>
-              <div className={styles.heading}>
-                <h1>Admin Sign In</h1>
-                <p>Secure access for agency staff and administrators</p>
-              </div>
-
-              {error && <div className={styles.errorBox}>{error}</div>}
+              {error && (
+                <div className={styles.errorBox}>
+                  <AlertCircle size={18} />
+                  <span>{error}</span>
+                </div>
+              )}
 
               <form className={styles.form} onSubmit={handleLogin}>
                 <div className={styles.field}>
-                  <label className={styles.label}>Email</label>
+                  <label className={styles.label}>Email Address</label>
                   <div className={styles.inputGroup}>
-                    <Mail size={17} className={styles.inputIcon} />
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="admin@digitalpulse.com" className={styles.input} required />
+                    <Mail size={18} className={styles.inputIcon} />
+                    <input 
+                      type="email" 
+                      value={email} 
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="admin@digitalpulse.com" 
+                      className={styles.input} 
+                      required 
+                    />
                   </div>
                 </div>
+
                 <div className={styles.field}>
                   <label className={styles.label}>Password</label>
                   <div className={styles.inputGroup}>
-                    <Lock size={17} className={styles.inputIcon} />
-                    <input type={showPassword ? 'text' : 'password'} value={password}
-                      onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                      className={styles.input} required />
+                    <Lock size={18} className={styles.inputIcon} />
+                    <input 
+                      type={showPassword ? 'text' : 'password'} 
+                      value={password}
+                      onChange={e => setPassword(e.target.value)} 
+                      placeholder="••••••••"
+                      className={styles.input} 
+                      required 
+                    />
                     <button type="button" className={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
+
                 <div className={styles.formMeta}>
                   <label className={styles.checkLabel}>
                     <input type="checkbox" /> Remember me
                   </label>
                   <Link href="#" className={styles.forgotLink}>Forgot password?</Link>
                 </div>
-                <button type="submit" className={styles.submitBtn} disabled={loading}>
-                  {loading ? 'Signing in...' : 'Sign In'}
+
+                <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+                  {isLoading ? 'Authenticating...' : 'Sign In to Command Center'}
                 </button>
               </form>
 
-              <p className={styles.switchLink}>
-                Staff member? <Link href="/admin/register">Request access here</Link>
-              </p>
-              <p className={styles.switchLink}>
-                Client? <Link href="/portal/login">Go to Client Portal</Link>
-              </p>
-            </>
-          ) : (
-            <>
-              <div className={styles.heading}>
-                <h1>Two-Factor Auth</h1>
-                <p>Enter the 6-digit code from your authenticator app</p>
+              <div className={styles.sampleAccess}>
+                <p>Sample Access:</p>
+                <button className={styles.sampleBadge} onClick={handleSampleAccess}>
+                  <Shield size={16} color="#06B6D4" />
+                  <strong>Priya Nanthakumar</strong>
+                  <span className={styles.role}>Founder & CEO</span>
+                </button>
               </div>
 
-              {error && <div className={styles.errorBox}>{error}</div>}
-
-              <form className={styles.form} onSubmit={handleTwoFA}>
-                <div className={styles.otpRow}>
-                  {code.map((c, i) => (
-                    <input
-                      key={i} id={`otp-${i}`}
-                      className={styles.otpBox}
-                      maxLength={1} value={c}
-                      onChange={e => handleCodeChange(e.target.value, i)}
-                      onKeyDown={e => e.key === 'Backspace' && !c && i > 0 && document.getElementById(`otp-${i - 1}`)?.focus()}
-                    />
-                  ))}
-                </div>
-                <p className={styles.demoHint}>Demo hint: enter <strong>123456</strong></p>
-                <button type="submit" className={styles.submitBtn}>Verify &amp; Continue</button>
-                <button type="button" className={styles.backBtn} onClick={() => { setStep('credentials'); setError(''); setCode(['','','','','','']); }}>
-                  ← Back to Login
-                </button>
-              </form>
+              <div className={styles.switchLink}>
+                Client access? <Link href="/portal/login">Log in to Portal</Link>
+              </div>
             </>
-          )}
         </div>
       </div>
 
       <div className={styles.rightPanel}>
         <div className={styles.rightInner}>
-          <h2>Agency Intelligence<br />Command Centre</h2>
-          <p>Manage leads, portfolio, campaigns, and analytics from one secure dashboard.</p>
+          <h2>The Agency<br />Command Center</h2>
+          <p>Orchestrate client campaigns, monitor agency health, and lead your team with data-driven intelligence.</p>
+          
           <div className={styles.featureList}>
-            {[
-              { icon: Users, title: 'Lead Management', desc: 'Score and convert enquiries automatically' },
-              { icon: TrendingUp, title: 'Campaign Analytics', desc: 'Real-time performance across all channels' },
-              { icon: BarChart2, title: 'Content CMS', desc: 'Portfolio, blog, and AI content tools' },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className={styles.featureItem}>
-                <div className={styles.featureIcon}><Icon size={18} /></div>
-                <div>
-                  <strong>{title}</strong>
-                  <span>{desc}</span>
+            {features.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div key={i} className={styles.featureItem}>
+                  <div className={styles.featureIcon}>
+                    <Icon size={22} />
+                  </div>
+                  <div className={styles.featureText}>
+                    <strong>{f.title}</strong>
+                    <span>{f.desc}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

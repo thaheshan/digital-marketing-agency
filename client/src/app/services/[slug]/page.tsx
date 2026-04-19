@@ -1,225 +1,129 @@
-'use client';
-
-import { useParams } from 'next/navigation';
-import styles from './page.module.css';
 import Link from 'next/link';
-import { 
-  Check, 
-  ChevronRight, 
-  TrendingUp, 
-  Users, 
-  Zap, 
-  Target, 
-  MessageCircle,
-  BarChart2,
-  FileText,
-  MousePointer2,
-  Share2,
-  ShieldCheck,
-  Star
-} from 'lucide-react';
-import { Button } from '@/components/common/Button/Button';
+import { ArrowLeft, CheckCircle2, ArrowRight } from 'lucide-react';
+import styles from './page.module.css';
 
-const serviceData: Record<string, any> = {
+// Mock data for services since we don't have a DB seed yet for this specific content
+const serviceDetails = {
   'social-media': {
     title: 'Social Media Marketing',
-    subtitle: 'Build meaningful connections and drive measurable results across all major social platforms.',
-    heroImage: '/hero_dashboard_mockup_1774897876378.png',
-    stats: [
-       { label: 'Avg. ROI', value: '250%', icon: TrendingUp },
-       { label: 'Follower Growth', value: '180%', icon: Users },
-       { label: 'Platform Satisfaction', value: '4.9/5', icon: Star }
+    subtitle: 'Build an engaged community and drive measurable ROI across social channels.',
+    description: 'We don\'t just post for the sake of posting. Our social media strategies are deeply rooted in data, designed to capture attention and convert followers into paying customers.',
+    features: [
+      'Platform-specific content strategy',
+      'Community management and engagement',
+      'Influencer partnership management',
+      'Paid social advertising campaigns',
+      'Advanced audience targeting',
+      'Comprehensive performance analytics'
     ],
-    included: [
-       'Custom Content Strategy',
-       'Daily Community Management',
-       'Monthly Performance Reports',
-       'Paid Social Campaign Setup',
-       'Professional Graphic Design',
-       'Multi-Platform Scheduling',
-       'Influencer Outreach Strategy',
-       'Sentiment & Competitor Analysis'
-    ],
-    process: [
-       { step: 1, title: 'Discovery & Strategy', desc: 'We dive deep into your brand, audience, and goals to build a winning social roadmap.' },
-       { step: 2, title: 'Content Planning & Creation', desc: 'Our creative team crafts engaging, viral-ready content tailored for each platform.' },
-       { step: 3, title: 'Campaign Launch & Management', desc: 'We handle the posting, engagement, and paid ad management to maximize reach.' },
-       { step: 4, title: 'Monitoring & Optimization', desc: 'Real-time tracking allows us to pivot and optimize campaigns for peak performance.' },
-       { step: 5, title: 'Reporting & Strategy Refinement', desc: 'Monthly deep-dives into data to refine our approach for even better results.' }
-    ],
-    plans: [
-       { name: 'Basic', price: '2,500', features: ['3 Platforms', '12 Posts/mo', 'Basic Reporting'] },
-       { name: 'Industrial', price: '5,000', features: ['5 Platforms', '24 Posts/mo', 'Full Ad Management', 'Premium Reporting'], popular: true },
-       { name: 'Enterprise', price: '8,000+', features: ['Unlimited Platforms', 'Daily Posting', 'Dedicated Account Manager', 'Custom Analytics'] }
-    ]
+    pricing: 'Starting from £2,500/month',
+    timeline: '1-2 weeks to launch'
   },
-  // SEO, PPC, etc. follow similar structures...
+  'seo': {
+    title: 'SEO Optimization',
+    subtitle: 'Dominate search results and capture high-intent organic traffic.',
+    description: 'Our technical and content SEO experts work together to ensure your website ranks for the keywords that matter most to your bottom line, not just vanity metrics.',
+    features: [
+      'Comprehensive technical site audits',
+      'Keyword research and mapping',
+      'On-page content optimization',
+      'High-authority link building',
+      'Local SEO and Google Business Profile',
+      'Monthly ranking and traffic reports'
+    ],
+    pricing: 'Starting from £1,200/month',
+    timeline: 'Ongoing (Initial audit 2 weeks)'
+  },
+  // Add fallback for others
+  'default': {
+    title: 'Digital Marketing Service',
+    subtitle: 'Expert strategies tailored to your business goals.',
+    description: 'Our specialized digital marketing services are designed to increase your visibility, engagement, and most importantly, your revenue.',
+    features: [
+      'Custom strategy development',
+      'Dedicated account manager',
+      'Bi-weekly performance reviews',
+      'Data-driven optimizations',
+      'Transparent reporting dashboard',
+      'Continuous A/B testing'
+    ],
+    pricing: 'Custom quote based on scope',
+    timeline: 'Typically 2-4 weeks'
+  }
 };
 
-export default function ServiceDetailPage() {
-  const params = useParams();
-  const slug = params.slug as string;
-  
-  const content = serviceData[slug] || serviceData['social-media']; // Default for demo
+export default function ServiceDetailPage({ params }: { params: { slug: string } }) {
+  const service = serviceDetails[params.slug as keyof typeof serviceDetails] || serviceDetails['default'];
 
   return (
     <div className={styles.page}>
-      {/* Detail Hero */}
-      <section className={styles.hero}>
-        <div className={styles.container}>
-          <div className={styles.heroLayout}>
-             <div className={styles.heroLeft}>
-                <nav className={styles.breadcrumb}>
-                  <Link href="/services">Services</Link>
-                  <ChevronRight size={14} />
-                  <span>{content.title}</span>
-                </nav>
-                <h1 className={styles.title}>{content.title}</h1>
-                <p className={styles.subtitle}>{content.subtitle}</p>
-                <div className={styles.heroBtns}>
-                   <Button variant="primary" size="large">Start Your Campaign</Button>
-                   <div className={styles.shareIcon}><Share2 size={24} /></div>
-                </div>
-             </div>
-             
-             <div className={styles.heroRight}>
-                <div className={styles.statsCardGrid}>
-                   {content.stats.map((s: any, idx: number) => {
-                      const Icon = s.icon;
-                      return (
-                         <div key={idx} className={styles.statMiniCard}>
-                            <div className={styles.statIcon}><Icon size={20} /></div>
-                            <div className={styles.statInfo}>
-                               <strong>{s.value}</strong>
-                               <span>{s.label}</span>
-                            </div>
-                         </div>
-                      );
-                   })}
-                </div>
-             </div>
+      <header className={styles.hero}>
+        <div className={styles.heroInner}>
+          <Link href="/services" className={styles.backLink}>
+            <ArrowLeft size={16} /> Back to Services
+          </Link>
+          <h1>{service.title}</h1>
+          <p className={styles.subtitle}>{service.subtitle}</p>
+        </div>
+      </header>
+
+      <div className={styles.content}>
+        <div className={styles.mainCol}>
+          <section className={styles.section}>
+            <h2>Overview</h2>
+            <p className={styles.description}>{service.description}</p>
+          </section>
+
+          <section className={styles.section}>
+            <h2>What's Included</h2>
+            <ul className={styles.featuresList}>
+              {service.features.map((feature, idx) => (
+                <li key={idx}>
+                  <CheckCircle2 size={20} className={styles.checkIcon} />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className={styles.ctaCard}>
+            <h3>Ready to scale your business?</h3>
+            <p>Let's discuss how our {service.title} services can help you achieve your goals.</p>
+            <Link href="/contact" className={styles.primaryBtn}>
+              Request a Custom Quote <ArrowRight size={16} />
+            </Link>
+          </section>
+        </div>
+
+        <div className={styles.sidebarCol}>
+          <div className={styles.infoCard}>
+            <h3>Service Details</h3>
+            <div className={styles.infoRow}>
+              <span>Estimated Pricing:</span>
+              <strong>{service.pricing}</strong>
+            </div>
+            <div className={styles.infoRow}>
+              <span>Average Timeline:</span>
+              <strong>{service.timeline}</strong>
+            </div>
+            <div className={styles.divider} />
+            <Link href="/roi-calculator" className={styles.calcLink}>
+              Calculate Potential ROI
+            </Link>
+          </div>
+
+          <div className={styles.testimonialCard}>
+            <p className={styles.quote}>"They completely transformed how we approach digital. The results speak for themselves."</p>
+            <div className={styles.author}>
+              <div className={styles.avatar}>T</div>
+              <div>
+                <strong>Tom Bradley</strong>
+                <span>CEO, TechGrowth</span>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* Overview & Checklist */}
-      <section className={styles.overview}>
-         <div className={styles.container}>
-            <div className={styles.overviewGrid}>
-               <div className={styles.visualCol}>
-                  <img src={content.heroImage} alt={content.title} className={styles.overviewImg} />
-                  <div className={styles.floatBox}>
-                     <ShieldCheck size={24} color="#06B6D4" />
-                     <span>100% Data-Driven Implementation</span>
-                  </div>
-               </div>
-               <div className={styles.checklistCol}>
-                  <h2 className={styles.sectionTitle}>What's Included</h2>
-                  <div className={styles.checkGrid}>
-                     {content.included.map((item: string, idx: number) => (
-                        <div key={idx} className={styles.checkItem}>
-                           <div className={styles.checkCircle}><Check size={14} strokeWidth={4} /></div>
-                           <span>{item}</span>
-                        </div>
-                     ))}
-                  </div>
-               </div>
-            </div>
-         </div>
-      </section>
-
-      {/* Process Section */}
-      <section className={styles.processSection}>
-         <div className={styles.container}>
-            <div className={styles.sectionHeader}>
-               <span className={styles.sectionUpper}>Workflow</span>
-               <h2 className={styles.sectionTitle}>Our Process</h2>
-            </div>
-            <div className={styles.processTimeline}>
-               {content.process.map((p: any) => (
-                  <div key={p.step} className={styles.processCard}>
-                     <div className={styles.stepNum}>{p.step}</div>
-                     <div className={styles.processContent}>
-                        <h4>{p.title}</h4>
-                        <p>{p.desc}</p>
-                        <Link href="/contact" className={styles.stepLink}>Section Details →</Link>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className={styles.pricingSection}>
-         <div className={styles.container}>
-            <div className={styles.pricingHeader}>
-               <h2 className={styles.sectionTitle}>Choose Your Plan</h2>
-               <p>Select the perfect package for your business goals.</p>
-            </div>
-            <div className={styles.pricingGrid}>
-               {content.plans.map((plan: any, idx: number) => (
-                  <div key={idx} className={`${styles.priceCard} ${plan.popular ? styles.priceCardPopular : ''}`}>
-                     {plan.popular && <div className={styles.popularBadge}>MOST POPULAR</div>}
-                     <div className={styles.priceHeader}>
-                        <h4 className={styles.planName}>{plan.name}</h4>
-                        <div className={styles.planPrice}>
-                           <span className={styles.currency}>$</span>
-                           <strong>{plan.price}</strong>
-                           <span className={styles.period}>/mo</span>
-                        </div>
-                     </div>
-                     <ul className={styles.planFeatures}>
-                        {plan.features.map((f: string, i: number) => (
-                           <li key={i}><Check size={14} /> {f}</li>
-                        ))}
-                     </ul>
-                     <Button variant={plan.popular ? 'primary' : 'outline'} fullWidth className={styles.planBtn}>
-                        Select Plan
-                     </Button>
-                  </div>
-               ))}
-            </div>
-            
-            <div className={styles.readyCard}>
-               <div>
-                  <h3>Ready to Get Started?</h3>
-                  <p>Book a free strategy session with our team.</p>
-               </div>
-               <Button variant="primary" className={styles.readyBtn}>Get Started Now</Button>
-            </div>
-         </div>
-      </section>
-
-      {/* Benefits / KPIs */}
-      <section className={styles.benefitsSection}>
-         <div className={styles.container}>
-            <h2 className={styles.sectionTitle}>Key Benefits</h2>
-            <div className={styles.benefitsGrid}>
-               <div className={styles.benefitCard} style={{ background: '#F0FDF4' }}>
-                  <TrendingUp size={32} color="#15803D" />
-                  <h4>Increased Brand Awareness</h4>
-                  <p>Reach thousands of potential customers through smart targeting.</p>
-               </div>
-               <div className={styles.benefitCard} style={{ background: '#FFF7ED' }}>
-                  <MousePointer2 size={32} color="#C2410C" />
-                  <h4>Engaged Community</h4>
-                  <p>Build real relationships with your audience through active management.</p>
-               </div>
-               <div className={styles.benefitCard} style={{ background: '#F0FDFA' }}>
-                  <Zap size={32} color="#0D9488" />
-                  <h4>Targeted Advertising</h4>
-                  <p>Precision-targeted ads that deliver high-value leads at a lower cost.</p>
-               </div>
-               <div className={styles.benefitCard} style={{ background: '#F5F3FF' }}>
-                  <TrendingUp size={32} color="#7C3AED" />
-                  <h4>Measurable ROI</h4>
-                  <p>Track every dollar spent and see the direct impact on your bottom line.</p>
-               </div>
-            </div>
-         </div>
-      </section>
-      
+      </div>
     </div>
   );
 }

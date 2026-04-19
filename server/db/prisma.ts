@@ -3,10 +3,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { env } from "../config/env.config";
 
+const isSupabase = env.DATABASE_URL.includes("supabase.com");
+
 const pool = new Pool({
   connectionString: env.DATABASE_URL,
-  host: "127.0.0.1",
-  ssl: false,
+  ssl: isSupabase ? { rejectUnauthorized: false } : false,
 });
 
 const adapter = new PrismaPg(pool);

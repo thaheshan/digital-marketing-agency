@@ -84,3 +84,27 @@ export const updatePermissions = async (req: Request, res: Response, next: NextF
     ok(res, result);
   } catch (e) { err(next, e); }
 };
+
+export const getClientDashboard = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const dashboard = await portalService.getClientDashboard(userId);
+    ok(res, dashboard);
+  } catch (e) { err(next, e); }
+};
+
+export const getClientCampaigns = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const campaigns = await portalService.getClientCampaigns(userId);
+    ok(res, { campaigns });
+  } catch (e) { err(next, e); }
+};
+
+export const getClientCampaignData = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const campaign = await portalService.getClientCampaignData(userId, req.params.id);
+    ok(res, { campaign });
+  } catch (e) { err(next, e); }
+};

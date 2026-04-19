@@ -1,21 +1,22 @@
 import { Router } from "express";
 import * as portalController from "../controllers/portal.controller";
-import { requireAuth } from "../middlewares/auth.middleware";
-import { requireRole } from "../middlewares/auth.middleware";
+import { requireAuth, requireRole } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-// All routes require auth + admin role
 router.use(requireAuth);
-router.use(requireRole("admin"));
 
-// Staff management
-router.post("/staff",                        portalController.createStaff);
-router.get ("/staff",                        portalController.getAllStaff);
-router.patch("/staff/:userId/permissions",   portalController.updatePermissions);
+// Client Portal Routes (accessible to clients)
+router.get("/dashboard", requireRole("client"), portalController.getClientDashboard);
+router.get("/campaigns", requireRole("client"), portalController.getClientCampaigns);
+router.get("/campaigns/:id", requireRole("client"), portalController.getClientCampaignData);
 
-// Client management
-router.post("/clients",                      portalController.createClient);
-router.get ("/clients",                      portalController.getAllClients);
+// Admin Routes for managing staff and clients
+router.post("/staff", requireRole("admin"), portalController.createStaff);
+router.get ("/staff", requireRole("admin"), portalController.getAllStaff);
+router.patch("/staff/:userId/permissions", requireRole("admin"), portalController.updatePermissions);
+
+router.post("/clients", requireRole("admin"), portalController.createClient);
+router.get ("/clients", requireRole("admin", "content_manager"), portalController.getAllClients);
 
 export default router;

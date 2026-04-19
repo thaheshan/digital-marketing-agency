@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, Sparkles, RefreshCw } from 'lucide-react';
 import { usePortfolioStore } from '@/store';
+import { api } from '@/lib/api';
 import { ContentScorePanel } from '@/components/admin/ContentScorePanel/ContentScorePanel';
 import styles from './page.module.css';
 
@@ -59,17 +60,22 @@ export default function NewPortfolioPage() {
 
   const generateDescriptions = async () => {
     setGenerating(true);
-    await new Promise(r => setTimeout(r, 1800));
-    const data = {
-      title, clientName, clientIndustry, serviceCategory,
-      channels: selectedChannels.join(', '), dateRange,
-      ...metrics,
-    };
-    const generated = AI_VARIATIONS.map(v => ({ tone: v.tone, text: v.text(data) }));
-    setVariations(generated);
-    setSelectedVariation(null);
-    setEditedDescription('');
-    setGenerating(false);
+    try {
+      const data = {
+        title, clientName, clientIndustry, serviceCategory,
+        channels: selectedChannels.join(', '), dateRange,
+        ...metrics,
+      };
+      
+      const res = await api.post('/portfolio/draft/generate-description', data);
+      setVariations(res.options || []);
+      setSelectedVariation(null);
+      setEditedDescription('');
+    } catch (e) {
+      console.error("Error generating descriptions:", e);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const selectVariation = (idx: number) => {
