@@ -1,201 +1,209 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Minus, Send } from 'lucide-react';
-import { useEnquiryStore } from '@/store';
+import { useState, useRef, useEffect } from 'react';
+import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2 } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './ChatbotWidget.module.css';
 
-type BotStep = 'greeting' | 'service' | 'budget' | 'timeline' | 'email' | 'done';
-
-const SERVICES = ['Social Media Marketing', 'SEO Optimization', 'PPC Advertising', 'Content Marketing', 'Email Marketing', 'Other'];
-const BUDGETS = ['Under £500/mo', '£500–£1,000/mo', '£1,000–£2,500/mo', '£2,500–£5,000/mo', '£5,000+/mo'];
-const TIMELINES = ['ASAP', 'Within 1 month', '1–3 months', '3–6 months', 'Just exploring'];
-
 interface Message {
+  id: string;
   from: 'bot' | 'user';
   text: string;
+  time: string;
 }
 
-const BOT_INTROS: Record<BotStep, string> = {
-  greeting: "Hi there! 👋 I'm the DigitalPulse assistant. What's your name?",
-  service: 'Great to meet you! Which service are you most interested in?',
-  budget: 'Perfect choice. What monthly budget are you working with?',
-  timeline: 'Understood. What is your timeline to get started?',
-  email: "Excellent! Last question — what's your email so we can send you a tailored proposal?",
-  done: "Thanks! 🎉 A member of our team will be in touch within 24 hours. You can also call us at +44 20 1234 5678.",
-};
-
-export function ChatbotWidget() {
-  const [open, setOpen] = useState(false);
-  const [minimised, setMinimised] = useState(false);
-  const [step, setStep] = useState<BotStep>('greeting');
+export default function ChatbotWidget() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputVal, setInputVal] = useState('');
-  const [userData, setUserData] = useState({ name: '', service: '', budget: '', timeline: '', email: '' });
-  const [showOptions, setShowOptions] = useState(false);
-  const [autoShown, setAutoShown] = useState(false);
-  const { addEnquiry } = useEnquiryStore();
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [quickReplies, setQuickReplies] = useState<string[]>([]);
 
-  // Auto-open after 30s
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (!autoShown) { setOpen(true); setAutoShown(true); }
-    }, 30000);
-    return () => clearTimeout(t);
-  }, [autoShown]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Send initial greeting when first opened
   useEffect(() => {
-    if (open && messages.length === 0) {
-      setTimeout(() => {
-        setMessages([{ from: 'bot', text: BOT_INTROS.greeting }]);
-      }, 400);
+    if (isOpen && messages.length === 0) {
+      // Start session
+      startSession();
     }
-  }, [open]);
+  }, [isOpen]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, isTyping]);
 
-  useEffect(() => {
-    if (step === 'service' || step === 'budget' || step === 'timeline') {
-      setTimeout(() => setShowOptions(true), 600);
-    } else {
-      setShowOptions(false);
-    }
-  }, [step]);
-
-  const addMsg = (from: 'bot' | 'user', text: string) => {
-    setMessages(m => [...m, { from, text }]);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const botReply = (nextStep: BotStep, delay = 700) => {
-    setTimeout(() => {
-      addMsg('bot', BOT_INTROS[nextStep]);
-      setStep(nextStep);
-    }, delay);
+  const startSession = async () => {
+    setIsTyping(true);
+    try {
+      const pageContext = window.location.pathname;
+      const res = await api.post<any>('/chatbot/session', { pageContext });
+
+      setSessionId(res.session_id);
+      setMessages([{
+        id: Date.now().toString(),
+        from: 'bot',
+        text: res.reply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+      setQuickReplies(res.quick_replies || []);
+    } catch (e) {
+      console.error(e);
+      setMessages([{
+        id: Date.now().toString(),
+        from: 'bot',
+        text: 'Hello! How can we help you today?',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
-  const handleSend = (val?: string) => {
-    const text = val ?? inputVal.trim();
-    if (!text) return;
-    setInputVal('');
-    addMsg('user', text);
-    setShowOptions(false);
+  const handleSend = async (text: string) => {
+    if (!text.trim() || !sessionId) return;
 
-    const next = (ns: BotStep, newData: Partial<typeof userData>) => {
-      setUserData(d => ({ ...d, ...newData }));
-      botReply(ns);
+    const newMsg: Message = {
+      id: Date.now().toString(),
+      from: 'user',
+      text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    switch (step) {
-      case 'greeting': next('service', { name: text }); break;
-      case 'service': next('budget', { service: text }); break;
-      case 'budget': next('timeline', { budget: text }); break;
-      case 'timeline': next('email', { timeline: text }); break;
-      case 'email': {
-        const finalData = { ...userData, email: text };
-        setUserData(finalData);
-        botReply('done');
-        // Save to store
-        addEnquiry({
-          name: finalData.name,
-          email: finalData.email,
-          company: '',
-          phone: '',
-          service: finalData.service,
-          budget: finalData.budget,
-          message: `Timeline: ${finalData.timeline}`,
-          source: 'Chatbot',
-          chatLog: messages.map(m => ({ from: m.from, text: m.text, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) })),
-          pageVisits: [],
-        });
-        break;
-      }
-      default: break;
+    setMessages(prev => [...prev, newMsg]);
+    setInput('');
+    setQuickReplies([]);
+    setIsTyping(true);
+
+    try {
+      const pageContext = window.location.pathname;
+      const res = await api.post<any>('/chatbot/session', {
+        sessionId,
+        message: text,
+        pageContext
+      });
+
+      const botReply: Message = {
+        id: (Date.now() + 1).toString(),
+        from: 'bot',
+        text: res.reply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setMessages(prev => [...prev, botReply]);
+      setQuickReplies(res.quick_replies || []);
+    } catch (e) {
+      console.error(e);
+      const errReply: Message = {
+        id: (Date.now() + 1).toString(),
+        from: 'bot',
+        text: 'Sorry, I am having trouble connecting. Could you use our contact form?',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errReply]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
-  const getOptions = () => {
-    if (step === 'service') return SERVICES;
-    if (step === 'budget') return BUDGETS;
-    if (step === 'timeline') return TIMELINES;
-    return [];
+  const formatText = (text: string) => {
+    // Basic bold formatting **text**
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
   };
 
-  if (!open) {
+  if (!isOpen) {
     return (
-      <button className={styles.trigger} onClick={() => setOpen(true)} aria-label="Open chat">
-        <MessageCircle size={24} />
-        <span className={styles.triggerPulse} />
-        <span className={styles.triggerLabel}>Chat with us</span>
+      <button className={styles.fab} onClick={() => setIsOpen(true)} aria-label="Open chat">
+        <MessageSquare size={24} />
       </button>
     );
   }
 
   return (
-    <div className={`${styles.widget} ${minimised ? styles.minimised : ''}`}>
-      {/* Header */}
+    <div className={`${styles.widget} ${isMinimized ? styles.minimized : ''}`}>
       <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <div className={styles.headerAvatar}>DP</div>
+        <div className={styles.headerInfo}>
+          <div className={styles.avatar}>
+            <Bot size={20} />
+          </div>
           <div>
-            <strong>DigitalPulse</strong>
-            <div className={styles.onlineStatus}><span className={styles.onlineDot} />Online</div>
+            <h3>DigitalPulse Assistant</h3>
+            <span className={styles.status}>Online</span>
           </div>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.headerBtn} onClick={() => setMinimised(!minimised)}>
-            <Minus size={15} />
+          <button onClick={() => setIsMinimized(!isMinimized)} aria-label="Minimize chat">
+            {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
           </button>
-          <button className={styles.headerBtn} onClick={() => setOpen(false)}>
-            <X size={15} />
+          <button onClick={() => setIsOpen(false)} aria-label="Close chat">
+            <X size={16} />
           </button>
         </div>
       </div>
 
-      {!minimised && (
+      {!isMinimized && (
         <>
-          {/* Messages */}
           <div className={styles.messages}>
-            {messages.map((m, i) => (
-              <div key={i} className={`${styles.msg} ${m.from === 'bot' ? styles.botMsg : styles.userMsg}`}>
-                <div className={styles.bubble}>{m.text}</div>
+            {messages.map(msg => (
+              <div key={msg.id} className={`${styles.messageWrapper} ${msg.from === 'bot' ? styles.botWrapper : styles.userWrapper}`}>
+                {msg.from === 'bot' && <div className={styles.msgAvatar}><Bot size={14} /></div>}
+                <div className={`${styles.message} ${msg.from === 'bot' ? styles.botMessage : styles.userMessage}`}>
+                  <p>{formatText(msg.text)}</p>
+                  <span className={styles.time}>{msg.time}</span>
+                </div>
               </div>
             ))}
-            {showOptions && (
-              <div className={styles.options}>
-                {getOptions().map(o => (
-                  <button key={o} className={styles.optionBtn} onClick={() => handleSend(o)}>{o}</button>
-                ))}
+
+            {isTyping && (
+              <div className={`${styles.messageWrapper} ${styles.botWrapper}`}>
+                <div className={styles.msgAvatar}><Bot size={14} /></div>
+                <div className={`${styles.message} ${styles.botMessage} ${styles.typingMsg}`}>
+                  <div className={styles.typingIndicator}>
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
               </div>
             )}
-            {step === 'done' && (
-              <div className={styles.doneActions}>
-                <a href="/contact" className={styles.contactLink}>📞 Book a Call</a>
-              </div>
-            )}
-            <div ref={bottomRef} />
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          {step !== 'done' && !showOptions && (
-            <div className={styles.inputRow}>
-              <input
-                ref={inputRef}
-                value={inputVal}
-                onChange={e => setInputVal(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder={step === 'email' ? 'your@email.com' : 'Type your answer...'}
-                className={styles.chatInput}
-              />
-              <button className={styles.sendBtn} onClick={() => handleSend()} disabled={!inputVal.trim()}>
-                <Send size={15} />
-              </button>
+          {quickReplies.length > 0 && !isTyping && (
+            <div className={styles.quickReplies}>
+              {quickReplies.map((qr, i) => (
+                <button key={i} onClick={() => handleSend(qr)} className={styles.qrBtn}>
+                  {qr}
+                </button>
+              ))}
             </div>
           )}
+
+          <div className={styles.inputArea}>
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSend(input)}
+              placeholder="Type your message..."
+            />
+            <button
+              onClick={() => handleSend(input)}
+              disabled={!input.trim()}
+              className={styles.sendBtn}
+            >
+              <Send size={18} />
+            </button>
+          </div>
         </>
       )}
     </div>

@@ -42,8 +42,7 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
       // 2. Strict check for protected routes
       if (!isAuthenticated) {
         setAuthorized(false);
-        const loginPath = pathname.startsWith('/admin') ? '/admin/login' : '/portal/login';
-        router.push(loginPath);
+        router.push('/portal/login');
         return;
       }
 

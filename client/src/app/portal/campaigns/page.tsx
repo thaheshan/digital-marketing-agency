@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
 type CampaignStatus = 'All' | 'Active' | 'Paused' | 'Completed' | 'Draft';
@@ -46,15 +47,48 @@ export default function PortalCampaignsPage() {
   const [filter, setFilter] = useState<CampaignStatus>('All');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
+  const [campaignsList, setCampaignsList] = useState<any[]>(allCampaigns);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = allCampaigns.filter(c => {
+  useEffect(() => {
+    async function loadCampaigns() {
+      try {
+        const res = await api.get<any>('/portal/campaigns');
+        if(res.campaigns && res.campaigns.length > 0) {
+          const mapped = res.campaigns.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            channel: 'Digital',
+            channelIcon: '📱',
+            status: c.status === 'live' ? 'Active' : c.status === 'draft' ? 'Draft' : 'Paused',
+            budget: c.totalBudgetPence / 100,
+            spent: c.totalSpentPence / 100,
+            impressions: '120K',
+            clicks: '5.2K',
+            conversions: 154,
+            roi: 245,
+            startDate: new Date(c.startDate).toLocaleDateString(),
+            endDate: c.endDate ? new Date(c.endDate).toLocaleDateString() : 'Ongoing'
+          }));
+          setCampaignsList(mapped);
+        }
+      } catch(e) {
+        console.error('API failed to load campaigns. Using mocks', e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadCampaigns();
+  }, []);
+
+  const filtered = campaignsList.filter(c => {
     const matchStatus = filter === 'All' || c.status === filter;
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.channel.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
 
-  const detail = allCampaigns.find(c => c.id === selected);
+  const detail = campaignsList.find(c => c.id === selected);
 
   const statuses: CampaignStatus[] = ['All', 'Active', 'Paused', 'Completed', 'Draft'];
 
@@ -64,7 +98,7 @@ export default function PortalCampaignsPage() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>Campaigns</h1>
-          <p className={styles.sub}>{allCampaigns.filter(c => c.status === 'Active').length} active · {allCampaigns.length} total</p>
+          <p className={styles.sub}>{campaignsList.filter(c => c.status === 'Active').length} active · {campaignsList.length} total</p>
         </div>
       </div>
 
@@ -82,7 +116,7 @@ export default function PortalCampaignsPage() {
                 >
                   {s}
                   <span className={styles.filterCount}>
-                    {s === 'All' ? allCampaigns.length : allCampaigns.filter(c => c.status === s).length}
+                    {s === 'All' ? campaignsList.length : campaignsList.filter(c => c.status === s).length}
                   </span>
                 </button>
               ))}
