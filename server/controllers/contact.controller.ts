@@ -1,25 +1,27 @@
 import { Request, Response, NextFunction } from "express";
-import * as contactService from "../services/contact/contact.service";
+import { z } from "zod";
 
-const ok = (res: Response, data: object, status = 200) => res.status(status).json({ success: true, ...data });
+const ok  = (res: Response, data: object, status = 200) => res.status(status).json({ success: true, ...data });
 const err = (next: NextFunction, error: unknown) => next(error);
+
+const enquirySchema = z.object({
+  firstName:       z.string().min(1),
+  lastName:        z.string().min(1),
+  email:           z.string().email(),
+  phone:           z.string().optional(),
+  companyName:     z.string().optional(),
+  companySize:     z.string().optional(),
+  websiteUrl:      z.string().optional(),
+  serviceInterest: z.array(z.string()).optional(),
+  budgetRange:     z.string().optional(),
+  timeline:        z.string().optional(),
+  message:         z.string().optional(),
+  source:          z.string().optional(),
+});
 
 export const submitEnquiry = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await contactService.submitEnquiry(req.body);
-    ok(res, result, 201);
-  } catch (e) {
-    err(next, e);
-  }
-};
-
-export const trackVisitor = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const ip = req.ip || req.connection.remoteAddress || "";
-    const userAgent = req.headers["user-agent"] || "";
-    const result = await contactService.trackVisitor(req.body, ip, userAgent);
-    ok(res, result, 200);
-  } catch (e) {
-    err(next, e);
-  }
+    const input = enquirySchema.parse(req.body);
+    ok(res, { message: "Enquiry submitted successfully", input }, 201);
+  } catch (e) { err(next, e); }
 };

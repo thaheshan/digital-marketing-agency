@@ -1,32 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import * as analyticsService from "../services/analytics/analytics.service";
 
-const ok = (res: Response, data: object, status = 200) => res.status(status).json({ success: true, ...data });
+const ok  = (res: Response, data: object, status = 200) => res.status(status).json({ success: true, ...data });
 const err = (next: NextFunction, error: unknown) => next(error);
 
-export const getOverview = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await analyticsService.getOverview();
-    ok(res, data);
-  } catch (e) {
-    err(next, e);
-  }
+export const getDashboard = async (req: Request, res: Response, next: NextFunction) => {
+  try { ok(res, { message: "Analytics dashboard - coming soon" }); } catch (e) { err(next, e); }
 };
 
 export const getCampaignAnalytics = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await analyticsService.getCampaignAnalytics(req.params.id);
-    ok(res, data);
-  } catch (e) {
-    err(next, e);
-  }
+  try { ok(res, { id: req.params.id as string, message: "Campaign analytics - coming soon" }); } catch (e) { err(next, e); }
 };
 
-export const getContentPerformance = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await analyticsService.getContentPerformance();
-    ok(res, data);
-  } catch (e) {
-    err(next, e);
-  }
+export const getSnapshot = async (req: Request, res: Response, next: NextFunction) => {
+  try { ok(res, { message: "Snapshot - coming soon" }); } catch (e) { err(next, e); }
 };

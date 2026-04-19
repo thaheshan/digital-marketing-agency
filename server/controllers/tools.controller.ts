@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
-import * as roiService from "../services/tools/roi.service";
+import * as roiService   from "../services/tools/roi.service";
 import * as toolsService from "../services/tools/tools.service";
 
 const ok  = (res: Response, data: object, status = 200) => res.status(status).json({ success: true, ...data });
@@ -32,34 +32,34 @@ export const calculateRoi = async (req: Request, res: Response, next: NextFuncti
   try {
     const input  = roiSchema.parse(req.body);
     const result = await roiService.calculateRoi(input);
-    ok(res, result, 201);
+    ok(res, result as unknown as object, 201);
   } catch (e) { err(next, e); }
 };
 
 export const getRoiResult = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await roiService.getRoiResult(req.params.id);
+    const result = await roiService.getRoiResult(req.params.id as string);
     ok(res, { result });
   } catch (e) { err(next, e); }
 };
 
 export const runAudit = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await toolsService.runAudit(req.body.url);
-    ok(res, result);
+    const result = await toolsService.runAudit(req.body.url as string);
+    ok(res, result as unknown as object);
   } catch (e) { err(next, e); }
 };
 
 export const evaluateSentiment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await toolsService.evaluateSentiment(req.body.text);
-    ok(res, result);
+    const result = await toolsService.evaluateSentiment(req.body.text as string);
+    ok(res, result as unknown as object);
   } catch (e) { err(next, e); }
 };
 
 export const getPersonalization = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await toolsService.getPersonalization(req.body.visitor_type);
-    ok(res, result);
+    const result = await toolsService.getPersonalization(req.body.visitor_type as string);
+    ok(res, result as unknown as object);
   } catch (e) { err(next, e); }
 };
