@@ -17,15 +17,16 @@ from services.audit import generate_website_audit
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=os.getenv("CORS_ORIGIN", "*"))
+CORS(app, resources={r"/ml/*": {"origins": os.getenv("CORS_ORIGIN", "http://localhost:5000")}})
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok", "service": "ml-services", "version": "1.0.0"})
+@app.route("/ml/health", methods=["GET"])
+def ml_health():
+    return jsonify({"status": "ok", "service": "ML Services", "port": int(os.getenv("PORT", 5001))})
 
 
 # ── Lead Scoring ──────────────────────────────────────────────────────────────
@@ -163,7 +164,7 @@ def personalize_content():
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
-    debug = os.getenv("FLASK_ENV", "production") == "development"
-    logger.info(f"ML Services starting on port {port}")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    from waitress import serve
+    port = int(os.getenv("PORT", 5001))
+    logger.info(f"[ML] Flask starting on port {port} via Waitress")
+    serve(app, host="0.0.0.0", port=port)
