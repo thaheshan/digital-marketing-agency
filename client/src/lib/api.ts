@@ -34,7 +34,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const isJson = response.headers.get('content-type')?.includes('application/json');
   const data = isJson ? await response.json() : await response.text();
 
-  if (!response.ok) {
+  if (!response.ok || (isJson && data.success === false)) {
     throw new ApiError(response.status, data.error || data.message || 'API Error', data);
   }
 
@@ -45,5 +45,6 @@ export const api = {
   get: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { ...options, method: 'GET' }),
   post: <T>(endpoint: string, body: any, options?: RequestInit) => request<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
   put: <T>(endpoint: string, body: any, options?: RequestInit) => request<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+  patch: <T>(endpoint: string, body: any, options?: RequestInit) => request<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { ...options, method: 'DELETE' }),
 };

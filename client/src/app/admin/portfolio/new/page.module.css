@@ -82,4 +82,67 @@
 .publishBtn:hover:not(:disabled) { background: #15803d; }
 .publishBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-@media (max-width: 900px) { .mainArea { grid-template-columns: 1fr; } .formGrid { grid-template-columns: 1fr; } .metricsGrid { grid-template-columns: 1fr 1fr; } }
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.fileItem {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.fileInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.fileSize {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.progressTrack {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: #06b6d4;
+  transition: width 0.3s ease;
+}
+
+.browseBtn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.browseBtn:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1024px) {
+ .mainArea { grid-template-columns: 1fr; } .formGrid { grid-template-columns: 1fr; } .metricsGrid { grid-template-columns: 1fr 1fr; } }

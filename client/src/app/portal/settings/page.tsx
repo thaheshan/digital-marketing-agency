@@ -1,12 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function PortalSettingsPage() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('Profile');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: '',
+    websiteUrl: '',
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: '',
+        websiteUrl: '',
+      });
+    }
+  }, [user]);
 
   const tabs = ['Profile', 'Account', 'Notifications', 'Security', 'Billing'];
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setSaveStatus(null);
+    try {
+      await api.patch('/portal/profile', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        websiteUrl: formData.websiteUrl,
+      });
+      setSaveStatus('Profile updated successfully!');
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (err) {
+      setSaveStatus('Failed to update profile.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -37,40 +82,62 @@ export default function PortalSettingsPage() {
             <div className={styles.section}>
               <h3>Public Profile</h3>
               <p>How the agency sees your account.</p>
-              <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+              <form className={styles.form} onSubmit={handleSave}>
                 <div className={styles.avatarSection}>
-                  <div className={styles.avatar}>JD</div>
+                  <div className={styles.avatar}>{user?.firstName?.[0]}{user?.lastName?.[0]}</div>
                   <div className={styles.avatarActions}>
-                    <button className={styles.uploadBtn}>Upload New Photo</button>
-                    <button className={styles.removeBtn}>Remove</button>
+                    <button type="button" className={styles.uploadBtn}>Upload New Photo</button>
+                    <button type="button" className={styles.removeBtn}>Remove</button>
                   </div>
                 </div>
 
                 <div className={styles.formGrid}>
                   <div className={styles.formField}>
                     <label>First Name</label>
-                    <input defaultValue="John" className={styles.input} />
+                    <input 
+                      value={formData.firstName} 
+                      onChange={e => setFormData({...formData, firstName: e.target.value})}
+                      className={styles.input} 
+                    />
                   </div>
                   <div className={styles.formField}>
                     <label>Last Name</label>
-                    <input defaultValue="Doe" className={styles.input} />
+                    <input 
+                      value={formData.lastName} 
+                      onChange={e => setFormData({...formData, lastName: e.target.value})}
+                      className={styles.input} 
+                    />
                   </div>
                   <div className={styles.formField}>
                     <label>Email Address</label>
-                    <input defaultValue="john@company.com" className={styles.input} />
+                    <input value={formData.email} disabled className={styles.input} />
                   </div>
                   <div className={styles.formField}>
                     <label>Phone Number</label>
-                    <input defaultValue="+1 (555) 000-0000" className={styles.input} />
+                    <input 
+                      value={formData.phone} 
+                      onChange={e => setFormData({...formData, phone: e.target.value})}
+                      placeholder="+1 (555) 000-0000" 
+                      className={styles.input} 
+                    />
                   </div>
                   <div className={styles.formFieldFull}>
                     <label>Company Website</label>
-                    <input defaultValue="https://company.com" className={styles.input} />
+                    <input 
+                      value={formData.websiteUrl} 
+                      onChange={e => setFormData({...formData, websiteUrl: e.target.value})}
+                      placeholder="https://company.com" 
+                      className={styles.input} 
+                    />
                   </div>
                 </div>
 
+                {saveStatus && <div style={{ marginBottom: '16px', color: saveStatus.includes('successfully') ? '#22C55E' : '#EF4444' }}>{saveStatus}</div>}
+
                 <div className={styles.formActions}>
-                  <button type="submit" className={styles.saveBtn}>Save Changes</button>
+                  <button type="submit" className={styles.saveBtn} disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
                 </div>
               </form>
             </div>

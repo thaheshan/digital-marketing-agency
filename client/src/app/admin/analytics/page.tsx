@@ -1,141 +1,189 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Users, Target, Zap, ArrowUpRight, PoundSterling, BarChart3 } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
-const agencyStats = [
-  { label: 'Total Managed Spend', value: '$1.4M', change: '+12%', color: '#F97316' },
-  { label: 'Total Client ROI', value: '184%', change: '+5%', color: 'var(--color-success)' },
-  { label: 'Active Campaigns', value: '47', change: '+3', color: 'var(--color-secondary)' },
-  { label: 'Client Retention', value: '98%', change: '+0.5%', color: 'var(--color-accent)' },
-];
+export default function AnalyticsPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState('90d');
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [customDays, setCustomDays] = useState('90');
 
-const conversionChart = [
-  { month: 'Jan', value: 420 },
-  { month: 'Feb', value: 380 },
-  { month: 'Mar', value: 510 },
-  { month: 'Apr', value: 460 },
-  { month: 'May', value: 650 },
-  { month: 'Jun', value: 820 },
-];
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      try {
+        const result = await api.get(`/admin/analytics?range=${range}`);
+        setData(result);
+      } catch (err) {
+        console.error('Failed to fetch analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, [range]);
 
-const revenueDistribution = [
-  { channel: 'SEO Services', value: 42, color: 'var(--color-secondary)' },
-  { channel: 'Social Media', value: 28, color: 'var(--color-accent)' },
-  { channel: 'PPC Management', value: 20, color: '#F97316' },
-  { channel: 'Content / Creative', value: 10, color: '#8B5CF6' },
-];
+  const handleCustomRange = (days: string) => {
+    setCustomDays(days);
+    setRange(`${days}d`);
+  };
 
-export default function AdminAnalyticsPage() {
+  if (loading && !data) return <div className={styles.loading}>Analyzing agency data...</div>;
+
+  const points = data?.revenueHistory || [];
+  const maxVal = Math.max(...points.map((p: any) => p.value), 1000);
+  const chartHeight = 200;
+  const chartWidth = 800;
+
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
+      <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Agency Performance</h1>
-          <p className={styles.sub}>Combined analytics across all clients and service lines.</p>
+          <h1 className={styles.title}>Agency Analytics</h1>
+          <p className={styles.sub}>Deep-dive into cross-channel performance and revenue intelligence.</p>
         </div>
-        <div className={styles.headerActions}>
-           <button className={styles.exportBtn}>📊 Download Agency Report</button>
+        <div className={styles.timeRange}>
+          {['7d', '30d', '60d', '90d', '12m', 'all'].map(r => (
+            <button 
+              key={r}
+              className={`${styles.rangeBtn} ${range === r ? styles.active : ''}`}
+              onClick={() => setRange(r)}
+            >
+              {r.toUpperCase()}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* KPI Overviews */}
-      <div className={styles.statsGrid}>
-        {agencyStats.map(s => (
-          <div key={s.label} className={styles.statCard}>
-            <div className={styles.statLabel}>{s.label}</div>
-            <div className={styles.statValue} style={{ color: s.color }}>{s.value}</div>
-            <div className={styles.statChange}>
-               <span className={styles.plus}>{s.change}</span> vs last month
-            </div>
+      <div className={styles.metricsGrid}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricTop}>
+            <div className={styles.iconBox} style={{ background: '#06b6d4' }}><PoundSterling size={20} /></div>
+            <span className={styles.trend}>+12.5%</span>
           </div>
-        ))}
+          <span className={styles.metricValue}>£{(data.pipelineValue || 0).toLocaleString()}</span>
+          <span className={styles.metricLabel}>Total Pipeline Value</span>
+        </div>
+        <div className={styles.metricCard}>
+          <div className={styles.metricTop}>
+            <div className={styles.iconBox} style={{ background: '#f59e0b' }}><Target size={20} /></div>
+            <span className={styles.trend}>+4.2%</span>
+          </div>
+          <span className={styles.metricValue}>{data.avgRoi}x</span>
+          <span className={styles.metricLabel}>Avg. Account ROI</span>
+        </div>
+        <div className={styles.metricCard}>
+          <div className={styles.metricTop}>
+            <div className={styles.iconBox} style={{ background: '#10b981' }}><Users size={20} /></div>
+            <span className={styles.trend}>+18.1%</span>
+          </div>
+          <span className={styles.metricValue}>{(data.totalImpressions / 1000).toFixed(0)}k</span>
+          <span className={styles.metricLabel}>Total Impressions</span>
+        </div>
       </div>
 
-      <div className={styles.mainGrid}>
-        {/* Conversion Trends */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h3>Global Conversion Growth</h3>
+      <div className={styles.chartGrid}>
+        <div className={styles.chartCard}>
+          <div className={styles.chartHeader}>
+             <h2 className={styles.chartTitle}>Revenue Growth vs Target</h2>
+             <span className={styles.chartMeta}>Live Data Pipeline: {range.toUpperCase()} Window</span>
           </div>
-          <div className={styles.chartWrapper}>
-            <div className={styles.chartArea}>
-              {conversionChart.map(point => (
-                <div key={point.month} className={styles.chartCol}>
-                  <div 
-                    className={styles.chartBar} 
-                    style={{ height: `${(point.value / 900) * 100}%` }}
-                  >
-                    <span className={styles.barValue}>{point.value}</span>
-                  </div>
-                  <span className={styles.chartLabel}>{point.month}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          <div className={styles.chartContainer} onMouseLeave={() => setHoverIndex(null)}>
+             <svg width="100%" height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none">
+                {/* Grid Lines */}
+                {[0, 1, 2, 3].map(i => (
+                  <line 
+                    key={i} 
+                    x1="0" y1={i * 50} x2={chartWidth} y2={i * 50} 
+                    stroke="#f1f5f9" strokeWidth="1" 
+                  />
+                ))}
+                
+                {/* The Line */}
+                <path 
+                  d={points.map((p: any, i: number) => {
+                    const x = (i / (points.length - 1)) * chartWidth;
+                    const y = chartHeight - (p.value / maxVal) * chartHeight;
+                    return `${i === 0 ? 'M' : 'L'}${x},${y}`;
+                  }).join(' ')} 
+                  fill="none" stroke="#F97316" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" 
+                />
 
-        {/* Revenue Share */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h3>Service Line Revenue Share</h3>
+                {/* Interaction Points */}
+                {points.map((p: any, i: number) => {
+                   const x = (i / (points.length - 1)) * chartWidth;
+                   return (
+                     <rect 
+                       key={i} 
+                       x={x - 10} y="0" width="20" height={chartHeight} 
+                       fill="transparent" 
+                       onMouseEnter={() => setHoverIndex(i)}
+                     />
+                   );
+                })}
+
+                {/* Hover Indicator */}
+                {hoverIndex !== null && points[hoverIndex] && (
+                  <>
+                    <line 
+                      x1={(hoverIndex / (points.length - 1)) * chartWidth} 
+                      y1="0" 
+                      x2={(hoverIndex / (points.length - 1)) * chartWidth} 
+                      y2={chartHeight} 
+                      stroke="#F97316" strokeWidth="1" strokeDasharray="4,4" 
+                    />
+                    <circle 
+                      cx={(hoverIndex / (points.length - 1)) * chartWidth} 
+                      cy={chartHeight - (points[hoverIndex].value / maxVal) * chartHeight} 
+                      r="6" fill="#F97316" stroke="#fff" strokeWidth="2" 
+                    />
+                  </>
+                )}
+             </svg>
+
+             {/* Custom Tooltip */}
+             {hoverIndex !== null && points[hoverIndex] && (
+               <div 
+                 className={styles.tooltip}
+                 style={{ 
+                   left: `${(hoverIndex / (points.length - 1)) * 100}%`,
+                   transform: `translateX(${hoverIndex > points.length / 2 ? '-100%' : '0'})`
+                 }}
+               >
+                 <div className={styles.tooltipDate}>{points[hoverIndex].date}</div>
+                 <div className={styles.tooltipValue}>£{points[hoverIndex].value.toLocaleString()}</div>
+               </div>
+             )}
           </div>
-          <div className={styles.shareList}>
-            {revenueDistribution.map(item => (
-              <div key={item.channel} className={styles.shareItem}>
-                <div className={styles.shareInfo}>
-                   <span className={styles.shareName}>{item.channel}</span>
-                   <span className={styles.shareValue}>{item.value}%</span>
-                </div>
-                <div className={styles.barContainer}>
-                   <div 
-                      className={styles.barFill} 
-                      style={{ width: `${item.value}%`, background: item.color }}
-                   ></div>
-                </div>
-              </div>
+          <div className={styles.chartXLabels}>
+            {points.filter((_: any, i: number) => i % Math.ceil(points.length / 6) === 0).map((p: any, i: number) => (
+              <span key={i}>{p.date}</span>
             ))}
           </div>
-          <p className={styles.shareFooter}>Based on $218.4K monthly recurring revenue.</p>
         </div>
-      </div>
 
-      {/* Top Clients by Performance */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <h3>Top 5 Clients by ROI</h3>
-        </div>
-        <div className={styles.tableWrap}>
-           <table className={styles.table}>
-             <thead>
-               <tr>
-                 <th>Client Account</th>
-                 <th>Managed Spend</th>
-                 <th>Conversions</th>
-                 <th>Goal Value</th>
-                 <th>ROI</th>
-                 <th>Manager</th>
-               </tr>
-             </thead>
-             <tbody>
-               {[
-                 { name: 'FashionFirst', spend: '$42K', conv: 842, value: '$172.5K', roi: '+310%', manager: 'Sarah K.' },
-                 { name: 'RetailCo', spend: '$12.5K', conv: 412, value: '$35.8K', roi: '+187%', manager: 'Sarah K.' },
-                 { name: 'TechFlow', spend: '$8.2K', conv: 382, value: '$19.8K', roi: '+142%', manager: 'Marcus C.' },
-                 { name: 'PowerLabs', spend: '$14.2K', conv: 520, value: '$32.4K', roi: '+128%', manager: 'James O.' },
-                 { name: 'GrowthMet', spend: '$6.2K', conv: 142, value: '$12.1K', roi: '+95%', manager: 'James O.' },
-               ].map(client => (
-                 <tr key={client.name}>
-                   <td className={styles.bold}>{client.name}</td>
-                   <td className={styles.mono}>{client.spend}</td>
-                   <td className={styles.mono}>{client.conv}</td>
-                   <td className={styles.mono}>{client.value}</td>
-                   <td className={styles.positive}>{client.roi}</td>
-                   <td>{client.manager}</td>
-                 </tr>
-               ))}
-             </tbody>
-           </table>
+        <div className={styles.chartCard}>
+          <div className={styles.chartHeader}>
+             <h2 className={styles.chartTitle}>Channel Efficiency</h2>
+             <span className={styles.chartMeta}>ROI per Marketing Channel</span>
+          </div>
+          <div className={styles.barList}>
+             {data.channelEfficiency.map((item: any) => (
+               <div key={item.name} className={styles.barItem}>
+                 <div className={styles.barInfo}>
+                    <span>{item.name}</span>
+                    <span>{item.value}%</span>
+                 </div>
+                 <div className={styles.barTrack}>
+                    <div className={styles.barFill} style={{ width: `${item.value}%`, background: '#F97316' }} />
+                 </div>
+               </div>
+             ))}
+          </div>
         </div>
       </div>
     </div>

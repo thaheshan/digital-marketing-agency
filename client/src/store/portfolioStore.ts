@@ -77,31 +77,96 @@ const MOCK_PORTFOLIO: PortfolioItem[] = [
 
 interface PortfolioState {
   items: PortfolioItem[];
-  addItem: (item: Omit<PortfolioItem, 'id' | 'createdAt' | 'contentScore'>) => void;
-  updateItem: (id: string, data: Partial<PortfolioItem>) => void;
-  deleteItem: (id: string) => void;
-  publishItem: (id: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  fetchItems: () => Promise<void>;
+  fetchItemBySlug: (slug: string) => Promise<PortfolioItem | null>;
+  addItem: (item: Omit<PortfolioItem, 'id' | 'createdAt' | 'contentScore'>) => Promise<void>;
+  updateItem: (id: string, data: Partial<PortfolioItem>) => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
+  publishItem: (id: string) => Promise<void>;
   getBySlug: (slug: string) => PortfolioItem | undefined;
 }
 
 export const usePortfolioStore = create<PortfolioState>((set, get) => ({
-  items: MOCK_PORTFOLIO,
+  items: [],
+  isLoading: false,
+  error: null,
 
-  addItem: (item) => set(s => ({
-    items: [
-      { ...item, id: `p${Date.now()}`, createdAt: new Date().toISOString().split('T')[0], contentScore: 0 },
-      ...s.items,
-    ],
-  })),
+  fetchItems: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await api.get<{ success: boolean; items: any[] }>('/portfolio/public');
+      if (data.success) {
+        set({ items: data.items, isLoading: false });
+      }
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
 
-  updateItem: (id, data) =>
-    set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...data } : i) })),
+  fetchItemBySlug: async (slug) => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await api.get<{ success: boolean; item: any }>(`/portfolio/public/${slug}`);
+      if (data.success && data.item) {
+        set({ isLoading: false });
+        return data.item;
+      }
+      return null;
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+      return null;
+    }
+  },
 
-  deleteItem: (id) =>
-    set(s => ({ items: s.items.filter(i => i.id !== id) })),
+  addItem: async (item) => {
+    set({ isLoading: true });
+    try {
+      const data = await api.post<{ success: boolean; item: PortfolioItem }>('/portfolio', item);
+      if (data.success) {
+        set(s => ({ items: [data.item, ...s.items], isLoading: false }));
+      }
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
 
-  publishItem: (id) =>
-    set(s => ({ items: s.items.map(i => i.id === id ? { ...i, status: 'published' } : i) })),
+  updateItem: async (id, data) => {
+    set({ isLoading: true });
+    try {
+      const resp = await api.put<{ success: boolean; item: PortfolioItem }>(`/portfolio/${id}`, data);
+      if (resp.success) {
+        set(s => ({ items: s.items.map(i => i.id === id ? resp.item : i), isLoading: false }));
+      }
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
+
+  deleteItem: async (id) => {
+    set({ isLoading: true });
+    try {
+      const data = await api.delete<{ success: boolean }>(`/portfolio/${id}`);
+      if (data.success) {
+        set(s => ({ items: s.items.filter(i => i.id !== id), isLoading: false }));
+      }
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
+
+  publishItem: async (id) => {
+    set({ isLoading: true });
+    try {
+      const data = await api.put<{ success: boolean; item: PortfolioItem }>(`/portfolio/${id}`, { status: 'published' });
+      if (data.success) {
+        set(s => ({ items: s.items.map(i => i.id === id ? data.item : i), isLoading: false }));
+      }
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
 
   getBySlug: (slug) => get().items.find(i => i.slug === slug),
 }));

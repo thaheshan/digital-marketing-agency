@@ -9,12 +9,16 @@ import analyticsRoutes from "./analytics.routes";
 import toolsRoutes from "./tools.routes";
 // import emailRoutes from "./email.routes"; // If needed
 import socialRoutes from "./social.routes";
+import adminRoutes from "./admin.routes";
+import blogRoutes from "./blog.routes";
 
 export const registerRoutes = (app: Application) => {
   app.use("/api/auth", authRoutes);
   app.use("/api/portal", portalRoutes);
   app.use("/api/contact", contactRoutes);
   app.use("/api/portfolio", portfolioRoutes);
+  app.use("/api/blog", blogRoutes);
+  app.use("/api/admin", adminRoutes); // Centralized admin routes
   app.use("/api/admin/enquiries", leadsRoutes);
   app.use("/api/chatbot", chatbotRoutes);
   app.use("/api/analytics", analyticsRoutes);

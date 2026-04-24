@@ -44,12 +44,13 @@ export const useAuthStore = create<AuthState>()(
         try {
           const data = await api.post<{
             accessToken: string;
-            user: { id: string; email: string; firstName: string; lastName: string; role: UserRole; status: string };
+            user: { id: string; email: string; firstName: string; lastName: string; role: UserRole; status: string; company?: string };
           }>('/auth/login', { email, password });
 
           const user: User = {
             ...data.user,
             name: `${data.user.firstName} ${data.user.lastName}`,
+            company: data.user.company,
           };
 
           // Persist token for API calls
@@ -80,12 +81,18 @@ export const useAuthStore = create<AuthState>()(
         if (!token) return;
 
         try {
-          const data = await api.get<{ user: { id: string; email: string; firstName: string; lastName: string; role: UserRole; status: string } }>('/auth/me');
-          const user: User = { ...data.user, name: `${data.user.firstName} ${data.user.lastName}` };
-          set({ user, token, isAuthenticated: true });
+          const data = await api.get<{ success: boolean; user: { id: string; email: string; firstName: string; lastName: string; role: UserRole; status: string; company?: string } }>('/auth/me');
+          if (data.success && data.user) {
+            const user: User = { ...data.user, name: `${data.user.firstName} ${data.user.lastName}`, company: data.user.company };
+            set({ user, token, isAuthenticated: true });
+          } else {
+             throw new Error('User not found');
+          }
         } catch {
           // Token invalid — clear state
-          localStorage.removeItem('token');
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+          }
           set({ user: null, token: null, isAuthenticated: false });
         }
       },

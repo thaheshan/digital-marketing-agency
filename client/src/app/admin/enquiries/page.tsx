@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Search, Filter, ArrowRight, Flame, TrendingUp, Minus } from 'lucide-react';
+import { Search, Filter, ArrowRight, Flame, TrendingUp, Minus, Loader2 } from 'lucide-react';
 import { useEnquiryStore } from '@/store';
 import type { LeadStatus } from '@/store';
 import styles from './page.module.css';
@@ -36,17 +36,35 @@ function StatusDot({ status }: { status: LeadStatus }) {
 }
 
 export default function EnquiriesPage() {
-  const { enquiries } = useEnquiryStore();
+  const { enquiries, fetchEnquiries, isLoading, error } = useEnquiryStore();
   const [filter, setFilter] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
 
+  useEffect(() => {
+    fetchEnquiries();
+  }, [fetchEnquiries]);
+
+  if (isLoading && enquiries.length === 0) return (
+    <div className={styles.loading}>
+      <Loader2 className={styles.spinner} />
+      <span>Fetching strategic leads...</span>
+    </div>
+  );
+
   const filtered = enquiries.filter(e => {
-    const matchTab = filter === 'all' || e.status === filter || (filter === 'hot' && e.score >= 70) || (filter === 'warm' && e.score >= 40 && e.score < 70) || (filter === 'cold' && e.score < 40);
-    const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.company.toLowerCase().includes(search.toLowerCase()) || e.email.toLowerCase().includes(search.toLowerCase());
+    const score = e.leadScore || 0;
+    const temp = e.leadTemperature || (score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold');
+    
+    const matchTab = filter === 'all' || temp === filter;
+    const fullName = `${e.firstName} ${e.lastName}`.toLowerCase();
+    const matchSearch = !search || fullName.includes(search.toLowerCase()) || (e.companyName && e.companyName.toLowerCase().includes(search.toLowerCase())) || e.email.toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
 
-  const hotLeads = enquiries.filter(e => e.score >= 70).sort((a, b) => b.score - a.score);
+  const hotLeads = enquiries.filter(e => {
+    const score = e.leadScore || 0;
+    return e.leadTemperature === 'hot' || score >= 70;
+  }).sort((a, b) => (b.leadScore || 0) - (a.leadScore || 0));
 
   return (
     <div className={styles.page}>
@@ -65,13 +83,13 @@ export default function EnquiriesPage() {
             {hotLeads.slice(0, 3).map(e => (
               <Link key={e.id} href={`/admin/enquiries/${e.id}`} className={styles.hotCard}>
                 <div className={styles.hotCardTop}>
-                  <div className={styles.hotAvatar}>{e.name.split(' ').map(n => n[0]).join('')}</div>
-                  <ScoreBadge score={e.score} />
+                  <div className={styles.hotAvatar}>{e.firstName[0]}{e.lastName[0]}</div>
+                  <ScoreBadge score={e.leadScore || 0} />
                 </div>
-                <strong className={styles.hotName}>{e.name}</strong>
-                <span className={styles.hotCompany}>{e.company}</span>
-                <span className={styles.hotService}>{e.service}</span>
-                <div className={styles.hotBudget}>{e.budget}</div>
+                <strong className={styles.hotName}>{e.firstName} {e.lastName}</strong>
+                <span className={styles.hotCompany}>{e.companyName || 'Private Individual'}</span>
+                <span className={styles.hotService}>{e.serviceInterest?.[0] || 'Digital Strategy'}</span>
+                <div className={styles.hotBudget}>{e.budgetRange || '£—'}</div>
                 <span className={styles.hotArrow}><ArrowRight size={14} /></span>
               </Link>
             ))}
@@ -89,9 +107,11 @@ export default function EnquiriesPage() {
                 {t.charAt(0).toUpperCase() + t.slice(1)}
                 <span className={styles.tabCount}>
                   {t === 'all' ? enquiries.length
-                    : t === 'hot' ? enquiries.filter(e => e.score >= 70).length
-                    : t === 'warm' ? enquiries.filter(e => e.score >= 40 && e.score < 70).length
-                    : enquiries.filter(e => e.score < 40).length}
+                    : enquiries.filter(e => {
+                        const score = e.leadScore || 0;
+                        const temp = e.leadTemperature || (score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold');
+                        return temp === t;
+                      }).length}
                 </span>
               </button>
             ))}
@@ -122,19 +142,19 @@ export default function EnquiriesPage() {
                 <tr key={e.id} className={styles.tr}>
                   <td>
                     <div className={styles.nameCell}>
-                      <div className={styles.avatar}>{e.name.split(' ').map(n => n[0]).join('')}</div>
+                      <div className={styles.avatar}>{e.firstName[0]}{e.lastName[0]}</div>
                       <div>
-                        <strong>{e.name}</strong>
-                        <span>{e.company}</span>
+                        <strong>{e.firstName} {e.lastName}</strong>
+                        <span>{e.companyName || 'Private Individual'}</span>
                       </div>
                     </div>
                   </td>
-                  <td className={styles.serviceCell}>{e.service}</td>
-                  <td className={styles.budgetCell}>{e.budget}</td>
-                  <td><ScoreBadge score={e.score} /></td>
-                  <td><StatusDot status={e.status} /></td>
-                  <td className={styles.sourceCell}>{e.source}</td>
-                  <td className={styles.dateCell}>{new Date(e.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</td>
+                  <td className={styles.serviceCell}>{e.serviceInterest?.[0] || 'Strategic Review'}</td>
+                  <td className={styles.budgetCell}>{e.budgetRange || '£—'}</td>
+                  <td><ScoreBadge score={e.leadScore || 0} /></td>
+                  <td><StatusDot status={(e.leadScore || 0) >= 70 ? 'hot' : (e.leadScore || 0) >= 40 ? 'warm' : 'cold'} /></td>
+                  <td className={styles.sourceCell}>{e.source || 'Organic'}</td>
+                  <td className={styles.dateCell}>{new Date(e.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</td>
                   <td>
                     <Link href={`/admin/enquiries/${e.id}`} className={styles.viewBtn}>View</Link>
                   </td>

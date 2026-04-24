@@ -18,6 +18,11 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
 }
 
 .createBtn:hover { background: #EA580C; transform: translateY(-1px); }

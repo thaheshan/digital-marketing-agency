@@ -101,10 +101,72 @@ export const getClientCampaigns = async (req: Request, res: Response, next: Next
   } catch (e) { err(next, e); }
 };
 
+export const getClientGoals = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const goals = await portalService.getClientGoals(userId);
+    ok(res, { goals });
+  } catch (e) { err(next, e); }
+};
+
+export const getClientReports = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const reports = await portalService.getClientReports(userId);
+    ok(res, { reports });
+  } catch (e) { err(next, e); }
+};
+
 export const getClientCampaignData = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).userId;
     const campaign = await portalService.getClientCampaignData(userId, req.params.id as string);
     ok(res, { campaign });
+  } catch (e) { err(next, e); }
+};
+
+export const getClientAnalytics = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const analytics = await portalService.getClientAnalytics(userId);
+    ok(res, { analytics });
+  } catch (e) { err(next, e); }
+};
+const updateProfileSchema = z.object({
+  firstName: z.string().min(1).max(100).optional(),
+  lastName:  z.string().min(1).max(100).optional(),
+  phone:      z.string().optional(),
+  websiteUrl: z.string().optional(),
+});
+
+export const updateClientProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const input = updateProfileSchema.parse(req.body);
+    const result = await portalService.updateClientProfile(userId, input);
+    ok(res, { message: "Profile updated successfully", user: result });
+  } catch (e) { err(next, e); }
+};
+
+export const getSupportTickets = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const tickets = await portalService.getSupportTickets(userId);
+    ok(res, { tickets });
+  } catch (e) { err(next, e); }
+};
+
+const createTicketSchema = z.object({
+  subject:  z.string().min(5),
+  category: z.string().min(2),
+  message:  z.string().min(10),
+});
+
+export const createSupportTicket = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const input = createTicketSchema.parse(req.body);
+    const ticket = await portalService.createSupportTicket(userId, input);
+    ok(res, { message: "Ticket created successfully", ticket }, 201);
   } catch (e) { err(next, e); }
 };

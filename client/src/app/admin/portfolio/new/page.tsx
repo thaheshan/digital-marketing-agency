@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, Sparkles, RefreshCw } from 'lucide-react';
@@ -38,15 +38,51 @@ export default function NewPortfolioPage() {
   const router = useRouter();
   const { addItem } = usePortfolioStore();
   const [step, setStep] = useState(1);
+  const [services, setServices] = useState<any[]>([]);
 
   // Step 1 state
   const [title, setTitle] = useState('');
   const [clientName, setClientName] = useState('');
   const [clientIndustry, setClientIndustry] = useState('');
-  const [serviceCategory, setServiceCategory] = useState('');
+  const [serviceId, setServiceId] = useState('');
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState('');
   const [metrics, setMetrics] = useState({ impressions: '', clicks: '', ctr: '', conversions: '', cpa: '', roi: '' });
+  
+  const DEFAULT_SERVICES = [
+    { id: 'seo', name: 'SEO Optimization' },
+    { id: 'ppc', name: 'PPC Advertising' },
+    { id: 'social', name: 'Social Media Marketing' },
+    { id: 'content', name: 'Content Marketing' },
+    { id: 'email', name: 'Email Marketing' },
+    { id: 'brand', name: 'Brand Strategy' },
+    { id: 'web-dev', name: 'Web Development' },
+    { id: 'app-dev', name: 'Mobile App Development' },
+    { id: 'cro', name: 'Conversion Rate Optimization' },
+    { id: 'ai-automation', name: 'AI & Automation' },
+    { id: 'influencer', name: 'Influencer Marketing' },
+    { id: 'video', name: 'Video Production' },
+    { id: 'pr', name: 'Digital PR' },
+    { id: 'amazon', name: 'Amazon Marketing' },
+    { id: 'analytics', name: 'Data & Analytics' }
+  ];
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const data = await api.get<any[]>('/admin/services');
+        setServices(data.length > 0 ? data : DEFAULT_SERVICES);
+      } catch (err) {
+        console.error('Failed to load services:', err);
+        setServices(DEFAULT_SERVICES);
+      }
+    };
+    loadServices();
+  }, []);
+  
+  // Step 2 state (Simulated)
+  const [files, setFiles] = useState<{name: string, size: string, progress: number}[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Step 3 state
   const [generating, setGenerating] = useState(false);
@@ -58,11 +94,39 @@ export default function NewPortfolioPage() {
     setSelectedChannels(s => s.includes(ch) ? s.filter(c => c !== ch) : [...s, ch]);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []);
+    simulateUpload(selected);
+  };
+
+  const simulateUpload = (newFiles: File[]) => {
+    setIsUploading(true);
+    const added = newFiles.map(f => ({ 
+      name: f.name, 
+      size: (f.size / 1024 / 1024).toFixed(1) + 'MB', 
+      progress: 0 
+    }));
+    
+    setFiles(prev => [...prev, ...added]);
+
+    // Simulate progress
+    let p = 0;
+    const interval = setInterval(() => {
+      p += 10;
+      setFiles(prev => prev.map(f => ({ ...f, progress: p > 100 ? 100 : p })));
+      if (p >= 100) {
+        clearInterval(interval);
+        setIsUploading(false);
+      }
+    }, 200);
+  };
+
   const generateDescriptions = async () => {
     setGenerating(true);
     try {
       const data = {
-        title, clientName, clientIndustry, serviceCategory,
+        title, clientName, clientIndustry, 
+        serviceCategory: services.find(s => s.id === serviceId)?.name || 'General Marketing',
         channels: selectedChannels.join(', '), dateRange,
         ...metrics,
       };
@@ -83,21 +147,24 @@ export default function NewPortfolioPage() {
     setEditedDescription(variations[idx].text);
   };
 
-  const handlePublish = (status: 'published' | 'draft') => {
-    const scoreText = editedDescription || '';
-    addItem({
-      title, clientName, clientIndustry, serviceCategory,
-      channels: selectedChannels, dateRange, metrics,
-      images: [], featuredImage: '',
-      description: editedDescription,
-      status,
-      slug: slugify(title),
-      tags: [serviceCategory, clientIndustry],
-    });
-    router.push('/admin/portfolio');
+  const handlePublish = async (status: 'published' | 'draft') => {
+    try {
+      const res = await api.post('/admin/portfolio/create', {
+        title,
+        clientName,
+        description: editedDescription,
+        status,
+        serviceId
+      });
+      if (res.success) {
+        router.push('/admin/portfolio');
+      }
+    } catch (err) {
+      console.error('Failed to create portfolio item:', err);
+    }
   };
 
-  const step1Valid = title && clientName && serviceCategory && selectedChannels.length > 0;
+  const step1Valid = title && clientName && serviceId && selectedChannels.length > 0;
 
   return (
     <div className={styles.page}>
@@ -145,9 +212,9 @@ export default function NewPortfolioPage() {
                 </div>
                 <div className={styles.field}>
                   <label className={styles.label}>Service Category *</label>
-                  <select value={serviceCategory} onChange={e => setServiceCategory(e.target.value)} className={styles.select}>
+                  <select value={serviceId} onChange={e => setServiceId(e.target.value)} className={styles.select}>
                     <option value="">Select service</option>
-                    {SERVICES.map(s => <option key={s}>{s}</option>)}
+                    {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
                 <div className={`${styles.field} ${styles.fullWidth}`}>
@@ -194,15 +261,43 @@ export default function NewPortfolioPage() {
           {step === 2 && (
             <div className={styles.card}>
               <h2 className={styles.cardHeading}>Media Upload</h2>
-              <div className={styles.dropzone}>
+              
+              <div 
+                className={styles.dropzone}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  simulateUpload(Array.from(e.dataTransfer.files));
+                }}
+              >
                 <div className={styles.dropzoneInner}>
                   <div className={styles.dropIcon}>📁</div>
                   <p className={styles.dropText}>Drag and drop images here</p>
                   <span className={styles.dropSub}>PNG, JPG, WebP up to 10MB each</span>
-                  <button className={styles.browseBtn}>Browse Files</button>
+                  <label className={styles.browseBtn}>
+                    Browse Files
+                    <input type="file" multiple hidden onChange={handleFileSelect} accept="image/*" />
+                  </label>
                 </div>
               </div>
-              <p className={styles.dropHint}>For demo purposes, images are simulated. In production this connects to your file storage.</p>
+
+              {files.length > 0 && (
+                <div className={styles.fileList}>
+                  {files.map((file, idx) => (
+                    <div key={idx} className={styles.fileItem}>
+                      <div className={styles.fileInfo}>
+                        <span className={styles.fileName}>{file.name}</span>
+                        <span className={styles.fileSize}>{file.size}</span>
+                      </div>
+                      <div className={styles.progressTrack}>
+                        <div className={styles.progressBar} style={{ width: `${file.progress}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className={styles.dropHint}>For demo purposes, images are simulated. In production this connects to your S3/Cloudinary storage.</p>
               <div className={styles.stepActions}>
                 <button className={styles.backStepBtn} onClick={() => setStep(1)}><ArrowLeft size={16} /> Back</button>
                 <button className={styles.nextBtn} onClick={() => { setStep(3); generateDescriptions(); }}>
@@ -273,7 +368,10 @@ export default function NewPortfolioPage() {
         {/* Content Score panel (step 3 only) */}
         {step === 3 && (
           <div className={styles.scoreArea}>
-            <ContentScorePanel text={editedDescription} serviceCategory={serviceCategory} />
+            <ContentScorePanel 
+              text={editedDescription} 
+              serviceCategory={services.find(s => s.id === serviceId)?.name || 'General'} 
+            />
           </div>
         )}
       </div>

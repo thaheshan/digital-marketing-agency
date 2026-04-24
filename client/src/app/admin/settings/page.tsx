@@ -1,131 +1,98 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Save, Globe, Shield, Bell, Zap, Sliders, Briefcase } from 'lucide-react';
 import styles from './page.module.css';
 
-export default function AdminSettingsPage() {
-  const [activeTab, setActiveTab] = useState('Agency');
-
-  const tabs = ['Agency', 'Staff', 'Services', 'Integrations', 'Security'];
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState('General');
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
+      <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>System Settings</h1>
-          <p className={styles.sub}>Configure agency branding, manage staff access, and system integrations.</p>
+          <h1 className={styles.title}>Agency Settings</h1>
+          <p className={styles.sub}>Configure global agency defaults, security policies, and integrations.</p>
         </div>
+        <button className={styles.saveBtn}>
+          <Save size={18} />
+          <span>Save Changes</span>
+        </button>
       </div>
 
-      <div className={styles.layout}>
+      <div className={styles.container}>
         <aside className={styles.sidebar}>
-          {tabs.map(tab => (
+          {['General', 'Branding', 'Integrations', 'Security', 'Billing Plans'].map(tab => (
             <button 
               key={tab} 
-              className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
+              className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab}
+              {tab === 'General' && <Sliders size={18} />}
+              {tab === 'Branding' && <Zap size={18} />}
+              {tab === 'Integrations' && <Globe size={18} />}
+              {tab === 'Security' && <Shield size={18} />}
+              {tab === 'Billing Plans' && <Briefcase size={18} />}
+              <span>{tab}</span>
             </button>
           ))}
         </aside>
 
-        <div className={styles.content}>
-          {activeTab === 'Agency' && (
-            <div className={styles.section}>
-              <h3>Agency Branding</h3>
-              <p>Customize how your agency appears to clients in the portal.</p>
-              
-              <div className={styles.form}>
-                <div className={styles.row}>
-                  <div className={styles.field}>
-                    <label>Agency Name</label>
-                    <input defaultValue="DigitalFlow Agency" className={styles.input} />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Support Email</label>
-                    <input defaultValue="hello@digitalflow.com" className={styles.input} />
-                  </div>
-                </div>
-
+        <main className={styles.content}>
+          {activeTab === 'General' && (
+            <div className={styles.formSection}>
+              <h2 className={styles.sectionTitle}>General Agency Information</h2>
+              <div className={styles.fieldGrid}>
                 <div className={styles.field}>
-                    <label>Agency Logo</label>
-                    <div className={styles.logoUpload}>
-                        <div className={styles.logoPreview}>DF</div>
-                        <button className={styles.uploadBtn}>Change Logo</button>
-                    </div>
+                  <label className={styles.label}>Agency Name</label>
+                  <input className={styles.input} defaultValue="Digital Pulse Marketing" />
                 </div>
-
                 <div className={styles.field}>
-                  <label>Primary Brand Color</label>
-                  <div className={styles.colorPicker}>
-                    <input type="color" defaultValue="#06B6D4" className={styles.colorInput} />
-                    <span className={styles.colorHex}>#06B6D4 (Cyan)</span>
-                  </div>
+                  <label className={styles.label}>Primary Contact Email</label>
+                  <input className={styles.input} defaultValue="hello@digitalpulse.com" />
                 </div>
-
-                <div className={styles.actions}>
-                  <button className={styles.saveBtn}>Save Agency Settings</button>
+                <div className={styles.field}>
+                  <label className={styles.label}>Default Currency</label>
+                  <select className={styles.input}>
+                    <option>GBP (£)</option>
+                    <option>USD ($)</option>
+                    <option>EUR (€)</option>
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Timezone</label>
+                  <select className={styles.input}>
+                    <option>London (GMT+0)</option>
+                    <option>New York (EST)</option>
+                  </select>
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'Staff' && (
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <div>
-                  <h3>Staff & Permissions</h3>
-                  <p>Manage access for your account managers and specialists.</p>
-                </div>
-                <button className={styles.addBtn}>+ Invite Staff</button>
-              </div>
-
-              <div className={styles.staffTable}>
-                 <table className={styles.table}>
-                    <thead>
-                       <tr>
-                          <th>Staff Member</th>
-                          <th>Role</th>
-                          <th>Accounts</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                       </tr>
-                    </thead>
-                    <tbody>
-                       {[
-                         { name: 'Sarah Kim', role: 'Senior Account Manager', accounts: 12, status: 'Active', initials: 'SK' },
-                         { name: 'Marcus Chen', role: 'SEO Specialist', accounts: 8, status: 'Active', initials: 'MC' },
-                         { name: 'Priya Nair', role: 'PPC Lead', accounts: 15, status: 'Active', initials: 'PN' },
-                         { name: 'James Okafor', role: 'Content Strategist', accounts: 6, status: 'Away', initials: 'JO' },
-                       ].map(staff => (
-                         <tr key={staff.name}>
-                           <td>
-                              <div className={styles.staffCell}>
-                                 <div className={styles.staffAvatar}>{staff.initials}</div>
-                                 <span className={styles.staffName}>{staff.name}</span>
-                              </div>
-                           </td>
-                           <td>{staff.role}</td>
-                           <td className={styles.center}>{staff.accounts}</td>
-                           <td><span className={`${styles.status} ${staff.status === 'Active' ? styles.active : styles.away}`}>{staff.status}</span></td>
-                           <td><button className={styles.editBtn}>Edit</button></td>
-                         </tr>
-                       ))}
-                    </tbody>
-                 </table>
-              </div>
+          {activeTab === 'Branding' && (
+            <div className={styles.formSection}>
+               <h2 className={styles.sectionTitle}>Visual Identity</h2>
+               <div className={styles.brandingPreview}>
+                  <div className={styles.logoSlot}>
+                     <div className={styles.logoBox}>DP</div>
+                     <button className={styles.uploadBtn}>Change Logo</button>
+                  </div>
+                  <div className={styles.colorSlot}>
+                     <label className={styles.label}>Brand Primary Color</label>
+                     <div className={styles.colorPicker}>
+                        <div className={styles.colorDot} style={{ background: '#06b6d4' }} />
+                        <input className={styles.input} defaultValue="#06b6d4" />
+                     </div>
+                  </div>
+               </div>
             </div>
           )}
-
-          {activeTab !== 'Agency' && activeTab !== 'Staff' && (
-             <div className={styles.placeholder}>
-                <span>🛠️</span>
-                <h3>{activeTab} Management</h3>
-                <p>System module for {activeTab.toLowerCase()} is being initialized.</p>
-             </div>
-          )}
-        </div>
+          
+          <div className={styles.bottomActions}>
+             <p className={styles.hint}>All system logs are audited for security purposes. Last updated: 2h ago</p>
+          </div>
+        </main>
       </div>
     </div>
   );

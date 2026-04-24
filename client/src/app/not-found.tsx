@@ -1,7 +1,13 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuthStore } from '@/store';
 import styles from './not-found.module.css';
 
 export default function NotFound() {
+  const { user } = useAuthStore();
+  const homeLink = user ? '/admin/dashboard' : '/';
+
   return (
     <div className={styles.page}>
       <div className={styles.content}>
@@ -9,7 +15,7 @@ export default function NotFound() {
         <h1 className={styles.title}>Page Not Found</h1>
         <p className={styles.message}>The page you're looking for doesn't exist or has been moved.</p>
         <div className={styles.actions}>
-          <Link href="/" className={styles.homeBtn}>← Go Home</Link>
+          <Link href={homeLink} className={styles.homeBtn}>← Go Home</Link>
           <Link href="/contact" className={styles.contactBtn}>Contact Us</Link>
         </div>
         <div className={styles.suggestions}>

@@ -79,7 +79,13 @@ export const verifyEmail = async (email: string, otp: string) => {
 };
 
 export const login = async (input: LoginInput, ipAddress?: string, userAgent?: string) => {
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const user = await prisma.user.findUnique({ 
+    where: { email: input.email },
+    include: {
+      clientProfile: { select: { companyName: true } },
+      staffProfile: { select: { department: true } }
+    }
+  });
   if (!user) throw new Error("Invalid email or password");
   if (user.lockedUntil && user.lockedUntil > new Date()) throw new Error("Account locked. Try again later");
   if (!user.emailVerified) throw new Error("Please verify your email first");
@@ -103,7 +109,18 @@ export const login = async (input: LoginInput, ipAddress?: string, userAgent?: s
 
   const tokens = generateTokens({ userId: user.id, role: user.role, sessionId: session.id });
 
-  return { ...tokens, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, status: user.status } };
+  return { 
+    ...tokens, 
+    user: { 
+      id: user.id, 
+      email: user.email, 
+      firstName: user.firstName, 
+      lastName: user.lastName, 
+      role: user.role, 
+      status: user.status,
+      company: user.clientProfile?.companyName || user.staffProfile?.department || 'DigitalPulse'
+    } 
+  };
 };
 
 export const logout = async (sessionId: string) => {
@@ -114,10 +131,22 @@ export const logout = async (sessionId: string) => {
 export const getMe = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, firstName: true, lastName: true, role: true, status: true, emailVerified: true, phone: true, profilePhotoUrl: true, createdAt: true },
+    select: { 
+      id: true, email: true, firstName: true, lastName: true, role: true, 
+      status: true, emailVerified: true, phone: true, profilePhotoUrl: true, createdAt: true,
+      clientProfile: { select: { companyName: true } },
+      staffProfile: { select: { jobTitle: true, department: true } }
+    },
   });
   if (!user) throw new Error("User not found");
-  return user;
+  
+  // Format the user object to include the company name at the top level for the frontend store
+  const formattedUser = {
+    ...user,
+    company: user.clientProfile?.companyName || user.staffProfile?.department || 'DigitalPulse'
+  };
+  
+  return formattedUser;
 };
 
 export const forgotPassword = async (email: string) => {

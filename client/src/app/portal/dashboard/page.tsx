@@ -142,20 +142,76 @@ export default function ClientDashboard() {
     fetchDashboard();
   }, []);
 
-  // Use API data if available, otherwise fallback to our nice mocks
   const displayKpis = dashboardData?.kpis ? [
-    { ...kpis[0], value: dashboardData.kpis.conversions },
-    { ...kpis[1], value: '1,450' }, // mock traffic fallback mapped to something else 
+    { ...kpis[0], value: dashboardData.kpis.organicTraffic },
+    { ...kpis[1], value: dashboardData.kpis.leadsGenerated },
     { ...kpis[2], value: dashboardData.kpis.roi },
-    { ...kpis[3], value: dashboardData.kpis.totalSpend }
+    { ...kpis[3], value: dashboardData.kpis.revenueAttributed }
   ] : kpis;
 
   const displayCampaigns = dashboardData?.activeCampaigns && dashboardData.activeCampaigns.length > 0 
     ? dashboardData.activeCampaigns.map((c: any) => ({
-        name: c.name, platform: 'Digital', iconBg: '#4285F4', status: 'Active', 
-        spend: `£${c.spent / 100}`, budget: `£${c.budget / 100}`, roas: 'N/A', progress: 50, color: '#22C55E'
+        name: c.name, 
+        platform: c.platform, 
+        iconBg: c.platform === 'Meta' || c.platform === 'Facebook' ? '#1877F2' : '#4285F4', 
+        status: 'Active', 
+        spend: `£${c.spent / 100}`, 
+        budget: `£${c.budget / 100}`, 
+        roas: 'N/A', 
+        progress: c.budget > 0 ? Math.round((c.spent / c.budget) * 100) : 0, 
+        color: c.budget > 0 && (c.spent / c.budget) > 0.8 ? '#EAB308' : '#22C55E'
       }))
     : campaigns;
+
+  const displayChartData = dashboardData?.chartData || [];
+  const chartMax = Math.max(...displayChartData.map((d: any) => d.traffic), 1);
+  const chartPointsArea = displayChartData.length > 0 
+    ? displayChartData.map((d: any, i: number) => {
+        const x = (i / (displayChartData.length - 1)) * 600;
+        const y = 180 - ((d.traffic / chartMax) * 120); 
+        return `${x},${y}`;
+      }).join(' ')
+    : '0,180 100,120 200,150 400,100 600,60';
+
+  const displayChannelBreakdown = dashboardData?.channelBreakdown || { organic: 38, paidSearch: 27, socialMedia: 19 };
+  const getStrokeDash = (percent: number) => {
+    const circumference = 2 * Math.PI * 40;
+    const value = (percent / 100) * circumference;
+    return `${value} ${circumference}`;
+  };
+  const getStrokeOffset = (percentBefore: number) => {
+    const circumference = 2 * Math.PI * 40;
+    const offset = 25 - ((percentBefore / 100) * circumference);
+    return offset;
+  };
+  
+  const displayActivities = dashboardData?.recentActivity || activities;
+  const displayTasks = dashboardData?.upcomingTasks || tasks;
+  const displayServices = dashboardData?.activeServices || [
+    { name: 'SEO', status: 'Healthy' },
+    { name: 'Social', status: 'Healthy' },
+    { name: 'PPC', status: 'Healthy' },
+    { name: 'Content', status: 'Healthy' },
+    { name: 'Email', status: 'Healthy' },
+    { name: 'Brand', status: 'Healthy' },
+  ];
+
+  const mapActivityIcon = (type: string) => {
+    if (type === 'warning') return AlertTriangle;
+    if (type === 'positive') return TrendingUp;
+    return UserPlus;
+  };
+
+  const mapServiceIcon = (name: string) => {
+    if (name === 'SEO') return Search;
+    if (name === 'Social') return Share2;
+    if (name === 'PPC') return TrendingUp;
+    if (name === 'Content') return FileText;
+    if (name === 'Email') return Mail;
+    if (name === 'Brand') return Award;
+    return Search;
+  };
+
 
   return (
     <div className={styles.page}>
@@ -244,11 +300,17 @@ export default function ClientDashboard() {
                 </linearGradient>
               </defs>
               <path 
-                d="M0,180 Q100,120 200,150 T400,100 T600,60 L600,200 L0,200 Z" 
+                d={`M0,180 L${chartPointsArea.split(' ').map(p => {
+                  const [x,y] = p.split(',');
+                  return `${x},${y}`;
+                }).join(' L')} L600,200 L0,200 Z`}
                 fill="url(#grad1)" 
               />
               <path 
-                d="M0,180 Q100,120 200,150 T400,100 T600,60" 
+                d={`M${chartPointsArea.split(' ').map(p => {
+                  const [x,y] = p.split(',');
+                  return `${x},${y}`;
+                }).join(' L')}`}
                 fill="none" 
                 stroke="#06B6D4" 
                 strokeWidth="3" 
@@ -311,21 +373,28 @@ export default function ClientDashboard() {
           <div className={styles.donutArea}>
             <svg className={styles.donutSvg} viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F1F5F9" strokeWidth="15" />
-              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22C55E" strokeWidth="15" strokeDasharray="95 156" strokeDashoffset="25" />
-              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#06B6D4" strokeWidth="15" strokeDasharray="60 191" strokeDashoffset="130" />
+              {displayChannelBreakdown.organic > 0 && (
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22C55E" strokeWidth="15" strokeDasharray={getStrokeDash(displayChannelBreakdown.organic)} strokeDashoffset={getStrokeOffset(0)} />
+              )}
+              {displayChannelBreakdown.paidSearch > 0 && (
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#06B6D4" strokeWidth="15" strokeDasharray={getStrokeDash(displayChannelBreakdown.paidSearch)} strokeDashoffset={getStrokeOffset(displayChannelBreakdown.organic)} />
+              )}
+              {displayChannelBreakdown.socialMedia > 0 && (
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F97316" strokeWidth="15" strokeDasharray={getStrokeDash(displayChannelBreakdown.socialMedia)} strokeDashoffset={getStrokeOffset(displayChannelBreakdown.organic + displayChannelBreakdown.paidSearch)} />
+              )}
             </svg>
             <div className={styles.donutLegend}>
               <div className={styles.donutItem}>
                 <div className={styles.donutLabel}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E' }} /> Organic Search</div>
-                <span className={styles.donutValue}>38%</span>
+                <span className={styles.donutValue}>{displayChannelBreakdown.organic}%</span>
               </div>
               <div className={styles.donutItem}>
                 <div className={styles.donutLabel}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#06B6D4' }} /> Paid Search</div>
-                <span className={styles.donutValue}>27%</span>
+                <span className={styles.donutValue}>{displayChannelBreakdown.paidSearch}%</span>
               </div>
               <div className={styles.donutItem}>
                 <div className={styles.donutLabel}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F97316' }} /> Social Media</div>
-                <span className={styles.donutValue}>19%</span>
+                <span className={styles.donutValue}>{displayChannelBreakdown.socialMedia}%</span>
               </div>
             </div>
           </div>
@@ -337,11 +406,12 @@ export default function ClientDashboard() {
             <h2 className={styles.cardTitle}>Recent Activity</h2>
           </div>
           <div className={styles.activityFeed}>
-            {activities.map((a, i) => {
-              const Icon = a.icon;
+            {displayActivities.map((a: any, i: number) => {
+              const Icon = a.icon || mapActivityIcon(a.type);
+              const iconBg = a.iconBg || (a.type === 'positive' ? '#22C55E' : a.type === 'warning' ? '#EAB308' : '#06B6D4');
               return (
                 <div key={i} className={styles.activityItem}>
-                  <div className={styles.activityIconDot} style={{ background: a.iconBg }}>
+                  <div className={styles.activityIconDot} style={{ background: iconBg }}>
                     <Icon size={14} color="#FFF" />
                   </div>
                   <div className={styles.activityContent}>
@@ -362,7 +432,7 @@ export default function ClientDashboard() {
             <button className={styles.headerIconButton}><Plus size={16} /></button>
           </div>
           <div className={styles.taskList}>
-            {tasks.map((t, i) => (
+            {displayTasks.map((t: any, i: number) => (
               <div key={i} className={styles.taskItem}>
                 <div className={styles.taskCheck} />
                 <div className={styles.taskMain}>
@@ -387,22 +457,17 @@ export default function ClientDashboard() {
           <div className={styles.headerBtn}>Manage All</div>
         </div>
         <div className={styles.servicesGrid}>
-          {[
-            { name: 'SEO', icon: Search, bg: '#22C55E' },
-            { name: 'Social', icon: Share2, bg: '#06B6D4' },
-            { name: 'PPC', icon: TrendingUp, bg: '#F97316' },
-            { name: 'Content', icon: FileText, bg: '#8B5CF6' },
-            { name: 'Email', icon: Mail, bg: '#EC4899' },
-            { name: 'Brand', icon: Award, bg: '#EAB308' },
-          ].map((s, i) => {
-            const Icon = s.icon;
+          {displayServices.map((s: any, i: number) => {
+            const Icon = mapServiceIcon(s.name);
+            const isHealthy = s.status === 'Healthy';
+            const bg = s.bg || (s.name === 'SEO' ? '#22C55E' : s.name === 'Social' ? '#06B6D4' : s.name === 'PPC' ? '#F97316' : s.name === 'Content' ? '#8B5CF6' : s.name === 'Email' ? '#EC4899' : '#EAB308');
             return (
-              <div key={i} className={styles.serviceStatusCard}>
-                <div className={styles.serviceIconWrap} style={{ background: s.bg }}>
+              <div key={i} className={styles.serviceStatusCard} style={{ opacity: isHealthy ? 1 : 0.6 }}>
+                <div className={styles.serviceIconWrap} style={{ background: isHealthy ? bg : '#94A3B8' }}>
                   <Icon size={18} />
                 </div>
                 <div className={styles.serviceTitle}>{s.name}</div>
-                <div className={styles.serviceUpdate}>Healthy</div>
+                <div className={styles.serviceUpdate} style={{ color: isHealthy ? '#22C55E' : '#94A3B8' }}>{s.status}</div>
               </div>
             );
           })}

@@ -44,3 +44,6 @@
 .editLink { font-size: 12px; font-weight: 600; color: var(--color-secondary); text-decoration: none; }
 .editLink:hover { text-decoration: underline; }
 .empty { grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--color-neutral-400); font-size: 14px; }
+.actualImage { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.cardImage:hover .actualImage { transform: scale(1.05); }
+.loading { grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--color-neutral-400); font-size: 14px; font-weight: 500; }

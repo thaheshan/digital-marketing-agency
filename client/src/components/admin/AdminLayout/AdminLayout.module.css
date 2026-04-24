@@ -253,13 +253,40 @@
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   padding: 6px 14px;
-  border-radius: full;
+  border-radius: 99px;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
   font-weight: 700;
   color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.periodBadge:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.periodBadgeActive {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #059669;
+}
+
+.periodBadgeMaintenance {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #D97706;
+}
+
+.periodBadgeIssue {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
 }
 
 .headerRight {
@@ -376,6 +403,118 @@
 }
 
 .accountAvatar:hover { transform: translateY(-1px); }
+
+/* Notifications Popup */
+.notifPopup {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 60px;
+  width: 380px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notifHeader {
+  padding: 20px;
+  border-bottom: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F8FAFC;
+}
+
+.notifTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.clearAllBtn {
+  font-size: 12px;
+  font-weight: 700;
+  color: #F97316;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clearAllBtn:hover {
+  color: #EA580C;
+  text-decoration: underline;
+}
+
+.notifList {
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.notifItem {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F8FAFC;
+  display: flex;
+  gap: 16px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.notifItem:hover {
+  background: #F8FAFC;
+}
+
+.notifItemUnread {
+  background: rgba(249, 115, 22, 0.03);
+}
+
+.notifIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notifContent {
+  flex: 1;
+}
+
+.notifItemTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.notifItemBody {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.5;
+  display: block;
+}
+
+.notifItemTime {
+  font-size: 11px;
+  color: #94A3B8;
+  margin-top: 8px;
+  display: block;
+  font-weight: 600;
+}
+
+.notifEmpty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94A3B8;
+  font-size: 14px;
+}
 
 /* Profile Dropdown */
 .dropdownMenu {
@@ -520,4 +659,123 @@
   .sidebar {
     display: none;
   }
+}
+
+/* --- COMMAND PALETTE (⌘K) --- */
+.commandOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  padding-top: 15vh;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.commandPalette {
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.2s ease-out;
+}
+
+.commandHeader {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 12px;
+}
+
+.commandIcon {
+  color: #94a3b8;
+}
+
+.commandInput {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.escBtn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.commandBody {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.commandGroup {
+  margin-bottom: 8px;
+}
+
+.groupHeader {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  letter-spacing: 0.05em;
+}
+
+.commandItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #334155;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.commandItem:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.commandFooter {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  gap: 20px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.commandFooter kbd {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: sans-serif;
+  margin-right: 4px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

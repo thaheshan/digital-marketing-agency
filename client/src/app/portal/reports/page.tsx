@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 import { 
   FileText, 
   Download, 
@@ -32,14 +33,49 @@ const STATS = [
 ];
 
 export default function PortalReportsPage() {
+  const [reports, setReports] = useState<any[]>([]);
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = MOCK_REPORTS.filter(r => {
+  useEffect(() => {
+    async function fetchReports() {
+      try {
+        const res = await api.get<any>('/portal/reports');
+        if (res.reports) {
+          setReports(res.reports);
+        }
+      } catch(e) {
+        console.error('Failed to load reports', e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchReports();
+  }, []);
+
+  const mappedReports = reports.length > 0 ? reports.map(r => ({
+    id: r.id,
+    title: r.title,
+    period: r.reportingPeriod,
+    type: r.reportType.charAt(0).toUpperCase() + r.reportType.slice(1),
+    status: r.status === 'generated' ? 'Ready' : 'Generating',
+    size: r.fileSizeKB ? `${(r.fileSizeKB / 1024).toFixed(1)} MB` : '—',
+    generated: new Date(r.generatedAt).toLocaleDateString()
+  })) : MOCK_REPORTS;
+
+  const filtered = mappedReports.filter(r => {
     const matchType = filter === 'All' || r.type === filter;
     const matchSearch = !search || r.title.toLowerCase().includes(search.toLowerCase());
     return matchType && matchSearch;
   });
+
+  const displayStats = [
+    { icon: FileText, label: 'Total Reports', value: `${mappedReports.length}`, color: '#06B6D4' },
+    { icon: BarChart3, label: 'Analytics Docs', value: `${mappedReports.filter(r => r.type === 'Monthly').length}`, color: '#F97316' },
+    { icon: Database, label: 'Total Data', value: '47.3MB', color: '#6366F1' },
+    { icon: Calendar, label: 'Next Report', value: 'Upcoming', color: '#22C55E' },
+  ];
 
   return (
     <div className={styles.page}>
@@ -54,7 +90,7 @@ export default function PortalReportsPage() {
       </div>
 
       <div className={styles.statsGrid}>
-        {STATS.map((s, i) => (
+        {displayStats.map((s, i) => (
           <div key={i} className={styles.statCard}>
             <div className={styles.statIcon} style={{ background: `${s.color}15`, color: s.color }}>
               <s.icon size={20} />

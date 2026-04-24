@@ -1,77 +1,43 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
-
-const posts = [
-  {
-    slug: 'seo-trends-2026',
-    title: 'The 7 SEO Trends That Will Define 2026',
-    excerpt: 'AI-generated content, voice search, and Core Web Vitals are reshaping search rankings. Here\'s what you need to know to stay ahead.',
-    category: 'SEO',
-    readTime: '7 min',
-    date: 'Mar 28, 2026',
-    image: 'https://picsum.photos/seed/seo/800/600',
-    featured: true,
-  },
-  {
-    slug: 'social-media-roi',
-    title: 'How to Measure Social Media ROI: A Complete Guide',
-    excerpt: 'Stop guessing and start proving the value of your social efforts. Our framework for attributing real revenue to social campaigns.',
-    category: 'Social Media',
-    readTime: '9 min',
-    date: 'Mar 25, 2026',
-    image: 'https://picsum.photos/seed/social/800/600',
-    featured: false,
-  },
-  {
-    slug: 'ppc-bidding-strategies',
-    title: 'Smart Bidding vs Manual: When to Use Each',
-    excerpt: 'Google\'s Smart Bidding has matured significantly. We break down the 6 bidding strategies and the exact scenarios where each wins.',
-    category: 'PPC',
-    readTime: '6 min',
-    date: 'Mar 22, 2026',
-    image: 'https://picsum.photos/seed/ppc/800/600',
-    featured: false,
-  },
-  {
-    slug: 'content-marketing-funnel',
-    title: 'Building a Content Marketing Funnel That Actually Converts',
-    excerpt: 'Most content marketing fails at the bottom of the funnel. Here\'s how to create content that turns readers into paying customers.',
-    category: 'Content',
-    readTime: '11 min',
-    date: 'Mar 19, 2026',
-    image: 'https://picsum.photos/seed/content/800/600',
-    featured: false,
-  },
-  {
-    slug: 'email-automation-sequences',
-    title: '5 Email Automation Sequences Every E-Commerce Brand Needs',
-    excerpt: 'Welcome series, abandoned cart, win-back flows — these automated sequences generated over $2M for our clients last year.',
-    category: 'Email',
-    readTime: '8 min',
-    date: 'Mar 15, 2026',
-    image: 'https://picsum.photos/seed/email/800/600',
-    featured: false,
-  },
-  {
-    slug: 'brand-positioning-strategy',
-    title: 'Brand Positioning: How to Stand Out in a Crowded Market',
-    excerpt: 'A distinctive market position is your most durable competitive advantage. Here\'s our proven 4-step positioning framework.',
-    category: 'Branding',
-    readTime: '10 min',
-    date: 'Mar 12, 2026',
-    image: 'https://picsum.photos/seed/brand/800/600',
-    featured: false,
-  },
-];
 
 const categories = ['All', 'SEO', 'Social Media', 'PPC', 'Content', 'Email', 'Branding'];
 
 export default function BlogPage() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  useEffect(() => {
+    async function loadPosts() {
+      try {
+        const res = await api.get<any>('/blog/public');
+        if (res.items) {
+          const mapped = res.items.map((p: any) => ({
+             slug: p.slug,
+             title: p.title,
+             excerpt: p.excerpt,
+             category: p.category || 'Marketing',
+             readTime: '5 min',
+             date: new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+             image: p.featuredImageUrl || `https://picsum.photos/seed/${p.slug}/800/600`,
+             featured: p.isFeatured || false
+          }));
+          setPosts(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load blog posts:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadPosts();
+  }, []);
 
   const filteredPosts = useMemo(() => {
     if (activeCategory === 'All') return posts;

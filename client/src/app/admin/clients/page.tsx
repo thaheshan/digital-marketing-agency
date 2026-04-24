@@ -1,175 +1,137 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter, MoreVertical, Star, Shield, TrendingUp } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
-const clients = [
-  { id: 1, name: 'RetailCo', contact: 'Sarah Mitchell', email: 'sarah@retailco.com', plan: 'Enterprise', status: 'Active', spend: 8500, manager: 'Sarah K.', joined: 'Jan 15, 2025', campaigns: 5 },
-  { id: 2, name: 'TechFlow Solutions', contact: 'Marcus Chen', email: 'marcus@techflow.io', plan: 'Professional', status: 'Active', spend: 4200, manager: 'Marcus C.', joined: 'Mar 10, 2025', campaigns: 3 },
-  { id: 3, name: 'HealthPlus', contact: 'Dr. Priya Nair', email: 'priya@healthplus.com', plan: 'Starter', status: 'Trial', spend: 1200, manager: 'Priya N.', joined: 'Mar 28, 2026', campaigns: 1 },
-  { id: 4, name: 'FashionFirst', contact: 'Emily Nakamura', email: 'emily@fashionfirst.com', plan: 'Enterprise', status: 'Active', spend: 12000, manager: 'Sarah K.', joined: 'Feb 20, 2024', campaigns: 7 },
-  { id: 5, name: 'GrowthMetrics', contact: 'David Okonkwo', email: 'david@growthmet.com', plan: 'Professional', status: 'Paused', spend: 3600, manager: 'James O.', joined: 'Jan 5, 2025', campaigns: 2 },
-  { id: 6, name: 'Propel Finance', contact: 'James Parker', email: 'james@propelfinance.com', plan: 'Professional', status: 'Active', spend: 5800, manager: 'Marcus C.', joined: 'Nov 12, 2024', campaigns: 4 },
+const clientData = [
+  { id: 1, name: 'Miller Digital Strategy', industry: 'Professional Services', retainer: '£4,500/mo', health: 98, status: 'Active', manager: 'Sarah M.', logo: 'M' },
+  { id: 2, name: 'TechFlow SaaS', industry: 'Technology', retainer: '£6,200/mo', health: 85, status: 'Active', manager: 'Tom B.', logo: 'T' },
+  { id: 3, name: 'Glow Skincare', industry: 'E-commerce', retainer: '£3,800/mo', health: 92, status: 'Active', manager: 'James O.', logo: 'G' },
+  { id: 4, name: 'Zenith Logistics', industry: 'Logistics', retainer: '£5,000/mo', health: 74, status: 'Warning', manager: 'Sarah M.', logo: 'Z' },
 ];
 
-const plans = ['All', 'Enterprise', 'Professional', 'Starter'];
-
-const statusClass: Record<string, string> = {
-  Active: 'sActive', Trial: 'sTrial', Paused: 'sPaused',
-};
-
-export default function AdminClientsPage() {
-  const [planFilter, setPlanFilter] = useState('All');
+export default function ClientsPage() {
   const [search, setSearch] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = clients.filter(c => {
-    const matchPlan = planFilter === 'All' || c.plan === planFilter;
-    const s = search.toLowerCase();
-    const matchSearch = c.name.toLowerCase().includes(s) || c.contact.toLowerCase().includes(s) || c.email.toLowerCase().includes(s);
-    return matchPlan && matchSearch;
-  });
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const data = await api.get('/admin/clients');
+        setClients(data);
+      } catch (error) {
+        console.error('Failed to fetch clients');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClients();
+  }, []);
+
+  const filteredClients = clients.filter(c => 
+    c.companyName.toLowerCase().includes(search.toLowerCase()) ||
+    c.industry?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className={styles.page}>
-      {/* Header */}
-      <div className={styles.pageHeader}>
+      <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Client Management</h1>
-          <p className={styles.sub}>{clients.filter(c => c.status === 'Active').length} active · {clients.length} total clients</p>
+          <h1 className={styles.title}>Client Portfolio</h1>
+          <p className={styles.sub}>Manage active accounts, monitor health scores, and track retainers.</p>
         </div>
-        <button className={styles.addBtn} onClick={() => setShowAdd(true)}>+ Add New Client</button>
+        <button className={styles.addBtn}>
+          <Plus size={18} />
+          <span>Onboard Client</span>
+        </button>
       </div>
 
-      {/* Summary Cards */}
-      <div className={styles.summaryGrid}>
-        {[
-          { label: 'Total Revenue/Mo', value: `$${clients.reduce((a, c) => a + c.spend, 0).toLocaleString()}`, icon: '💰' },
-          { label: 'Active Clients', value: clients.filter(c => c.status === 'Active').length, icon: '✅' },
-          { label: 'On Trial', value: clients.filter(c => c.status === 'Trial').length, icon: '🧪' },
-          { label: 'Paused', value: clients.filter(c => c.status === 'Paused').length, icon: '⏸️' },
-        ].map(s => (
-          <div key={s.label} className={styles.summaryCard}>
-            <span className={styles.summaryIcon}>{s.icon}</span>
-            <div className={styles.summaryValue}>{s.value}</div>
-            <div className={styles.summaryLabel}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className={styles.toolbar}>
-        <div className={styles.planTabs}>
-          {plans.map(p => (
-            <button key={p} className={`${styles.planTab} ${planFilter === p ? styles.planTabActive : ''}`} onClick={() => setPlanFilter(p)}>{p}</button>
-          ))}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Active Clients</span>
+          <span className={styles.statValue}>24</span>
+          <span className={styles.statChange}>+2 this month</span>
         </div>
-        <div className={styles.searchWrap}>
-          <span>🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search clients..." className={styles.searchInput} />
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Avg. Health Score</span>
+          <span className={styles.statValue}>91%</span>
+          <span className={styles.statChange} style={{ color: '#10b981' }}>Optimal</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Total MRR</span>
+          <span className={styles.statValue}>£142,500</span>
+          <span className={styles.statChange}>+8.4% Growth</span>
         </div>
       </div>
 
-      {/* Table */}
+      <div className={styles.tableControls}>
+        <div className={styles.searchBox}>
+          <Search size={18} />
+          <input 
+            placeholder="Search by client or industry..." 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+          />
+        </div>
+        <button className={styles.filterBtn}><Filter size={18} /> Filter</button>
+      </div>
+
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
               <th>Client</th>
-              <th>Contact</th>
-              <th>Plan</th>
-              <th>Status</th>
-              <th>Monthly Spend</th>
-              <th>Campaigns</th>
+              <th>Industry</th>
+              <th>Retainer</th>
+              <th>Health Score</th>
               <th>Manager</th>
-              <th>Actions</th>
+              <th>Status</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(c => (
-              <tr key={c.id} className={styles.tr}>
+            {filteredClients.map(client => (
+              <tr key={client.id} className={styles.row}>
                 <td>
                   <div className={styles.clientCell}>
-                    <div className={styles.clientAvatar}>{c.name[0]}</div>
+                    <div className={styles.avatar}>{client.companyName[0]}</div>
                     <div>
-                      <div className={styles.clientName}>{c.name}</div>
-                      <div className={styles.clientJoined}>Since {c.joined}</div>
+                      <div className={styles.clientName}>{client.companyName}</div>
+                      <div className={styles.clientMeta}>ID: {client.id.slice(0,8)}</div>
                     </div>
                   </div>
                 </td>
+                <td>{client.industry || 'General'}</td>
+                <td className={styles.retainer}>£{(client.monthlyBudgetPence / 100).toLocaleString()}/mo</td>
                 <td>
-                  <div className={styles.contactCell}>
-                    <div className={styles.contactName}>{c.contact}</div>
-                    <div className={styles.contactEmail}>{c.email}</div>
+                  <div className={styles.healthWrap}>
+                    <div className={styles.healthBar}>
+                      <div 
+                        className={styles.healthFill} 
+                        style={{ width: `90%`, background: '#10b981' }} 
+                      />
+                    </div>
+                    <span>90%</span>
                   </div>
                 </td>
-                <td><span className={`${styles.planBadge} ${styles[`plan${c.plan}`]}`}>{c.plan}</span></td>
-                <td><span className={`${styles.statusBadge} ${styles[statusClass[c.status]]}`}>{c.status}</span></td>
-                <td className={styles.mono}>${c.spend.toLocaleString()}/mo</td>
-                <td className={styles.centerCell}>{c.campaigns}</td>
-                <td>{c.manager}</td>
+                <td>{client.user?.firstName || 'Assigned'}</td>
                 <td>
-                  <div className={styles.actions}>
-                    <button className={styles.actionBtn}>View</button>
-                    <button className={styles.actionBtn}>Edit</button>
-                  </div>
+                  <span className={`${styles.badge} ${styles.active}`}>
+                    Active
+                  </span>
                 </td>
+                <td><button className={styles.moreBtn}><MoreVertical size={16} /></button></td>
               </tr>
             ))}
+            {filteredClients.length === 0 && !loading && (
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>No clients found.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
-
-      {/* Add Client Modal */}
-      {showAdd && (
-        <div className={styles.modalOverlay} onClick={() => setShowAdd(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Add New Client</h3>
-              <button className={styles.modalClose} onClick={() => setShowAdd(false)}>✕</button>
-            </div>
-            <form className={styles.modalForm} onSubmit={e => { e.preventDefault(); setShowAdd(false); }}>
-              <div className={styles.formRow}>
-                <div className={styles.formField}>
-                  <label>Company Name *</label>
-                  <input placeholder="RetailCo Ltd." className={styles.formInput} required />
-                </div>
-                <div className={styles.formField}>
-                  <label>Contact Name *</label>
-                  <input placeholder="John doe" className={styles.formInput} required />
-                </div>
-              </div>
-              <div className={styles.formRow}>
-                <div className={styles.formField}>
-                  <label>Email *</label>
-                  <input type="email" placeholder="contact@company.com" className={styles.formInput} required />
-                </div>
-                <div className={styles.formField}>
-                  <label>Plan</label>
-                  <select className={styles.formInput}>
-                    <option>Starter</option>
-                    <option>Professional</option>
-                    <option>Enterprise</option>
-                  </select>
-                </div>
-              </div>
-              <div className={styles.formField}>
-                <label>Assign Account Manager</label>
-                <select className={styles.formInput}>
-                  <option>Sarah K.</option>
-                  <option>Marcus C.</option>
-                  <option>Priya N.</option>
-                  <option>James O.</option>
-                </select>
-              </div>
-              <div className={styles.modalActions}>
-                <button type="button" className={styles.cancelBtn} onClick={() => setShowAdd(false)}>Cancel</button>
-                <button type="submit" className={styles.saveBtn}>Create Client</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

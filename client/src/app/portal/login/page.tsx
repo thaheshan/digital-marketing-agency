@@ -24,6 +24,7 @@ export default function ClientLoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loginMode, setLoginMode] = useState<'client' | 'staff'>('client');
 
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
@@ -35,11 +36,13 @@ export default function ClientLoginPage() {
     const result = await login(email, password);
 
     if (!result.success) {
-      setError(result.error || 'Invalid email or password. Please try again.');
+      setError(result.error || 'Invalid credentials. Please try again.');
       return;
     }
 
     const { user } = useAuthStore.getState();
+    
+    // Smart Routing based on role and mode
     if (user?.role === 'admin' || user?.role === 'content_manager') {
       router.push('/admin/dashboard');
     } else {
@@ -57,17 +60,37 @@ export default function ClientLoginPage() {
 
   return (
     <div className={styles.page}>
-      {/* Absolute Header Logo */}
-      <Link href="/" className={styles.headerLogo}>
-        <span className={styles.logoText}>Digital <span className={styles.logoPulse}>Pulse</span></span>
-      </Link>
-
       <div className={styles.leftPanel}>
+        <Link href="/" className={styles.headerLogo}>
+          <span className={styles.logoText}>Digital <span className={styles.logoPulse}>Pulse</span></span>
+        </Link>
+
         <div className={styles.formContainer}>
+          <div className={styles.modeToggle}>
+            <button 
+              className={`${styles.modeBtn} ${loginMode === 'client' ? styles.activeMode : ''}`}
+              onClick={() => setLoginMode('client')}
+            >
+              Client Portal
+            </button>
+            <button 
+              className={`${styles.modeBtn} ${loginMode === 'staff' ? styles.activeMode : ''}`}
+              onClick={() => setLoginMode('staff')}
+            >
+              Agency Staff
+            </button>
+          </div>
+
           <>
               <header className={styles.formHeader}>
-                <h1 className={styles.headline}>Client Portal</h1>
-                <p className={styles.subheadline}>Welcome back! Sign in to view your campaigns</p>
+                <h1 className={styles.headline}>
+                  {loginMode === 'client' ? 'Client Access' : 'Command Center'}
+                </h1>
+                <p className={styles.subheadline}>
+                  {loginMode === 'client' 
+                    ? 'Sign in to view your campaign performance' 
+                    : 'Authorized staff entry only. 2FA required.'}
+                </p>
               </header>
 
               {error && (
@@ -114,7 +137,7 @@ export default function ClientLoginPage() {
                   </div>
                   {error && (
                     <div className={styles.attemptsWarn}>
-                      <AlertCircle size={14} /> Attempts remaining: {attempts}/5
+                      <AlertCircle size={14} /> Please check your credentials and try again.
                     </div>
                   )}
                 </div>
@@ -153,8 +176,16 @@ export default function ClientLoginPage() {
 
       <div className={styles.rightPanel}>
         <div className={styles.rightContent}>
-          <h2 className={styles.welcomeTitle}>Welcome to Your Marketing Command Center</h2>
-          <p className={styles.welcomeText}>Track performance, access reports, and communicate with your dedicated team—all in one place.</p>
+          <h2 className={styles.welcomeTitle}>
+            {loginMode === 'client' 
+              ? 'Your Marketing Command Center' 
+              : 'Digital Pulse Operations Gate'}
+          </h2>
+          <p className={styles.welcomeText}>
+            {loginMode === 'client'
+              ? 'Track performance, access reports, and communicate with your dedicated team—all in one place.'
+              : 'Manage clients, analyze lead behavior, and coordinate agency campaigns from a single unified interface.'}
+          </p>
 
           <div className={styles.featuresList}>
             {features.map((f, i) => {

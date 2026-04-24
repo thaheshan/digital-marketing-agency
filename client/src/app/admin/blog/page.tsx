@@ -1,91 +1,72 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, Calendar, Tag } from 'lucide-react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
 
-const MOCK_POSTS = [
-  { id: '1', title: 'How to Maximise ROAS on Meta Ads in 2026', status: 'Published', date: 'Apr 1, 2026', category: 'PPC', views: 1240, score: 84 },
-  { id: '2', title: 'The Ultimate Guide to Local SEO for Service Businesses', status: 'Published', date: 'Mar 22, 2026', category: 'SEO', views: 3420, score: 91 },
-  { id: '3', title: 'Email Drip Campaigns That Actually Convert', status: 'Draft', date: 'Mar 30, 2026', category: 'Email', views: 0, score: 52 },
-  { id: '4', title: '10 Social Media Trends to Watch This Quarter', status: 'Scheduled', date: 'Apr 10, 2026', category: 'Social', views: 0, score: 76 },
-];
+export default function BlogAdminPage() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function AdminBlogPage() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('All');
-
-  const filtered = MOCK_POSTS.filter(p => {
-    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'All' || p.status === filter;
-    return matchSearch && matchFilter;
-  });
+  useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        const data = await api.get<any[]>('/admin/blog');
+        setPosts(data || []);
+      } catch (err) {
+        console.error('Failed to load posts:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPosts();
+  }, []);
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
+      <div className={styles.header}>
         <div>
-          <h1 className={styles.pageTitle}>Blog Posts</h1>
-          <p className={styles.pageSub}>{MOCK_POSTS.filter(p => p.status === 'Published').length} published · {MOCK_POSTS.filter(p => p.status === 'Draft').length} drafts</p>
+          <h1 className={styles.title}>Blog Articles</h1>
+          <p className={styles.sub}>Manage your agency's thought leadership and content marketing.</p>
         </div>
         <Link href="/admin/blog/new" className={styles.addBtn}>
-          <Plus size={16} /> New Post
+          <Plus size={18} />
+          <span>New Article</span>
         </Link>
       </div>
 
-      <div className={styles.filterBar}>
-        <div className={styles.tabs}>
-          {['All', 'Published', 'Draft', 'Scheduled'].map(f => (
-            <button key={f} className={`${styles.tab} ${filter === f ? styles.active : ''}`} onClick={() => setFilter(f)}>{f}</button>
-          ))}
-        </div>
-        <div className={styles.searchBar}>
-          <Search size={14} color="#94a3b8" />
-          <input placeholder="Search posts..." value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
-        </div>
-      </div>
-
-      <div className={styles.card}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Status</th>
-              <th>Score</th>
-              <th>Views</th>
-              <th>Date</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(post => (
-              <tr key={post.id} className={styles.tr}>
-                <td className={styles.titleCell}>{post.title}</td>
-                <td><span className={styles.catChip}>{post.category}</span></td>
-                <td>
-                  <span className={`${styles.statusBadge} ${styles[`s${post.status}`]}`}>{post.status}</span>
-                </td>
-                <td>
-                  <span className={styles.scoreVal} style={{ color: post.score >= 80 ? '#16a34a' : post.score >= 60 ? '#06b6d4' : '#d97706' }}>
-                    {post.score}/100
-                  </span>
-                </td>
-                <td className={styles.mono}>{post.views.toLocaleString()}</td>
-                <td className={styles.dateCell}>{post.date}</td>
-                <td>
-                  <div className={styles.rowActions}>
-                    <Link href={`/admin/blog/${post.id}`} className={styles.iconBtn}><Edit2 size={14} /></Link>
-                    <button className={styles.iconBtn}><Eye size={14} /></button>
-                    <button className={`${styles.iconBtn} ${styles.deleteBtn}`}><Trash2 size={14} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && <div className={styles.empty}>No posts found.</div>}
+      <div className={styles.grid}>
+        {loading ? (
+          <div className={styles.loading}>Loading articles...</div>
+        ) : posts.length === 0 ? (
+          <div className={styles.empty}>No articles found. Create your first one!</div>
+        ) : (
+          posts.map(post => (
+            <div key={post.id} className={styles.postCard}>
+              <div className={styles.postStatus}>
+                 <span className={`${styles.statusBadge} ${styles[post.status.toLowerCase()]}`}>{post.status}</span>
+              </div>
+              <h3 className={styles.postTitle}>{post.title}</h3>
+              <div className={styles.postMeta}>
+                 <div className={styles.metaItem}><Calendar size={14} /> {new Date(post.createdAt).toLocaleDateString()}</div>
+                 <div className={styles.metaItem}><Tag size={14} /> {post.category || 'General'}</div>
+                 <div className={styles.metaItem}><Eye size={14} /> {post.viewsCount || 0} views</div>
+              </div>
+              <div className={styles.postFooter}>
+                 <div className={styles.author}>
+                    <div className={styles.avatarMini}>{post.author?.firstName?.[0] || 'A'}</div>
+                    <span>{post.author?.firstName} {post.author?.lastName}</span>
+                 </div>
+                 <div className={styles.actions}>
+                    <button className={styles.actionBtn}><Edit2 size={16} /></button>
+                    <button className={styles.actionBtn}><Trash2 size={16} /></button>
+                 </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

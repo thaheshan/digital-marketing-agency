@@ -185,6 +185,7 @@ model User {
   updatedSettings       SystemSetting[]
   chatbotKnowledge      ChatbotKnowledgeBase[]
   contentScoreHistory   ContentScoreHistory[]
+  strategyReviews       StrategyReview[]     @relation("ClientStrategyReviews")
   @@index([email])
   @@index([role])
   @@index([status])
@@ -423,6 +424,7 @@ model BlogPost {
   readTimeMinutes  Int?          @map("read_time_minutes") @db.SmallInt
   viewsCount       Int           @default(0) @map("views_count")
   publishedAt      DateTime?     @map("published_at") @db.Timestamptz
+  category         String?       @db.VarChar(100)
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz
   author             User?               @relation(fields: [authorId], references: [id])
@@ -1098,4 +1100,16 @@ model AnalyticsSnapshot {
   trafficSources  Json?    @map("traffic_sources")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   @@map("analytics_snapshots")
+}
+model StrategyReview {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId      String   @map("client_id") @db.Uuid
+  title         String   @db.VarChar(300)
+  reviewDate    DateTime @map("review_date") @db.Timestamptz
+  status        String   @default("scheduled") @db.VarChar(50)
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  client        User     @relation("ClientStrategyReviews", fields: [clientId], references: [id])
+  @@map("strategy_reviews")
 }

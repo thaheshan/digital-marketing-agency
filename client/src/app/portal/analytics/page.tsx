@@ -1,35 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 import styles from './page.module.css';
-
-const performanceData = [
-  { label: 'SEO Traffic', value: '12.4K', change: '+14%', color: 'var(--color-secondary)' },
-  { label: 'PPC Leads', value: '482', change: '+8%', color: 'var(--color-accent)' },
-  { label: 'Social Reach', value: '142K', change: '+22%', color: '#8B5CF6' },
-  { label: 'Email CTR', value: '3.2%', change: '-2%', color: '#F97316' },
-];
-
-const chartBars = [
-  { label: 'W1', value: 65 },
-  { label: 'W2', value: 45 },
-  { label: 'W3', value: 85 },
-  { label: 'W4', value: 70 },
-  { label: 'W5', value: 95 },
-  { label: 'W6', value: 60 },
-  { label: 'W7', value: 75 },
-  { label: 'W8', value: 90 },
-];
-
-const trafficSources = [
-  { source: 'Direct', percentage: 35, color: 'var(--color-secondary)' },
-  { source: 'Search', percentage: 40, color: 'var(--color-accent)' },
-  { source: 'Social', percentage: 15, color: '#8B5CF6' },
-  { source: 'Referral', percentage: 10, color: '#F97316' },
-];
 
 export default function PortalAnalyticsPage() {
   const [timeRange, setTimeRange] = useState('Last 30 Days');
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const res = await api.get<any>('/portal/analytics');
+        if (res.analytics) {
+          setData(res.analytics);
+        }
+      } catch (err) {
+        console.error('Failed to fetch analytics', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
+
+  if (isLoading) return <div className={styles.page}>Loading analytics...</div>;
+  if (!data) return <div className={styles.page}>No analytics data available.</div>;
 
   return (
     <div className={styles.page}>
@@ -55,7 +52,7 @@ export default function PortalAnalyticsPage() {
 
       {/* Performance Overview */}
       <div className={styles.performanceGrid}>
-        {performanceData.map((item) => (
+        {data.performanceData.map((item: any) => (
           <div key={item.label} className={styles.perfCard}>
             <div className={styles.perfLabel}>{item.label}</div>
             <div className={styles.perfValue} style={{ color: item.color }}>{item.value}</div>
@@ -85,7 +82,7 @@ export default function PortalAnalyticsPage() {
               <span>0</span>
             </div>
             <div className={styles.bars}>
-              {chartBars.map((bar) => (
+              {data.chartBars.map((bar: any) => (
                 <div key={bar.label} className={styles.barItem}>
                   <div className={styles.barWrapper}>
                     <div 
@@ -108,7 +105,7 @@ export default function PortalAnalyticsPage() {
             <h3>Traffic Sources</h3>
           </div>
           <div className={styles.sourcesList}>
-            {trafficSources.map((src) => (
+            {data.trafficSources.map((src: any) => (
               <div key={src.source} className={styles.sourceItem}>
                 <div className={styles.sourceInfo}>
                   <span className={styles.sourceName}>{src.source}</span>
@@ -124,14 +121,13 @@ export default function PortalAnalyticsPage() {
             ))}
           </div>
           <div className={styles.donutPlaceholder}>
-             {/* Simple CSS-based visualization of 4 components */}
              <div className={styles.donut}>
-                <div className={styles.segment} style={{ '--deg': '0deg', '--pct': '35%', '--color': trafficSources[0].color } as any}></div>
-                <div className={styles.segment} style={{ '--deg': '126deg', '--pct': '40%', '--color': trafficSources[1].color } as any}></div>
-                <div className={styles.segment} style={{ '--deg': '270deg', '--pct': '15%', '--color': trafficSources[2].color } as any}></div>
-                <div className={styles.segment} style={{ '--deg': '324deg', '--pct': '10%', '--color': trafficSources[3].color } as any}></div>
+                <div className={styles.segment} style={{ '--deg': '0deg', '--pct': '35%', '--color': data.trafficSources[0].color } as any}></div>
+                <div className={styles.segment} style={{ '--deg': '126deg', '--pct': '40%', '--color': data.trafficSources[1].color } as any}></div>
+                <div className={styles.segment} style={{ '--deg': '270deg', '--pct': '15%', '--color': data.trafficSources[2].color } as any}></div>
+                <div className={styles.segment} style={{ '--deg': '324deg', '--pct': '10%', '--color': data.trafficSources[3].color } as any}></div>
                 <div className={styles.donutCenter}>
-                    <strong>12.4K</strong>
+                    <strong>{data.performanceData[0].value}</strong>
                     <span>Sessions</span>
                 </div>
              </div>
@@ -157,38 +153,16 @@ export default function PortalAnalyticsPage() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className={styles.bold}>Organic Search</td>
-                <td>5,842</td>
-                <td>42.5%</td>
-                <td>3m 42s</td>
-                <td>248</td>
-                <td className={styles.positive}>4.2%</td>
-              </tr>
-              <tr>
-                <td className={styles.bold}>Paid Search</td>
-                <td>3,120</td>
-                <td>54.2%</td>
-                <td>1m 12s</td>
-                <td>112</td>
-                <td className={styles.mid}>3.5%</td>
-              </tr>
-              <tr>
-                <td className={styles.bold}>Social Media</td>
-                <td>1,850</td>
-                <td>68.4%</td>
-                <td>0m 48s</td>
-                <td>42</td>
-                <td className={styles.low}>2.2%</td>
-              </tr>
-              <tr>
-                <td className={styles.bold}>Email Marketing</td>
-                <td>940</td>
-                <td>28.1%</td>
-                <td>2m 15s</td>
-                <td>65</td>
-                <td className={styles.positive}>6.9%</td>
-              </tr>
+              {data.channelPerformance.map((row: any, i: number) => (
+                <tr key={i}>
+                  <td className={styles.bold}>{row.channel}</td>
+                  <td>{row.sessions}</td>
+                  <td>{row.bounce}</td>
+                  <td>{row.duration}</td>
+                  <td>{row.goals}</td>
+                  <td className={styles.positive}>{row.cvr}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

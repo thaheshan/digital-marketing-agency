@@ -1,22 +1,62 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save } from 'lucide-react';
+import { api } from '@/lib/api';
 import { ContentScorePanel } from '@/components/admin/ContentScorePanel/ContentScorePanel';
 import styles from './page.module.css';
 
-const CATEGORIES = ['SEO', 'PPC', 'Social Media', 'Email Marketing', 'Content', 'Brand Strategy', 'News'];
+const CATEGORIES = [
+  'SEO Optimization', 'PPC Advertising', 'Social Media Marketing', 
+  'Content Marketing', 'Email Marketing', 'Brand Strategy', 
+  'Web Development', 'Mobile App Development', 'Conversion Rate Optimization', 
+  'AI & Automation', 'Influencer Marketing', 'Video Production', 
+  'Digital PR', 'Amazon Marketing', 'Data & Analytics', 'Agency News'
+];
 
 export default function NewBlogPostPage() {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [content, setContent] = useState('');
-  const [saved, setSaved] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<string[]>(CATEGORIES);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await api.get<any[]>('/admin/services');
+        if (data.length > 0) {
+          setCategories(data.map(s => s.name));
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  const handlePublish = async (status: 'published' | 'draft') => {
+    if (!title || !content) return;
+    setIsSubmitting(true);
+    try {
+      const res = await api.post('/admin/blog/create', {
+        title,
+        excerpt: content.substring(0, 160) + '...',
+        content,
+        status,
+        category
+      });
+      if (res.success) {
+        router.push('/admin/blog');
+      }
+    } catch (err) {
+      console.error('Failed to publish:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -26,10 +66,18 @@ export default function NewBlogPostPage() {
         <div className={styles.topActions}>
           <select value={category} onChange={e => setCategory(e.target.value)} className={styles.categorySelect}>
             <option value="">Category</option>
-            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <button className={styles.draftBtn} onClick={handleSave}>Save Draft</button>
-          <button className={styles.publishBtn} disabled={!title || !content || content.length < 100}>Publish Post</button>
+          <button className={styles.draftBtn} onClick={() => handlePublish('draft')} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Save Draft'}
+          </button>
+          <button 
+            className={styles.publishBtn} 
+            onClick={() => handlePublish('published')}
+            disabled={isSubmitting || !title || !content || content.length < 10}
+          >
+            {isSubmitting ? 'Publishing...' : 'Publish Post'}
+          </button>
         </div>
       </div>
 

@@ -1,9 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useAuthStore } from '@/store';
 import styles from './error.module.css';
 
 export default function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
+  const { user } = useAuthStore();
+  const homeLink = user ? '/admin/dashboard' : '/';
+
   return (
     <div className={styles.page}>
       <div className={styles.content}>
@@ -15,7 +19,7 @@ export default function ErrorPage({ error, reset }: { error: Error; reset: () =>
         <p className={styles.detail}>{error?.message}</p>
         <div className={styles.actions}>
           <button onClick={reset} className={styles.retryBtn}>Try Again</button>
-          <Link href="/" className={styles.homeBtn}>← Go Home</Link>
+          <Link href={homeLink} className={styles.homeBtn}>← Go Home</Link>
         </div>
       </div>
     </div>

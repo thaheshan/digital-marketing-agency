@@ -52,8 +52,9 @@ const serviceDetails = {
   }
 };
 
-export default function ServiceDetailPage({ params }: { params: { slug: string } }) {
-  const service = serviceDetails[params.slug as keyof typeof serviceDetails] || serviceDetails['default'];
+export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const service = serviceDetails[slug as keyof typeof serviceDetails] || serviceDetails['default'];
 
   return (
     <div className={styles.page}>

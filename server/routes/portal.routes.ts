@@ -9,7 +9,13 @@ router.use(requireAuth);
 // Client Portal Routes (accessible to clients)
 router.get("/dashboard", requireRole("client"), portalController.getClientDashboard);
 router.get("/campaigns", requireRole("client"), portalController.getClientCampaigns);
+router.get("/goals", requireRole("client"), portalController.getClientGoals);
+router.get("/reports", requireRole("client"), portalController.getClientReports);
+router.get("/analytics", requireRole("client"), portalController.getClientAnalytics);
+router.patch("/profile", requireRole("client"), portalController.updateClientProfile);
 router.get("/campaigns/:id", requireRole("client"), portalController.getClientCampaignData);
+router.get("/support", requireRole("client"), portalController.getSupportTickets);
+router.post("/support", requireRole("client"), portalController.createSupportTicket);
 
 // Admin Routes for managing staff and clients
 router.post("/staff", requireRole("admin"), portalController.createStaff);
