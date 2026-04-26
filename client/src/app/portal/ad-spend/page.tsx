@@ -3,16 +3,23 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { PoundSterling, TrendingUp, AlertTriangle } from 'lucide-react';
+import { usePortalDateRange } from '@/components/portal/PortalLayout/PortalLayout';
+import { useAuthStore } from '@/store';
 import styles from './page.module.css';
+import { PortalExportAction } from '@/components/portal/PortalExportAction/PortalExportAction';
 
 export default function PortalAdSpendPage() {
+  const { user } = useAuthStore();
+  const { dateRange } = usePortalDateRange();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     async function loadCampaigns() {
+      setIsLoading(true);
       try {
-        const res = await api.get<any>('/portal/campaigns');
+        const from = dateRange.from.toISOString();
+        const to = dateRange.to.toISOString();
+        const res = await api.get<any>(`/portal/campaigns?from=${from}&to=${to}`);
         if (res.campaigns) {
           setCampaigns(res.campaigns);
         }
@@ -23,7 +30,7 @@ export default function PortalAdSpendPage() {
       }
     }
     loadCampaigns();
-  }, []);
+  }, [dateRange]);
 
   const activeCampaigns = campaigns.filter(c => c.status === 'live');
   
@@ -42,6 +49,48 @@ export default function PortalAdSpendPage() {
           <h1 className={styles.title}>Ad Spend</h1>
           <p className={styles.sub}>Track your budget pacing across all active campaigns.</p>
         </div>
+        <PortalExportAction 
+          title="Ad Spend Report" 
+          data={{ spent, budget, remaining }}
+          onExportPDF={() => {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+            printWindow.document.write(`
+              <html>
+                <head><title>Ad Spend Report - ${user?.name}</title></head>
+                <body style="font-family:sans-serif; padding:40px; color:#0f172a;">
+                  <h1 style="border-bottom:2px solid #3b82f6; padding-bottom:10px;">Ad Spend & Budget Report</h1>
+                  <p>Client: ${user?.name} | Period: ${dateRange.label}</p>
+                  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-top:20px;">
+                    <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                      <div style="font-size:12px; color:#64748b;">TOTAL SPENT</div>
+                      <div style="font-size:24px; font-weight:800;">£${spent.toLocaleString()}</div>
+                    </div>
+                    <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                      <div style="font-size:12px; color:#64748b;">TOTAL BUDGET</div>
+                      <div style="font-size:24px; font-weight:800;">£${budget.toLocaleString()}</div>
+                    </div>
+                    <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                      <div style="font-size:12px; color:#64748b;">REMAINING</div>
+                      <div style="font-size:24px; font-weight:800;">£${remaining.toLocaleString()}</div>
+                    </div>
+                  </div>
+                  <script>window.onload = () => { window.print(); window.close(); };</script>
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+          }}
+          onExportCSV={() => {
+            const header = "Metric,Value\n";
+            const rows = `Total Spent,${spent}\nBudget,${budget}\nRemaining,${remaining}`;
+            const blob = new Blob([header + rows], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "Ad_Spend_Report.csv";
+            a.click();
+          }}
+        />
       </div>
 
       <div className={styles.summaryGrid}>
@@ -54,7 +103,7 @@ export default function PortalAdSpendPage() {
           </div>
           <div className={styles.summaryValue}>£{spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
           <div className={`${styles.summaryTrend} ${styles.trendPositive}`}>
-            <TrendingUp size={14} /> +12% vs last month
+            <TrendingUp size={14} /> +12%
           </div>
         </div>
 

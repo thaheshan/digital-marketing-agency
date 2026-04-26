@@ -1,5 +1,10 @@
 import express from "express";
 import "dotenv/config";
+
+// --- FIX: BigInt serialization ---
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
 import { applySecurity }   from "./middlewares/security.middleware";
 import { httpLogger }      from "./middlewares/httpLogger.middleware";
 import { sanitizeInput }   from "./middlewares/sanitize.middleware";

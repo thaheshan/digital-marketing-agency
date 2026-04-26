@@ -3,16 +3,24 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { Target } from 'lucide-react';
+import { usePortalDateRange } from '@/components/portal/PortalLayout/PortalLayout';
+import { useAuthStore } from '@/store';
 import styles from './page.module.css';
+import { PortalExportAction } from '@/components/portal/PortalExportAction/PortalExportAction';
 
 export default function PortalGoalsPage() {
+  const { user } = useAuthStore();
+  const { dateRange } = usePortalDateRange();
   const [goals, setGoals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadGoals() {
+      setIsLoading(true);
       try {
-        const res = await api.get<any>('/portal/goals');
+        const from = dateRange.from.toISOString();
+        const to = dateRange.to.toISOString();
+        const res = await api.get<any>(`/portal/goals?from=${from}&to=${to}`);
         if (res.goals) {
           setGoals(res.goals);
         }
@@ -23,7 +31,7 @@ export default function PortalGoalsPage() {
       }
     }
     loadGoals();
-  }, []);
+  }, [dateRange]);
 
   const formatStatus = (status: string) => {
     return status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -56,6 +64,54 @@ export default function PortalGoalsPage() {
           <h1 className={styles.title}>Goals & KPIs</h1>
           <p className={styles.sub}>Track performance targets across all active campaigns.</p>
         </div>
+        <PortalExportAction 
+          title="Goals & KPIs Report" 
+          data={goals}
+          onExportPDF={() => {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+            const goalsHtml = goals.map(g => `
+              <tr>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${g.metricName}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${g.campaign?.name || 'N/A'}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${g.currentValue}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${g.targetValue}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${g.status.replace('_', ' ')}</td>
+              </tr>
+            `).join('');
+
+            printWindow.document.write(`
+              <html>
+                <head><title>Goals Report - ${user?.name}</title></head>
+                <body style="font-family:sans-serif; padding:40px; color:#0f172a;">
+                  <h1 style="border-bottom:2px solid #06b6d4; padding-bottom:10px;">Goals & KPIs Performance</h1>
+                  <p>Client: ${user?.name} | Period: ${dateRange.label}</p>
+                  <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:12px;">
+                    <thead><tr style="background:#f8fafc; text-align:left;">
+                      <th style="padding:12px;">Metric</th>
+                      <th style="padding:12px;">Campaign</th>
+                      <th style="padding:12px;">Current</th>
+                      <th style="padding:12px;">Target</th>
+                      <th style="padding:12px;">Status</th>
+                    </tr></thead>
+                    <tbody>${goalsHtml}</tbody>
+                  </table>
+                  <script>window.onload = () => { window.print(); window.close(); };</script>
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+          }}
+          onExportCSV={() => {
+            const header = "Metric,Campaign,Current,Target,Status\n";
+            const rows = goals.map(g => `"${g.metricName}","${g.campaign?.name}",${g.currentValue},${g.targetValue},${g.status}`).join('\n');
+            const blob = new Blob([header + rows], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "Goals_Report.csv";
+            a.click();
+          }}
+        />
       </div>
 
       <div className={styles.goalsGrid}>

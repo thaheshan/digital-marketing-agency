@@ -11,9 +11,12 @@ router.get('/team', adminController.getTeam);
 
 // Client Management
 router.get('/clients', adminController.getClients);
+router.put('/clients/:id/status', adminController.toggleClientStatus);
 
 // Invoice Management
 router.get('/invoices', adminController.getInvoices);
+router.post('/invoices', adminController.createInvoice);
+router.put('/invoices/:id/status', adminController.updateInvoiceStatus);
 
 // Global Search
 router.get('/search', adminController.globalSearch);

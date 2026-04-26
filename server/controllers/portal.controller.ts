@@ -9,7 +9,7 @@ const createStaffSchema = z.object({
   firstName:   z.string().min(1).max(100),
   lastName:    z.string().min(1).max(100),
   email:       z.string().email(),
-  role:        z.enum(["content_manager"]),
+  role:        z.enum(["staff"]),
   department:  z.string().optional(),
   jobTitle:    z.string().optional(),
   phone:       z.string().optional(),
@@ -88,7 +88,8 @@ export const updatePermissions = async (req: Request, res: Response, next: NextF
 export const getClientDashboard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).userId;
-    const dashboard = await portalService.getClientDashboard(userId);
+    const { from, to } = req.query;
+    const dashboard = await portalService.getClientDashboard(userId, from as string, to as string);
     ok(res, dashboard);
   } catch (e) { err(next, e); }
 };
@@ -128,7 +129,8 @@ export const getClientCampaignData = async (req: Request, res: Response, next: N
 export const getClientAnalytics = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).userId;
-    const analytics = await portalService.getClientAnalytics(userId);
+    const { from, to } = req.query;
+    const analytics = await portalService.getClientAnalytics(userId, from as string, to as string);
     ok(res, { analytics });
   } catch (e) { err(next, e); }
 };
@@ -170,3 +172,104 @@ export const createSupportTicket = async (req: Request, res: Response, next: Nex
     ok(res, { message: "Ticket created successfully", ticket }, 201);
   } catch (e) { err(next, e); }
 };
+
+// --- PORTAL SEARCH ---
+export const portalSearch = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const q = (req.query.q as string) || '';
+    if (q.trim().length < 2) { res.json({ results: [] }); return; }
+
+    const prisma = (await import('../db/prisma')).default;
+    const [campaigns, reports] = await Promise.all([
+      prisma.campaign.findMany({
+        where: {
+          clientId: userId,
+          OR: [
+            { name: { contains: q, mode: 'insensitive' } },
+            { objective: { contains: q, mode: 'insensitive' } },
+          ]
+        },
+        select: { id: true, name: true, status: true },
+        take: 5,
+      }),
+      prisma.report.findMany({
+        where: {
+          clientId: userId,
+          title: { contains: q, mode: 'insensitive' }
+        },
+        select: { id: true, title: true, reportType: true, createdAt: true },
+        take: 5,
+      }),
+    ]);
+
+    res.json({
+      results: [
+        ...campaigns.map(c => ({ type: 'campaign', id: c.id, title: c.name, subtitle: c.status, href: `/portal/campaigns` })),
+        ...reports.map(r => ({ type: 'report', id: r.id, title: r.title, subtitle: r.reportType, href: `/portal/reports` })),
+      ]
+    });
+  } catch (e) { err(next, e); }
+};
+
+// --- NOTIFICATIONS ---
+export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).userId;
+    const prisma = (await import('../db/prisma')).default;
+
+    // Fetch real data to construct intelligent notifications
+    const [campaigns, reports, invoices] = await Promise.all([
+      prisma.campaign.findMany({ where: { clientId: userId }, orderBy: { updatedAt: 'desc' }, take: 3, select: { id: true, name: true, status: true, updatedAt: true } }),
+      prisma.report.findMany({ where: { clientId: userId }, orderBy: { createdAt: 'desc' }, take: 3, select: { id: true, title: true, createdAt: true } }),
+      prisma.invoice.findMany({ where: { clientId: userId }, orderBy: { createdAt: 'desc' }, take: 3, select: { id: true, invoiceNumber: true, status: true, totalPence: true, dueDate: true } }),
+    ]);
+
+    const notifications = [
+      ...campaigns.map(c => ({
+        id: `campaign-${c.id}`,
+        type: c.status === 'active' ? 'success' : 'info',
+        title: `Campaign "${c.name}"`,
+        message: `Status: ${c.status}`,
+        time: c.updatedAt.toISOString(),
+        read: false,
+        href: `/portal/campaigns`,
+        icon: 'megaphone',
+      })),
+      ...reports.map(r => ({
+        id: `report-${r.id}`,
+        type: 'info',
+        title: 'New Report Available',
+        message: r.title,
+        time: r.createdAt.toISOString(),
+        read: false,
+        href: `/portal/reports`,
+        icon: 'file',
+      })),
+      ...invoices
+        .filter(i => i.status === 'sent' || i.status === 'overdue')
+        .map(i => ({
+          id: `invoice-${i.id}`,
+          type: i.status === 'overdue' ? 'warning' : 'info',
+          title: `Invoice ${i.invoiceNumber}`,
+          message: `£${(i.totalPence / 100).toFixed(2)} — ${i.status}`,
+          time: i.dueDate.toISOString(),
+          read: false,
+          href: `/portal/settings`,
+          icon: 'credit-card',
+        })),
+    ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10);
+
+    res.json({ notifications });
+  } catch (e) { err(next, e); }
+};
+
+export const markNotificationRead = async (req: Request, res: Response) => {
+  // Client-side managed; acknowledge gracefully
+  res.json({ success: true });
+};
+
+export const markAllNotificationsRead = async (req: Request, res: Response) => {
+  res.json({ success: true });
+};
+

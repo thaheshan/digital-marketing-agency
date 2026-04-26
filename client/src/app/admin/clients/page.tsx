@@ -17,24 +17,84 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Modals state
+  const [showOnboard, setShowOnboard] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+
+  // Onboard Form state
+  const [formData, setFormData] = useState({
+    firstName: '', lastName: '', email: '', companyName: '', industry: '', monthlyBudget: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filter state
+  const [filterIndustry, setFilterIndustry] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [activeFilters, setActiveFilters] = useState({ industry: '', status: '' });
+
+  const fetchClients = async () => {
+    try {
+      const data = await api.get('/admin/clients');
+      setClients(data);
+    } catch (error) {
+      console.error('Failed to fetch clients');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const data = await api.get('/admin/clients');
-        setClients(data);
-      } catch (error) {
-        console.error('Failed to fetch clients');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchClients();
   }, []);
 
-  const filteredClients = clients.filter(c => 
-    c.companyName.toLowerCase().includes(search.toLowerCase()) ||
-    c.industry?.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleOnboard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post('/portal/clients', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        companyName: formData.companyName,
+        industry: formData.industry,
+        monthlyBudgetPence: parseInt(formData.monthlyBudget) * 100 || 0,
+      });
+      setShowOnboard(false);
+      setFormData({ firstName: '', lastName: '', email: '', companyName: '', industry: '', monthlyBudget: '' });
+      fetchClients();
+    } catch (err) {
+      alert('Failed to onboard client. Please check details.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const applyFilters = () => {
+    setActiveFilters({ industry: filterIndustry, status: filterStatus });
+    setShowFilter(false);
+  };
+
+  const clearFilters = () => {
+    setFilterIndustry('');
+    setFilterStatus('');
+    setActiveFilters({ industry: '', status: '' });
+    setShowFilter(false);
+  };
+
+  const toggleDropdown = (id: string) => {
+    if (dropdownOpenId === id) setDropdownOpenId(null);
+    else setDropdownOpenId(id);
+  };
+
+  const hasFilters = activeFilters.industry || activeFilters.status;
+
+  const filteredClients = clients.filter(c => {
+    const matchSearch = c.companyName.toLowerCase().includes(search.toLowerCase()) || c.industry?.toLowerCase().includes(search.toLowerCase());
+    const matchInd = !activeFilters.industry || c.industry?.toLowerCase() === activeFilters.industry.toLowerCase();
+    const matchStatus = !activeFilters.status || (activeFilters.status === 'active' && c.portalAccess) || (activeFilters.status === 'inactive' && !c.portalAccess);
+    return matchSearch && matchInd && matchStatus;
+  });
 
   return (
     <div className={styles.page}>
@@ -43,7 +103,7 @@ export default function ClientsPage() {
           <h1 className={styles.title}>Client Portfolio</h1>
           <p className={styles.sub}>Manage active accounts, monitor health scores, and track retainers.</p>
         </div>
-        <button className={styles.addBtn}>
+        <button className={styles.addBtn} onClick={() => setShowOnboard(true)}>
           <Plus size={18} />
           <span>Onboard Client</span>
         </button>
@@ -52,7 +112,7 @@ export default function ClientsPage() {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Active Clients</span>
-          <span className={styles.statValue}>24</span>
+          <span className={styles.statValue}>{clients.length}</span>
           <span className={styles.statChange}>+2 this month</span>
         </div>
         <div className={styles.statCard}>
@@ -62,7 +122,7 @@ export default function ClientsPage() {
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Total MRR</span>
-          <span className={styles.statValue}>£142,500</span>
+          <span className={styles.statValue}>£{(clients.reduce((acc, curr) => acc + (curr.monthlyBudgetPence || 0), 0) / 100).toLocaleString()}</span>
           <span className={styles.statChange}>+8.4% Growth</span>
         </div>
       </div>
@@ -76,7 +136,13 @@ export default function ClientsPage() {
             onChange={e => setSearch(e.target.value)} 
           />
         </div>
-        <button className={styles.filterBtn}><Filter size={18} /> Filter</button>
+        <button 
+          className={`${styles.filterBtn} ${hasFilters ? styles.activeFilter : ''}`} 
+          onClick={() => setShowFilter(true)}
+        >
+          <Filter size={18} /> 
+          {hasFilters ? 'Filters Active' : 'Filter'}
+        </button>
       </div>
 
       <div className={styles.tableWrap}>
@@ -105,7 +171,7 @@ export default function ClientsPage() {
                   </div>
                 </td>
                 <td>{client.industry || 'General'}</td>
-                <td className={styles.retainer}>£{(client.monthlyBudgetPence / 100).toLocaleString()}/mo</td>
+                <td className={styles.retainer}>£{((client.monthlyBudgetPence || 0) / 100).toLocaleString()}/mo</td>
                 <td>
                   <div className={styles.healthWrap}>
                     <div className={styles.healthBar}>
@@ -117,13 +183,38 @@ export default function ClientsPage() {
                     <span>90%</span>
                   </div>
                 </td>
-                <td>{client.user?.firstName || 'Assigned'}</td>
+                <td>{client.accountManager?.firstName || client.user?.firstName || 'Assigned'}</td>
                 <td>
-                  <span className={`${styles.badge} ${styles.active}`}>
-                    Active
+                  <span className={`${styles.badge} ${client.portalAccess ? styles.active : styles.inactive}`}>
+                    {client.portalAccess ? 'Active' : 'Inactive'}
                   </span>
                 </td>
-                <td><button className={styles.moreBtn}><MoreVertical size={16} /></button></td>
+                <td style={{ position: 'relative' }}>
+                  <button className={styles.moreBtn} onClick={() => toggleDropdown(client.id)}>
+                    <MoreVertical size={16} />
+                  </button>
+                  {dropdownOpenId === client.id && (
+                    <div className={styles.dropdownMenu}>
+                      <button onClick={() => { setDropdownOpenId(null); alert('Profile view coming soon'); }}>View Profile</button>
+                      <button onClick={() => { setDropdownOpenId(null); alert('Retainer edit coming soon'); }}>Edit Retainer</button>
+                      <button onClick={() => { setDropdownOpenId(null); alert('Messaging coming soon'); }}>Send Message</button>
+                      <button 
+                        onClick={async () => {
+                          setDropdownOpenId(null);
+                          try {
+                            await api.put(`/admin/clients/${client.id}/status`, {});
+                            fetchClients();
+                          } catch (err) {
+                            alert('Failed to update status');
+                          }
+                        }} 
+                        className={client.portalAccess ? styles.danger : ''}
+                      >
+                        {client.portalAccess ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
             {filteredClients.length === 0 && !loading && (
@@ -132,6 +223,87 @@ export default function ClientsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Onboard Modal */}
+      {showOnboard && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h2>Onboard New Client</h2>
+            <form onSubmit={handleOnboard}>
+               <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                     <label>First Name</label>
+                     <input required value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
+                  </div>
+                  <div className={styles.formGroup}>
+                     <label>Last Name</label>
+                     <input required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+                  </div>
+               </div>
+               <div className={styles.formGroup}>
+                 <label>Email Address</label>
+                 <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+               </div>
+               <div className={styles.formGroup}>
+                 <label>Company Name</label>
+                 <input required value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
+               </div>
+               <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                     <label>Industry</label>
+                     <input value={formData.industry} onChange={e => setFormData({...formData, industry: e.target.value})} />
+                  </div>
+                  <div className={styles.formGroup}>
+                     <label>Monthly Retainer (£)</label>
+                     <input type="number" required value={formData.monthlyBudget} onChange={e => setFormData({...formData, monthlyBudget: e.target.value})} />
+                  </div>
+               </div>
+               <div className={styles.modalActions}>
+                 <button type="button" className={styles.cancelBtn} onClick={() => setShowOnboard(false)}>Cancel</button>
+                 <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+                   {isSubmitting ? 'Creating...' : 'Create Client'}
+                 </button>
+               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Modal */}
+      {showFilter && (
+        <div className={styles.modalOverlay} onClick={() => setShowFilter(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h2>Filter Clients</h2>
+            <div className={styles.formGroup}>
+               <label>Industry</label>
+               <select value={filterIndustry} onChange={e => setFilterIndustry(e.target.value)}>
+                 <option value="">All Industries</option>
+                 <option value="fashion">Fashion</option>
+                 <option value="technology">Technology</option>
+                 <option value="finance">Finance</option>
+                 <option value="healthcare">Healthcare</option>
+                 <option value="e-commerce">E-commerce</option>
+               </select>
+            </div>
+            <div className={styles.formGroup}>
+               <label>Status</label>
+               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                 <option value="">All Statuses</option>
+                 <option value="active">Active</option>
+                 <option value="inactive">Inactive</option>
+               </select>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowFilter(false)}>Cancel</button>
+              {hasFilters ? (
+                <button className={styles.dangerBtn} onClick={clearFilters}>Clear Filters</button>
+              ) : (
+                <button className={styles.submitBtn} onClick={applyFilters}>Apply Filters</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

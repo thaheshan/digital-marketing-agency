@@ -76,14 +76,14 @@ export default function PortalSupportPage() {
           <div className={styles.contactIcon}><Phone size={24} /></div>
           <div>
             <div className={styles.contactTitle}>Direct Support Line</div>
-            <div className={styles.contactValue}>+44 20 7946 0958</div>
+            <div className={styles.contactValue}>+94 74 278 8567</div>
           </div>
         </div>
         <div className={styles.contactCard}>
           <div className={styles.contactIcon}><Mail size={24} /></div>
           <div>
             <div className={styles.contactTitle}>Email Support</div>
-            <div className={styles.contactValue}>support@digitalpulse.agency</div>
+            <div className={styles.contactValue}>w2051885@westminster.ac.uk</div>
           </div>
         </div>
       </div>

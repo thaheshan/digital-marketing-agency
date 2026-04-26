@@ -264,6 +264,30 @@
   background: #F8FAFC;
 }
 
+.btnRoi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: #F97316;
+  color: #fff;
+  font-weight: 700;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  text-decoration: none;
+  margin-top: 8px;
+}
+
+.btnRoi:hover {
+  background: #EA580C;
+  transform: translateY(-2px);
+}
+
 /* \u2500\u2500 Responsive \u2500\u2500 */
 @media (max-width: 1024px) {
   .mainLayout { grid-template-columns: 1fr; gap: 40px; }

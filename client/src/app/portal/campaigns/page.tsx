@@ -2,38 +2,57 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { 
+  Search, 
+  Monitor, 
+  Mail, 
+  Target, 
+  Image, 
+  Share2, 
+  MousePointer2, 
+  Calendar, 
+  Layout, 
+  TrendingUp,
+  X,
+  MessageCircle,
+  FileText,
+  Activity
+} from 'lucide-react';
 import styles from './page.module.css';
+import { PortalExportAction } from '@/components/portal/PortalExportAction/PortalExportAction';
+import { usePortalDateRange } from '@/components/portal/PortalLayout/PortalLayout';
+import { useAuthStore } from '@/store';
 
 type CampaignStatus = 'All' | 'Active' | 'Paused' | 'Completed' | 'Draft';
 
 const allCampaigns = [
   {
-    id: 1, name: 'Spring Social Blitz', channel: 'Social Media', channelIcon: '📱',
+    id: 1, name: 'Spring Social Blitz', channel: 'Social Media', channelIcon: <Monitor size={16} />,
     status: 'Active', budget: 4500, spent: 3120, impressions: '284K', clicks: '9.2K',
     conversions: 312, roi: 187, startDate: 'Mar 1', endDate: 'Apr 30',
   },
   {
-    id: 2, name: 'SEO Authority Build', channel: 'SEO', channelIcon: '🔍',
+    id: 2, name: 'SEO Authority Build', channel: 'SEO', channelIcon: <Search size={16} />,
     status: 'Active', budget: 2200, spent: 1980, impressions: '—', clicks: '—',
     conversions: 148, roi: 142, startDate: 'Jan 15', endDate: 'Jun 15',
   },
   {
-    id: 3, name: 'Q1 Google Ads Campaign', channel: 'PPC', channelIcon: '🎯',
+    id: 3, name: 'Q1 Google Ads Campaign', channel: 'PPC', channelIcon: <Target size={16} />,
     status: 'Paused', budget: 6000, spent: 2400, impressions: '182K', clicks: '4.8K',
     conversions: 96, roi: 95, startDate: 'Jan 1', endDate: 'Mar 31',
   },
   {
-    id: 4, name: 'Email Nurture Sequence', channel: 'Email', channelIcon: '📧',
+    id: 4, name: 'Email Nurture Sequence', channel: 'Email', channelIcon: <Mail size={16} />,
     status: 'Active', budget: 800, spent: 640, impressions: '—', clicks: '12.4K',
     conversions: 220, roi: 210, startDate: 'Feb 10', endDate: 'May 10',
   },
   {
-    id: 5, name: 'Brand Awareness Display', channel: 'Display', channelIcon: '🖼️',
+    id: 5, name: 'Brand Awareness Display', channel: 'Display', channelIcon: <Image size={16} />,
     status: 'Completed', budget: 3200, spent: 3200, impressions: '1.2M', clicks: '8.1K',
     conversions: 72, roi: 67, startDate: 'Dec 1', endDate: 'Feb 28',
   },
   {
-    id: 6, name: 'Q2 LinkedIn B2B', channel: 'Social Media', channelIcon: '📱',
+    id: 6, name: 'Q2 LinkedIn B2B', channel: 'Social Media', channelIcon: <Share2 size={16} />,
     status: 'Draft', budget: 5000, spent: 0, impressions: '—', clicks: '—',
     conversions: 0, roi: 0, startDate: 'Apr 1', endDate: 'Jun 30',
   },
@@ -44,6 +63,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function PortalCampaignsPage() {
+  const { user } = useAuthStore();
+  const { dateRange } = usePortalDateRange();
   const [filter, setFilter] = useState<CampaignStatus>('All');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
@@ -54,24 +75,34 @@ export default function PortalCampaignsPage() {
 
   useEffect(() => {
     async function loadCampaigns() {
+      setIsLoading(true);
       try {
-        const res = await api.get<any>('/portal/campaigns');
+        const from = dateRange.from.toISOString();
+        const to = dateRange.to.toISOString();
+        const res = await api.get<any>(`/portal/campaigns?from=${from}&to=${to}`);
         if(res.campaigns && res.campaigns.length > 0) {
-          const mapped = res.campaigns.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            channel: 'Digital',
-            channelIcon: '📱',
-            status: c.status === 'live' ? 'Active' : c.status === 'draft' ? 'Draft' : 'Paused',
-            budget: c.totalBudgetPence / 100,
-            spent: c.totalSpentPence / 100,
-            impressions: '120K',
-            clicks: '5.2K',
-            conversions: 154,
-            roi: 245,
-            startDate: new Date(c.startDate).toLocaleDateString(),
-            endDate: c.endDate ? new Date(c.endDate).toLocaleDateString() : 'Ongoing'
-          }));
+          const mapped = res.campaigns.map((c: any) => {
+            const platform = c.platforms && c.platforms[0]?.platform;
+            let icon = <Monitor size={16} />;
+            if (platform === 'Google') icon = <Target size={16} />;
+            if (platform?.includes('SEO')) icon = <Search size={16} />;
+            
+            return {
+              id: c.id,
+              name: c.name,
+              channel: platform || 'Digital',
+              channelIcon: icon,
+              status: c.status === 'live' ? 'Active' : c.status === 'draft' ? 'Draft' : 'Paused',
+              budget: c.totalBudgetPence / 100,
+              spent: c.totalSpentPence / 100,
+              impressions: '120K',
+              clicks: '5.2K',
+              conversions: 154,
+              roi: 245,
+              startDate: new Date(c.startDate).toLocaleDateString(),
+              endDate: c.endDate ? new Date(c.endDate).toLocaleDateString() : 'Ongoing'
+            };
+          });
           setCampaignsList(mapped);
         }
       } catch(e) {
@@ -81,7 +112,7 @@ export default function PortalCampaignsPage() {
       }
     }
     loadCampaigns();
-  }, []);
+  }, [dateRange]);
 
   const filtered = campaignsList.filter(c => {
     const matchStatus = filter === 'All' || c.status === filter;
@@ -107,7 +138,7 @@ export default function PortalCampaignsPage() {
           
           setDetailData({
             name: c.name,
-            channelIcon: c.platforms && c.platforms[0]?.platform === 'Google' ? '🔍' : '📱',
+            channelIcon: c.platforms && c.platforms[0]?.platform === 'Google' ? <Search size={20} /> : <Monitor size={20} />,
             status: c.status === 'live' ? 'Active' : c.status === 'draft' ? 'Draft' : 'Paused',
             budget: c.totalBudgetPence / 100,
             spent: c.totalSpentPence / 100,
@@ -126,7 +157,50 @@ export default function PortalCampaignsPage() {
       }
     }
     loadDetail();
-  }, [selected]);
+  }, [selected, dateRange]);
+
+  const exportPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const rows = filtered.map(c => `
+      <tr>
+        <td style="padding:10px; border-bottom:1px solid #eee;">${c.name}</td>
+        <td style="padding:10px; border-bottom:1px solid #eee;">${c.status}</td>
+        <td style="padding:10px; border-bottom:1px solid #eee;">$${c.budget.toLocaleString()}</td>
+        <td style="padding:10px; border-bottom:1px solid #eee;">$${c.spent.toLocaleString()}</td>
+        <td style="padding:10px; border-bottom:1px solid #eee;">${c.roi}%</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head><title>Campaign Report - ${user?.name}</title></head>
+        <body style="font-family:sans-serif; padding:40px;">
+          <h1 style="color:#0f172a;">Campaign Performance Report</h1>
+          <p>Client: ${user?.name} | Period: ${dateRange.label}</p>
+          <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+            <thead style="background:#f8fafc;">
+              <tr><th style="text-align:left; padding:10px;">Campaign</th><th>Status</th><th>Budget</th><th>Spent</th><th>ROI</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <script>window.onload = () => { window.print(); window.close(); };</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const exportCSV = () => {
+    const header = "Campaign,Status,Budget,Spent,Conversions,ROI,Period\n";
+    const rows = filtered.map(c => `"${c.name}",${c.status},${c.budget},${c.spent},${c.conversions},${c.roi},"${c.startDate}-${c.endDate}"`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Campaigns_Report_${new Date().getTime()}.csv`;
+    a.click();
+  };
 
   const detail = detailData;
 
@@ -140,6 +214,12 @@ export default function PortalCampaignsPage() {
           <h1 className={styles.title}>Campaigns</h1>
           <p className={styles.sub}>{campaignsList.filter(c => c.status === 'Active').length} active · {campaignsList.length} total</p>
         </div>
+        <PortalExportAction 
+          title="Campaigns Report" 
+          data={filtered} 
+          onExportPDF={exportPDF}
+          onExportCSV={exportCSV}
+        />
       </div>
 
       <div className={styles.layout}>
@@ -162,7 +242,7 @@ export default function PortalCampaignsPage() {
               ))}
             </div>
             <div className={styles.searchWrap}>
-              <span>🔍</span>
+              <Search size={18} className={styles.searchIcon} />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -218,7 +298,7 @@ export default function PortalCampaignsPage() {
             </table>
             {filtered.length === 0 && (
               <div className={styles.empty}>
-                <span>🔍</span>
+                <Search size={40} color="#E2E8F0" />
                 <p>No campaigns match your filters</p>
               </div>
             )}
@@ -226,8 +306,13 @@ export default function PortalCampaignsPage() {
         </div>
 
         {/* Right: Detail Pane */}
-        <aside className={`${styles.detailPane} ${detail ? styles.detailOpen : ''}`}>
-          {detail ? (
+        <aside className={`${styles.detailPane} ${selected ? styles.detailOpen : ''}`}>
+          {isLoadingDetail ? (
+             <div className={styles.detailLoading}>
+                <Activity size={32} className={styles.spin} />
+                <p>Loading analytics...</p>
+             </div>
+          ) : detail ? (
             <>
               <div className={styles.detailHeader}>
                 <div className={styles.detailIcon}>{detail.channelIcon}</div>
@@ -255,7 +340,7 @@ export default function PortalCampaignsPage() {
               </div>
 
               <div className={styles.detailPeriod}>
-                <span>📅</span> {detail.startDate} – {detail.endDate}
+                <Calendar size={16} /> {detail.startDate} – {detail.endDate}
               </div>
 
               <div className={styles.spendProgress}>
@@ -276,13 +361,39 @@ export default function PortalCampaignsPage() {
               </div>
 
               <div className={styles.detailActions}>
-                <button className={styles.actionBtn}>📄 View Full Report</button>
-                <button className={styles.actionBtn}>💬 Message Manager</button>
+                <button className={styles.actionBtn} onClick={() => {
+                  const printWindow = window.open('', '_blank');
+                  if (!printWindow) return;
+                  printWindow.document.write(`
+                    <html>
+                      <head><title>Campaign Report - ${detail.name}</title></head>
+                      <body style="font-family:sans-serif; padding:40px; color:#0f172a;">
+                        <h1 style="border-bottom:2px solid #06b6d4; padding-bottom:10px;">${detail.name} Performance Report</h1>
+                        <p>Period: ${detail.startDate} – ${detail.endDate}</p>
+                        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:15px; margin-top:20px;">
+                          <div style="background:#f8fafc; padding:15px; border-radius:10px;"><strong>Budget:</strong> $${detail.budget.toLocaleString()}</div>
+                          <div style="background:#f8fafc; padding:15px; border-radius:10px;"><strong>Spent:</strong> $${detail.spent.toLocaleString()}</div>
+                          <div style="background:#f8fafc; padding:15px; border-radius:10px;"><strong>ROI:</strong> +${detail.roi}%</div>
+                          <div style="background:#f8fafc; padding:15px; border-radius:10px;"><strong>Conversions:</strong> ${detail.conversions}</div>
+                        </div>
+                        <h3 style="margin-top:30px;">Executive Insight</h3>
+                        <p>This campaign is currently pacing at ${Math.round((detail.spent / detail.budget) * 100)}% of total budget. Performance is on track with a strong ${detail.roi}% ROI.</p>
+                        <script>window.onload = () => { window.print(); window.close(); };</script>
+                      </body>
+                    </html>
+                  `);
+                  printWindow.document.close();
+                }}>
+                  <FileText size={16} /> View Full Report
+                </button>
+                <button className={styles.actionBtn}>
+                  <MessageCircle size={16} /> Message Manager
+                </button>
               </div>
             </>
           ) : (
             <div className={styles.detailEmpty}>
-              <span>👆</span>
+              <MousePointer2 size={40} color="#E2E8F0" />
               <p>Select a campaign to view details</p>
             </div>
           )}

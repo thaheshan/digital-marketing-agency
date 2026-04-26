@@ -11,7 +11,8 @@ import {
   BarChart2, 
   MessageCircle, 
   Star,
-  ChevronRight
+  ChevronRight,
+  Calculator
 } from 'lucide-react';
 
 export default function Home() {
@@ -203,6 +204,21 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className={styles.portfolioFooter}>
+            <div className={styles.roiCtaCard}>
+              <div className={styles.roiCtaContent}>
+                <h3 className={styles.roiCtaTitle}>Ready to see your own growth?</h3>
+                <p className={styles.roiCtaDesc}>Use our proprietary ROI calculator to estimate the potential revenue growth for your business.</p>
+              </div>
+              <Link href="/roi-calculator">
+                <Button variant="primary" size="large" className={styles.roiButton}>
+                  <Calculator size={20} className={styles.ctaIcon} />
+                  Calculate Your ROI
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

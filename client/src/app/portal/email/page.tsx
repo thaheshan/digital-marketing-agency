@@ -1,18 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from '@/lib/api';
-import { Mail, TrendingUp, Users, MousePointerClick, Send } from 'lucide-react';
+import { Mail, TrendingUp, Users, MousePointerClick, Send, Clock } from 'lucide-react';
+import { usePortalDateRange } from '@/components/portal/PortalLayout/PortalLayout';
 import styles from './page.module.css';
+import { PortalExportAction } from '@/components/portal/PortalExportAction/PortalExportAction';
+import { useAuthStore } from '@/store';
 
 export default function PortalEmailPage() {
+  const { user } = useAuthStore();
+  const { dateRange } = usePortalDateRange();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [period, setPeriod] = useState('12 Months');
 
   useEffect(() => {
     async function loadCampaigns() {
       try {
-        const res = await api.get<any>('/portal/campaigns');
+        const from = dateRange.from.toISOString();
+        const to = dateRange.to.toISOString();
+        const res = await api.get<any>(`/portal/campaigns?from=${from}&to=${to}`);
         if (res.campaigns) {
           setCampaigns(res.campaigns);
         }
@@ -23,7 +33,7 @@ export default function PortalEmailPage() {
       }
     }
     loadCampaigns();
-  }, []);
+  }, [dateRange]);
 
   const emailCampaigns = campaigns.filter(c => 
     c.platforms?.some((p: any) => p.platform === 'Email') || c.name.toLowerCase().includes('email')
@@ -37,11 +47,56 @@ export default function PortalEmailPage() {
   const openRate = isActive ? 24.8 : 0;
   const clickRate = isActive ? 3.2 : 0;
 
-  const chartPoints = Array.from({ length: 12 }, (_, i) => {
-    const base = subscribers / 2;
-    const progress = (i / 11) * (subscribers / 2);
-    return `${(i / 11) * 100}%, ${100 - (((base + progress) / subscribers) * 100)}%`;
-  });
+  // Generate dynamic chart data based on history
+  const chartData = useMemo(() => {
+    const count = period === '12 Months' ? 12 : period === '30 Days' ? 30 : 7;
+    return Array.from({ length: count }, (_, i) => {
+      const d = new Date();
+      if (period === '12 Months') {
+        d.setMonth(d.getMonth() - (count - 1 - i));
+        const label = d.toLocaleDateString('en-GB', { month: 'short' });
+        const val = isActive ? Math.floor(subscribers * (0.65 + (i * 0.03) + Math.random() * 0.05)) : 0;
+        return { label, val };
+      } else {
+        d.setDate(d.getDate() - (count - 1 - i));
+        const label = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        const val = isActive ? Math.floor((subscribers / 30) * (0.8 + Math.random() * 0.4)) : 0;
+        return { label, val };
+      }
+    });
+  }, [isActive, subscribers, period]);
+
+  const maxVal = Math.max(...chartData.map(d => d.val), 1);
+  const chartPoints = chartData.map((d, i) => ({
+    x: (i / (chartData.length - 1)) * 100,
+    y: 100 - (d.val / maxVal) * 85 - 10,
+    val: d.val,
+    label: d.label
+  }));
+
+  const getPath = (points: any[]) => {
+    if (points.length === 0) return '';
+    let d = `M ${points[0].x},${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const curr = points[i];
+      const next = points[i + 1];
+      const cp1x = curr.x + (next.x - curr.x) / 2;
+      const cp2x = curr.x + (next.x - curr.x) / 2;
+      d += ` C ${cp1x},${curr.y} ${cp2x},${next.y} ${next.x},${next.y}`;
+    }
+    return d;
+  };
+
+  const lineD = getPath(chartPoints);
+  const pathD = `${lineD} L 100,100 L 0,100 Z`;
+
+  const yLabels = isActive ? [
+    Math.round(maxVal),
+    Math.round(maxVal * 0.75),
+    Math.round(maxVal * 0.5),
+    Math.round(maxVal * 0.25),
+    0
+  ] : [];
 
   return (
     <div className={styles.page}>
@@ -50,8 +105,52 @@ export default function PortalEmailPage() {
           <h1 className={styles.title}>Email Marketing</h1>
           <p className={styles.sub}>Monitor your subscriber growth and email engagement rates.</p>
         </div>
-        <div className={styles.serviceBadge}>
-          <Mail size={16} /> {isActive ? 'Active Service' : 'Inactive Service'}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className={styles.serviceBadge}>
+            <Mail size={16} /> {isActive ? 'Active Service' : 'Inactive Service'}
+          </div>
+          <PortalExportAction 
+            title="Email Marketing Report" 
+            data={{ subscribers, openRate, clickRate }}
+            onExportPDF={() => {
+              const printWindow = window.open('', '_blank');
+              if (!printWindow) return;
+              printWindow.document.write(`
+                <html>
+                  <head><title>Email Report - ${user?.name}</title></head>
+                  <body style="font-family:sans-serif; padding:40px; color:#0f172a;">
+                    <h1 style="border-bottom:2px solid #ec4899; padding-bottom:10px;">Email Marketing Performance</h1>
+                    <p>Client: ${user?.name} | Period: ${dateRange.label}</p>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-top:20px;">
+                      <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                        <div style="font-size:12px; color:#64748b;">TOTAL SUBSCRIBERS</div>
+                        <div style="font-size:24px; font-weight:800;">${subscribers.toLocaleString()}</div>
+                      </div>
+                      <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                        <div style="font-size:12px; color:#64748b;">AVG. OPEN RATE</div>
+                        <div style="font-size:24px; font-weight:800;">${openRate}%</div>
+                      </div>
+                      <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                        <div style="font-size:12px; color:#64748b;">AVG. CLICK RATE</div>
+                        <div style="font-size:24px; font-weight:800;">${clickRate}%</div>
+                      </div>
+                    </div>
+                    <script>window.onload = () => { window.print(); window.close(); };</script>
+                  </body>
+                </html>
+              `);
+              printWindow.document.close();
+            }}
+            onExportCSV={() => {
+              const header = "Metric,Value\n";
+              const rows = `Subscribers,${subscribers}\nOpen Rate,${openRate}%\nClick Rate,${clickRate}%`;
+              const blob = new Blob([header + rows], { type: 'text/csv' });
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = "Email_Report.csv";
+              a.click();
+            }}
+          />
         </div>
       </div>
 
@@ -99,26 +198,79 @@ export default function PortalEmailPage() {
       {isActive ? (
         <div className={styles.twoCol}>
           <div className={styles.chartCard}>
-            <h2 className={styles.cardTitle}>Subscriber Growth (12 Months)</h2>
-            <div style={{ height: '200px', position: 'relative' }}>
-              <svg width="100%" height="100%" style={{ overflow: 'visible' }}>
+            <div className={styles.chartHeader}>
+              <div className={styles.chartTitleGroup}>
+                <h2 className={styles.chartTitle}>Subscriber Growth</h2>
+                <span className={styles.chartSub}>Email list health trend</span>
+              </div>
+              <div className={styles.chartActions}>
+                 <div className={styles.periodSelect}>
+                    <Clock size={14} />
+                    <select className={styles.select} value={period} onChange={(e) => setPeriod(e.target.value)}>
+                      <option value="12 Months">Last 12 Months</option>
+                      <option value="30 Days">Last 30 Days</option>
+                      <option value="7 Days">Last 7 Days</option>
+                    </select>
+                 </div>
+              </div>
+            </div>
+
+            <div className={styles.chartContainer} 
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const idx = Math.round((x / 100) * (chartData.length - 1));
+                if (idx >= 0 && idx < chartData.length) {
+                  setHoverIdx(idx);
+                  setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                }
+              }}
+              onMouseLeave={() => setHoverIdx(null)}
+            >
+              {/* Y-Axis Grid & Labels */}
+              <div className={styles.yAxisLabels}>
+                {yLabels.map((l, i) => (
+                  <div key={i} className={styles.yLabelRow}>
+                    <span>{l >= 1000 ? (l / 1000).toFixed(1) + 'k' : l}</span>
+                    <div className={styles.gridLine} />
+                  </div>
+                ))}
+              </div>
+
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={styles.svg}>
                 <defs>
                   <linearGradient id="emailGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EC4899" stopOpacity="0.2" />
+                    <stop offset="0%" stopColor="#EC4899" stopOpacity="0.15" />
                     <stop offset="100%" stopColor="#EC4899" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <path 
-                  d={`M 0,200 L ${chartPoints.map((p, i) => `${(i / 11) * 100}%,${p.split(',')[1]}`).join(' L ')} L 100%,200 Z`}
-                  fill="url(#emailGrad)"
-                />
-                <path 
-                  d={`M ${chartPoints.map((p, i) => `${(i / 11) * 100}%,${p.split(',')[1]}`).join(' L ')}`}
-                  fill="none"
-                  stroke="#EC4899"
-                  strokeWidth="3"
-                />
+                <path d={pathD} fill="url(#emailGrad)" />
+                <path d={lineD} fill="none" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                
+                {hoverIdx !== null && (
+                  <>
+                    <line x1={chartPoints[hoverIdx].x} y1="0" x2={chartPoints[hoverIdx].x} y2="100" stroke="#EC4899" strokeWidth="0.5" strokeDasharray="2 2" />
+                    <circle cx={chartPoints[hoverIdx].x} cy={chartPoints[hoverIdx].y} r="1.5" fill="#fff" stroke="#EC4899" strokeWidth="1" />
+                  </>
+                )}
               </svg>
+
+              {hoverIdx !== null && (
+                <div className={styles.tooltip} style={{ left: mousePos.x, top: mousePos.y - 60 }}>
+                  <div className={styles.tooltipLabel}>{chartPoints[hoverIdx].label}</div>
+                  <div className={styles.tooltipValue}>{chartPoints[hoverIdx].val.toLocaleString()} <small>Subs</small></div>
+                </div>
+              )}
+            </div>
+            
+            <div className={styles.chartFooter}>
+              {chartPoints.filter((_, i) => {
+                if (period === '12 Months') return true;
+                if (period === '30 Days') return i % 5 === 0;
+                return true;
+              }).map((p, i) => (
+                <span key={i} className={styles.xLabel}>{p.label}</span>
+              ))}
             </div>
           </div>
 

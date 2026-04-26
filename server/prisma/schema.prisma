@@ -8,7 +8,7 @@ datasource db {
 
 enum Role {
   admin
-  content_manager
+  staff
   client
 }
 
@@ -108,6 +108,8 @@ enum Platform {
   Google
   LinkedIn
   TikTok
+  Organic
+  Email
 }
 
 enum AdType {

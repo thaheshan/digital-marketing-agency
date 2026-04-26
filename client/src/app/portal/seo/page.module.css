@@ -1,8 +1,10 @@
-.page {
-  padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+.page { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 32px; 
+  max-width: 1440px; 
+  margin: 0 auto; 
+  padding: 40px 20px 60px;
 }
 
 .title {
@@ -101,17 +103,169 @@
 }
 
 .chartCard {
-  background: var(--surface-card);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.chartTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.chartSub {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.chartActions {
+  display: flex;
+  gap: 12px;
+}
+
+.periodSelect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.select {
+  background: transparent;
+  border: none;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.chartContainer {
+  height: 250px;
+  width: 100%;
+  position: relative;
+  cursor: crosshair;
+  padding-left: 40px;
+}
+
+.yAxisLabels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  padding-bottom: 5px;
+}
+
+.yLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.yLabelRow span {
+  min-width: 30px;
+  text-align: right;
+}
+
+.gridLine {
+  flex: 1;
+  height: 1px;
+  background: #f1f5f9;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.tooltip {
+  position: absolute;
+  background: #0f172a;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 10;
+  transform: translateX(-50%);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  min-width: 140px;
+  text-align: center;
+}
+
+.tooltipLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.tooltipValue {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tooltipValue small {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.chartFooter {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0 0 40px;
+}
+
+.xLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.emptyChart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
 }
 
 .cardTitle {
   font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: #0f172a;
   margin-bottom: 24px;
 }
 
@@ -126,12 +280,21 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .keywordRow:last-child {
   border-bottom: none;
   padding-bottom: 0;
+}
+
+.page { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 32px; 
+  max-width: 1440px; 
+  margin: 0 auto; 
+  padding: 0 20px;
 }
 
 .keywordMain {
@@ -143,12 +306,12 @@
 .keywordName {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #0f172a;
 }
 
 .keywordVol {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #64748b;
 }
 
 .keywordRank {
@@ -161,5 +324,6 @@
 .rankPos {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #0f172a;
 }
+

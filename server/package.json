@@ -48,5 +48,8 @@
     "@types/pg": "^8.20.0",
     "nodemon": "^3.1.14",
     "typescript": "^6.0.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

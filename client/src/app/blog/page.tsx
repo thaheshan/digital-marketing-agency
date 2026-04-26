@@ -17,6 +17,7 @@ export default function BlogPage() {
     async function loadPosts() {
       try {
         const res = await api.get<any>('/blog/public');
+        console.log('[BlogPage] API Response:', res);
         if (res.items) {
           const mapped = res.items.map((p: any) => ({
              slug: p.slug,

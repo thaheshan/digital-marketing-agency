@@ -155,6 +155,60 @@
 .portfolioTitle { font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 12px; }
 .portfolioStats { font-size: 14px; font-weight: 600; color: #64748B; }
 
+.portfolioFooter {
+  margin-top: 60px;
+}
+
+.roiCtaCard {
+  background: #F8FAFC;
+  border-radius: 20px;
+  padding: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  border: 1px solid #F1F5F9;
+}
+
+.roiCtaContent {
+  flex: 1;
+}
+
+.roiCtaTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 12px;
+}
+
+.roiCtaDesc {
+  font-size: 16px;
+  color: #64748B;
+  line-height: 1.6;
+}
+
+.roiButton {
+  padding: 16px 32px !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #F97316 !important;
+  color: white !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  border: none !important;
+  white-space: nowrap;
+}
+
+.roiButton:hover {
+  background: #EA580C !important;
+  transform: scale(1.02);
+}
+
+.ctaIcon {
+  color: white;
+}
+
 /* Testimonials */
 .testimonialsSection { padding: 100px 0; background: #fff; }
 .testimonialsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
@@ -241,4 +295,6 @@
   .heroSubheadlineMain { font-size: 24px; }
   .heroCtas { justify-content: center; }
   .servicesGrid, .portfolioGrid, .testimonialsGrid { grid-template-columns: 1fr; }
+  .roiCtaCard { flex-direction: column; text-align: center; padding: 32px; }
+  .roiButton { width: 100%; justify-content: center; }
 }

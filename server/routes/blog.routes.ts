@@ -10,6 +10,6 @@ router.get("/public", blogController.getPublishedBlogPosts);
 router.get("/public/:slug", blogController.getBlogPostBySlug);
 
 // Admin routes (using methods from adminController for now as they exist)
-router.post("/", requireAuth, requireRole("admin", "content_manager"), adminController.createBlogPost);
+router.post("/", requireAuth, requireRole("admin", "staff"), adminController.createBlogPost);
 
 export default router;

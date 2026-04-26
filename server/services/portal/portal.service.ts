@@ -9,7 +9,7 @@ export const createStaff = async (
     firstName:   string;
     lastName:    string;
     email:       string;
-    role:        "content_manager";
+    role:        "staff";
     department?: string;
     jobTitle?:   string;
     phone?:      string;
@@ -167,7 +167,7 @@ export const createClient = async (
 // ── Get all staff ─────────────────────────────────────────
 export const getAllStaff = async () => {
   return prisma.user.findMany({
-    where: { role: { in: ["admin", "content_manager"] } },
+    where: { role: { in: ["admin", "staff"] } },
     select: {
       id:        true,
       email:     true,
@@ -236,11 +236,21 @@ export const updateStaffPermissions = async (
   return { message: "Permissions updated", permissions: updated };
 };
 
-export const getClientDashboard = async (userId: string) => {
+export const getClientDashboard = async (userId: string, from?: string, to?: string) => {
+  const startDate = from ? new Date(from) : new Date(new Date().setDate(new Date().getDate() - 30));
+  const endDate   = to ? new Date(to) : new Date();
+
   const campaigns = await prisma.campaign.findMany({
-    where: { clientId: userId, status: "live" },
+    where: { 
+      clientId: userId, 
+    },
     include: {
-      metricsDaily: { orderBy: { metricDate: 'desc' }, take: 7 },
+      metricsDaily: { 
+        where: {
+          metricDate: { gte: startDate, lte: endDate }
+        },
+        orderBy: { metricDate: 'desc' }
+      },
       platforms: true
     }
   });
@@ -334,14 +344,23 @@ export const getClientDashboard = async (userId: string) => {
       roi: `${roiValue > 0 ? '+' : ''}${roiValue}%`,
       revenueAttributed: `£${(estimatedRevenue > 0 ? (estimatedRevenue / 100) : 2840).toLocaleString()}`
     },
-    activeCampaigns: campaigns.map(c => ({
-      id: c.id,
-      name: c.name,
-      platform: c.platforms[0]?.platform || 'Digital',
-      spent: c.totalSpentPence,
-      budget: c.totalBudgetPence,
-      recentMetrics: c.metricsDaily
-    })),
+    activeCampaigns: campaigns.map(c => {
+      const spend = c.totalSpentPence || 0;
+      const conv = c.metricsDaily.reduce((sum, m) => sum + m.conversions, 0);
+      const rev = conv * 25000; // Same logic as kpis
+      const roas = spend > 0 ? (rev / spend).toFixed(1) : "0.0";
+
+      return {
+        id: c.id,
+        name: c.name,
+        platform: c.platforms[0]?.platform || 'Digital',
+        spent: spend,
+        budget: c.totalBudgetPence,
+        roas: `${roas}`,
+        status: c.status,
+        recentMetrics: c.metricsDaily
+      };
+    }),
     chartData,
     channelBreakdown,
     recentActivity,
@@ -388,11 +407,17 @@ export const getClientCampaignData = async (userId: string, campaignId: string) 
   return campaign;
 };
 
-export const getClientAnalytics = async (userId: string) => {
+export const getClientAnalytics = async (userId: string, from?: string, to?: string) => {
+  const startDate = from ? new Date(from) : new Date(new Date().setDate(new Date().getDate() - 30));
+  const endDate   = to ? new Date(to) : new Date();
+
   const campaigns = await prisma.campaign.findMany({
     where: { clientId: userId },
     include: {
-      metricsDaily: { orderBy: { metricDate: 'asc' } },
+      metricsDaily: { 
+        where: { metricDate: { gte: startDate, lte: endDate } },
+        orderBy: { metricDate: 'asc' } 
+      },
       platforms: true
     }
   });

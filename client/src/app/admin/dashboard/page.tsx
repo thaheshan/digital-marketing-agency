@@ -31,6 +31,7 @@ import Link from 'next/link';
 import { useAuthStore, useEnquiryStore, useCampaignStore } from '@/store';
 import styles from './page.module.css';
 import { api } from '@/lib/api';
+import { useAdminContext } from '@/components/admin/AdminLayout/AdminLayout';
 
 // --- MOCK DATA ---
 
@@ -136,7 +137,7 @@ const InteractiveRevenueChart = ({ history, onHover, onLeave }: any) => {
     const maxVal = Math.max(...history.map((d: any) => Math.max(d.actual, d.projected))) * 1.1;
     
     const getX = (i: number) => padding + (i / (history.length - 1)) * chartWidth;
-    const getY = (val: number) => height - padding - (val / maxVal) * chartHeight;
+    const getY = (val: number) => height - padding - (val / (maxVal || 1)) * chartHeight;
 
     const actualPath = history.map((d: any, i: number) => `${i === 0 ? 'M' : 'L'}${getX(i)},${getY(d.actual)}`).join(' ');
     const projectedPath = history.map((d: any, i: number) => `${i === 0 ? 'M' : 'L'}${getX(i)},${getY(d.projected)}`).join(' ');
@@ -187,10 +188,10 @@ const InteractiveRevenueChart = ({ history, onHover, onLeave }: any) => {
 
 export default function AdminDashboard() {
   const { user } = useAuthStore();
+  const { dateRange } = useAdminContext();
   const [firstName, setFirstName] = useState('Priya');
   const [exportOpen, setExportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState('90d');
   const [hoverData, setHoverData] = useState<any>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -200,9 +201,12 @@ export default function AdminDashboard() {
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
 
   const fetchDashboardData = async () => {
+    setLoading(true);
     try {
+      const from = dateRange.from.toISOString();
+      const to = dateRange.to.toISOString();
       const [statsData, leadsData, clientsData] = await Promise.all([
-        api.get(`/admin/stats?range=${range}`),
+        api.get(`/admin/stats?from=${from}&to=${to}`),
         api.get('/admin/enquiries?limit=4&sort=desc'),
         api.get('/admin/clients')
       ]);
@@ -218,7 +222,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [range]);
+  }, [dateRange]);
 
   useEffect(() => {
     if (user?.firstName) setFirstName(user.firstName);
@@ -227,24 +231,19 @@ export default function AdminDashboard() {
 
   // Update KPI objects with live data
   const liveKpis = adminKpis.map(k => {
-    if (k.id === 'agency_revenue') return { ...k, value: `£${stats.revenue.toLocaleString()}` };
-    if (k.id === 'hot_leads') return { ...k, value: stats.leads.toString() };
-    if (k.id === 'campaign_health') return { ...k, value: stats.activeCampaigns.toString(), label: 'Active Campaigns' };
+    if (k.id === 'agency_revenue') return { ...k, value: `£${(stats?.revenue || 0).toLocaleString()}` };
+    if (k.id === 'hot_leads') return { ...k, value: (stats?.leads || 0).toString() };
+    if (k.id === 'campaign_health') return { ...k, value: (stats?.activeCampaigns || 0).toString(), label: 'Active Campaigns' };
     return k;
   });
 
   const handleExport = (format: 'pdf' | 'csv') => {
     setExportOpen(false);
-
     if (format === 'csv') {
       let csv = "DIGITAL PULSE AGENCY - EXECUTIVE DATA EXPORT\n";
       csv += `Export Date: ${new Date().toLocaleString()}\n\n`;
       csv += "01. KEY PERFORMANCE INDICATORS\nMetric,Value,Status,Trend\n";
       adminKpis.forEach(k => { csv += `${k.label},"${k.value}",Stable,${k.change}\n`; });
-      csv += "\n02. SERVICE LINE REVENUE\nService,Revenue,Growth,Margin\nSEO Optimization,£94000,+8%,62%\nPaid Media (PPC),£120500,+18%,45%\nContent Strategy,£70000,+12%,74%\n\n";
-      csv += "03. URGENT LEAD PIPELINE\nLead Name,Company,Service,Lead Score,Last Contact\n";
-      urgentLeads.forEach(l => { csv += `${l.name},${l.company},${l.service},${l.score},${l.time}\n`; });
-
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -252,7 +251,6 @@ export default function AdminDashboard() {
       link.download = `DigitalPulse_Advanced_Report.csv`;
       link.click();
     } else {
-      // Direct Print on same page
       window.print();
     }
   };
@@ -274,10 +272,6 @@ export default function AdminDashboard() {
       alert('Failed to schedule session. Please try again.');
     }
   };
-
-  useEffect(() => {
-    if (user?.name) setFirstName(user.name.split(' ')[0]);
-  }, [user]);
 
   return (
     <div className={styles.page}>
@@ -342,47 +336,38 @@ export default function AdminDashboard() {
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleGroup}>
               <h2 className={styles.cardTitle}>Agency Revenue Pipeline</h2>
-              <span className={styles.cardSub}>Period: {range.toUpperCase()} Performance</span>
+              <span className={styles.cardSub}>Selected Period Performance</span>
             </div>
             <div className={styles.headerActions}>
-                <div className={styles.rangeSelector}>
-                    {['7d', '30d', '90d', '12m', 'all'].map(r => (
-                        <button 
-                            key={r} 
-                            className={`${styles.rangeBtn} ${range === r ? styles.rangeBtnActive : ''}`}
-                            onClick={() => setRange(r)}
-                        >
-                            {r.toUpperCase()}
-                        </button>
-                    ))}
-                </div>
                 <div className={styles.rangeStats}>
                     <div className={styles.rangeStatItem}>
                         <div className={styles.rangeStatDotActual} />
                         <div className={styles.rangeStatInfo}>
                             <span>Actual</span>
-                            <strong>£{stats.revenue.toLocaleString()}</strong>
+                            <strong>£{(stats?.revenue || 0).toLocaleString()}</strong>
                         </div>
                     </div>
                     <div className={styles.rangeStatItem}>
                         <div className={styles.rangeStatDotProjected} />
                         <div className={styles.rangeStatInfo}>
                             <span>Projected</span>
-                            <strong>£{(stats.projectedRevenue || 0).toLocaleString()}</strong>
+                            <strong>£{(stats?.projectedRevenue || 0).toLocaleString()}</strong>
                         </div>
                     </div>
                 </div>
             </div>
           </div>
           <div className={styles.chartContainer} style={{ position: 'relative' }}>
-            <InteractiveRevenueChart 
-                history={stats.revenueHistory} 
-                onHover={(d: any, x: number, y: number) => {
-                    setHoverData(d);
-                    setMousePos({ x, y });
-                }}
-                onLeave={() => setHoverData(null)}
-            />
+            {loading ? <div className={styles.chartLoading}>Syncing Data...</div> : (
+              <InteractiveRevenueChart 
+                  history={stats?.revenueHistory || []} 
+                  onHover={(d: any, x: number, y: number) => {
+                      setHoverData(d);
+                      setMousePos({ x, y });
+                  }}
+                  onLeave={() => setHoverData(null)}
+              />
+            )}
             {hoverData && (
                 <div className={styles.chartTooltip} style={{ left: mousePos.x, top: mousePos.y }}>
                     <div className={styles.tooltipDate}>{hoverData.date}</div>
@@ -405,7 +390,7 @@ export default function AdminDashboard() {
           <div className={styles.leadList}>
             {recentLeads.length > 0 ? recentLeads.map((lead) => (
               <Link href={`/admin/enquiries/${lead.id}`} key={lead.id} className={styles.leadItem}>
-                <div className={styles.leadAvatar}>{lead.firstName[0]}</div>
+                <div className={styles.leadAvatar}>{lead.firstName?.[0] || 'L'}</div>
                 <div className={styles.leadInfo}>
                   <span className={styles.leadName}>{lead.firstName} {lead.lastName}</span>
                   <span className={styles.leadMeta}>{lead.companyName || 'Private Individual'} · {lead.serviceInterest?.[0] || 'Digital Strategy'}</span>
@@ -429,7 +414,7 @@ export default function AdminDashboard() {
             <h2 className={styles.cardTitle}>Team Utilization</h2>
           </div>
           <div className={styles.teamList}>
-            {(stats.teamWorkload || teamWorkload).map((staff: any, i: number) => (
+            {(stats?.teamWorkload || teamWorkload).map((staff: any, i: number) => (
               <div key={i} className={styles.teamItem}>
                 <div className={styles.teamTop}>
                   <span className={styles.teamName}>{staff.name}</span>
@@ -453,8 +438,7 @@ export default function AdminDashboard() {
             <h2 className={styles.cardTitle}>Live Operations Feed</h2>
           </div>
           <div className={styles.activityList}>
-            {(stats.activityLogs || auditLogs).map((log: any, i: number) => {
-               // Map icon string to component
+            {(stats?.activityLogs || auditLogs).map((log: any, i: number) => {
                const iconMap: any = { Target, FileText, Settings };
                const Icon = iconMap[log.icon] || Activity;
                return (
@@ -558,45 +542,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-      {/* --- HIDDEN PRINT-ONLY REPORT --- */}
-      <div className={styles.printOnlyReport}>
-        <div className={styles.reportPage}>
-           <div className={styles.reportCover}>
-              <p className={styles.reportSubtitle}>Executive Financial Review</p>
-              <h1 className={styles.reportTitle}>Agency Performance & Financial Summary</h1>
-              <div className={styles.reportDivider} />
-              <div className={styles.reportMeta}>
-                <div><strong>Date Prepared:</strong> {new Date().toLocaleDateString()}</div>
-                <div><strong>Prepared By:</strong> Priya Nanthakumar</div>
-              </div>
-           </div>
-        </div>
-
-        <div className={styles.reportPage}>
-           <h2 className={styles.sectionTitle}>01. Executive Summary</h2>
-           <div className={styles.reportStats}>
-              {adminKpis.map(kpi => (
-                <div key={kpi.id} className={styles.reportStatBox}>
-                   <span className={styles.statLabel}>{kpi.label}</span>
-                   <span className={styles.statValue}>{kpi.value}</span>
-                   <span className={styles.statTrend}>{kpi.change}</span>
-                </div>
-              ))}
-           </div>
-           
-           <h3 className={styles.subTitle}>Service Line Breakdown</h3>
-           <table className={styles.reportTable}>
-              <thead>
-                <tr><th>SERVICE</th><th>REVENUE</th><th>GROWTH</th><th>MARGIN</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>SEO Optimization</td><td>£94,000</td><td>+8%</td><td>62%</td></tr>
-                <tr><td>Paid Media (PPC)</td><td>£120,500</td><td>+18%</td><td>45%</td></tr>
-                <tr><td>Content Strategy</td><td>£70,000</td><td>+12%</td><td>74%</td></tr>
-              </tbody>
-           </table>
-        </div>
-      </div>
     </div>
   );
 }

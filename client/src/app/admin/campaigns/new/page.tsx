@@ -12,8 +12,18 @@ export default function NewCampaignPage() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [clientId, setClientId] = useState('');
+  const [platform, setPlatform] = useState('Google');
+  const [serviceType, setServiceType] = useState('PPC');
   const [clients, setClients] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const serviceOptions = [
+    { label: 'SEO Optimization', value: 'SEO', platform: 'Organic' },
+    { label: 'Social Media Management', value: 'Social', platform: 'Instagram' },
+    { label: 'Email Marketing', value: 'Email', platform: 'Email' },
+    { label: 'Content Marketing', value: 'Content', platform: 'Google' },
+    { label: 'Paid Search (PPC)', value: 'PPC', platform: 'Google' },
+  ];
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -34,6 +44,8 @@ export default function NewCampaignPage() {
         name,
         clientId,
         status: 'live',
+        platform,
+        serviceType
       });
       setStep(3); // Success step
       setTimeout(() => router.push('/admin/campaigns'), 2500);
@@ -42,6 +54,13 @@ export default function NewCampaignPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setServiceType(val);
+    const opt = serviceOptions.find(o => o.value === val);
+    if (opt) setPlatform(opt.platform);
   };
 
   return (
@@ -62,16 +81,6 @@ export default function NewCampaignPage() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>Campaign Name</label>
-              <input 
-                value={name} 
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Q2 Meta Retargeting Blitz" 
-                style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>Select Client</label>
               <select 
                 value={clientId}
@@ -80,9 +89,49 @@ export default function NewCampaignPage() {
               >
                 <option value="">Select a client...</option>
                 {clients.map(c => (
-                  <option key={c.id} value={c.userId}>{c.companyName}</option>
+                  <option key={c.id} value={c.userId}>{c.clientProfile?.companyName || c.email}</option>
                 ))}
               </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>Service Type</label>
+              <select 
+                value={serviceType}
+                onChange={handleServiceChange}
+                style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+              >
+                {serviceOptions.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>Primary Platform</label>
+              <select 
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+              >
+                <option value="Google">Google Search / Display</option>
+                <option value="Facebook">Meta (Facebook)</option>
+                <option value="Instagram">Meta (Instagram)</option>
+                <option value="LinkedIn">LinkedIn Ads</option>
+                <option value="TikTok">TikTok Ads</option>
+                <option value="Organic">Organic Search (SEO)</option>
+                <option value="Email">Email Marketing</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>Campaign Name</label>
+              <input 
+                value={name} 
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Q2 Meta Retargeting Blitz" 
+                style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+              />
             </div>
 
             <button 

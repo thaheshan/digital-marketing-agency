@@ -132,7 +132,9 @@ export default function AdminCampaignsPage() {
                 <td>
                   <div className={styles.actions}>
                     <button className={styles.iconBtn} title="Performance Stats"><BarChart3 size={18} /></button>
-                    <button className={styles.iconBtn} title="Campaign Settings"><Settings size={18} /></button>
+                    <Link href={`/admin/campaigns/${c.id}`} className={styles.iconBtn} title="Campaign Management">
+                      <Settings size={18} />
+                    </Link>
                   </div>
                 </td>
               </tr>

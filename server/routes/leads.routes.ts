@@ -5,7 +5,7 @@ import { requireAuth, requireRole } from "../middlewares/auth.middleware";
 const router = Router();
 
 // All routes here should be protected for admin/staff
-router.use(requireAuth, requireRole("admin", "content_manager"));
+router.use(requireAuth, requireRole("admin", "staff"));
 
 router.get("/", leadsController.getEnquiries);
 router.get("/:id", leadsController.getEnquiryDetail);

@@ -26,7 +26,7 @@ export default function ClientLoginPage() {
   const [error, setError] = useState('');
   const [loginMode, setLoginMode] = useState<'client' | 'staff'>('client');
 
-  const { login, isLoading } = useAuthStore();
+  const { login, logout, isLoading } = useAuthStore();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,8 +42,24 @@ export default function ClientLoginPage() {
 
     const { user } = useAuthStore.getState();
     
-    // Smart Routing based on role and mode
-    if (user?.role === 'admin' || user?.role === 'content_manager') {
+    // Role Validation: Ensure the user logged in matches the selected toggle mode
+    const isAdmin = user?.role === 'admin' || user?.role === 'content_manager';
+    const isClient = user?.role === 'client';
+
+    if (loginMode === 'client' && !isClient) {
+      setError('Account found, but this is a Staff account. Please switch to the "Agency Staff" toggle.');
+      logout(); // Clear the invalid session
+      return;
+    }
+
+    if (loginMode === 'staff' && !isAdmin) {
+      setError('Account found, but this is a Client account. Please switch to the "Client Portal" toggle.');
+      logout(); // Clear the invalid session
+      return;
+    }
+
+    // Smart Routing based on confirmed role
+    if (isAdmin) {
       router.push('/admin/dashboard');
     } else {
       router.push('/portal/dashboard');

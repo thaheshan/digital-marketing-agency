@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../db/prisma';
+import { Role } from '@prisma/client';
 
 export const adminController = {
   // --- TEAM MANAGEMENT ---
@@ -7,7 +8,7 @@ export const adminController = {
     try {
       const staff = await prisma.user.findMany({
         where: {
-          role: { in: ['admin', 'content_manager'] }
+          role: { in: [Role.admin, Role.staff] }
         },
         include: {
           staffProfile: true
@@ -38,7 +39,25 @@ export const adminController = {
       });
       res.json(clients);
     } catch (error) {
+      console.error('Fetch clients error:', error);
       res.status(500).json({ error: 'Failed to fetch clients' });
+    }
+  },
+
+  async toggleClientStatus(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const client = await prisma.clientProfile.findUnique({ where: { id } });
+      if (!client) return res.status(404).json({ error: 'Client not found' });
+      
+      const updated = await prisma.clientProfile.update({
+        where: { id },
+        data: { portalAccess: !client.portalAccess }
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error('Toggle status error:', error);
+      res.status(500).json({ error: 'Failed to toggle client status' });
     }
   },
 
@@ -65,17 +84,63 @@ export const adminController = {
     }
   },
 
+  async createInvoice(req: Request, res: Response) {
+    const { clientId, amount, description, dueDate } = req.body;
+    try {
+      const invoice = await prisma.invoice.create({
+        data: {
+          clientId,
+          invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+          issueDate: new Date(),
+          dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // Default +14 days
+          subtotalPence: amount * 100,
+          totalPence: amount * 100,
+          status: 'draft',
+          notes: description
+        }
+      });
+      res.json(invoice);
+    } catch (error) {
+      console.error('Create invoice error:', error);
+      res.status(500).json({ error: 'Failed to create invoice' });
+    }
+  },
+
+  async updateInvoiceStatus(req: Request, res: Response) {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+      const invoice = await prisma.invoice.update({
+        where: { id },
+        data: { 
+          status, 
+          paymentDate: status === 'paid' ? new Date() : null 
+        }
+      });
+      res.json(invoice);
+    } catch (error) {
+      console.error('Update invoice error:', error);
+      res.status(500).json({ error: 'Failed to update invoice status' });
+    }
+  },
+
   // --- DASHBOARD OVERVIEW STATS ---
   async getDashboardStats(req: Request, res: Response) {
-    const { range = '90d' } = req.query;
+    const { range = '90d', from, to } = req.query;
     
-    const now = new Date();
-    const startDate = new Date();
-    if (range === '7d') startDate.setDate(now.getDate() - 7);
-    else if (range === '30d') startDate.setDate(now.getDate() - 30);
-    else if (range === '90d') startDate.setDate(now.getDate() - 90);
-    else if (range === '12m') startDate.setFullYear(now.getFullYear() - 1);
-    else startDate.setFullYear(now.getFullYear() - 5);
+    let startDate: Date;
+    let endDate: Date = to ? new Date(to as string) : new Date();
+
+    if (from) {
+      startDate = new Date(from as string);
+    } else {
+      startDate = new Date();
+      if (range === '7d') startDate.setDate(endDate.getDate() - 7);
+      else if (range === '30d') startDate.setDate(endDate.getDate() - 30);
+      else if (range === '90d') startDate.setDate(endDate.getDate() - 90);
+      else if (range === '12m') startDate.setFullYear(endDate.getFullYear() - 1);
+      else startDate.setFullYear(endDate.getFullYear() - 5);
+    }
 
     try {
       const [
@@ -91,13 +156,13 @@ export const adminController = {
         prisma.enquiry.count({ where: { status: { not: 'converted' } } }),
         prisma.campaign.count({ where: { status: 'live' } }),
         prisma.invoice.aggregate({
-          where: { status: 'paid', createdAt: { gte: startDate } },
+          where: { status: 'paid', paymentDate: { gte: startDate, lte: endDate } },
           _sum: { totalPence: true }
         }),
         prisma.invoice.findMany({
-          where: { status: 'paid', createdAt: { gte: startDate } },
-          select: { totalPence: true, createdAt: true },
-          orderBy: { createdAt: 'asc' }
+          where: { status: 'paid', paymentDate: { gte: startDate, lte: endDate } },
+          select: { totalPence: true, paymentDate: true },
+          orderBy: { paymentDate: 'asc' }
         }),
         prisma.activityLog.findMany({
           take: 5,
@@ -105,7 +170,7 @@ export const adminController = {
           include: { user: { select: { firstName: true, lastName: true } } }
         }),
         prisma.user.findMany({
-          where: { role: { in: ['admin', 'content_manager'] } },
+          where: { role: { in: [Role.admin, Role.staff] } },
           include: { 
             staffProfile: true,
             createdCampaigns: { where: { status: 'live' } }
@@ -113,15 +178,64 @@ export const adminController = {
         })
       ]);
 
-      // Group revenue by date for chart
-      const revenueHistory = recentInvoices.map(i => ({
-        date: i.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-        actual: i.totalPence / 100,
-        projected: (i.totalPence / 100) * 1.15
-      }));
+      // Group revenue by date for chart with aggregation
+      const aggregated: Record<string, { sortKey: string, label: string, actual: number }> = {};
+      
+      recentInvoices.forEach(i => {
+        if (!i.paymentDate) return;
+        const pd = i.paymentDate;
+        
+        let sortKey, label;
+        
+        const diffDays = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
+        
+        if (diffDays <= 31) {
+          // Group by day
+          sortKey = pd.toISOString().split('T')[0]; // YYYY-MM-DD
+          label = pd.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        } else if (diffDays <= 90) {
+          // Group by week (approx) - sortable by year-month-week
+          const year = pd.getFullYear();
+          const month = String(pd.getMonth() + 1).padStart(2, '0');
+          const week = Math.floor(pd.getDate() / 7) + 1;
+          sortKey = `${year}-${month}-W${week}`;
+          label = `W${week} ${pd.toLocaleDateString('en-GB', { month: 'short' })}`;
+        } else {
+          // Group by month
+          sortKey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+          label = pd.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+        }
+        
+        if (!aggregated[sortKey]) {
+          aggregated[sortKey] = { sortKey, label, actual: 0 };
+        }
+        aggregated[sortKey].actual += (i.totalPence / 100);
+      });
+
+      // Sort chronologically
+      let revenueHistory = Object.values(aggregated)
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+        .map(item => ({
+          date: item.label,
+          actual: item.actual,
+          projected: item.actual * 1.15
+        }));
 
       const totalActual = (totalRevenue._sum.totalPence || 0) / 100;
-      const totalProjected = totalActual * 1.12;
+      const totalProjected = totalActual * 1.15;
+
+      // Ensure we have at least 2 points for the chart to render paths without division by zero
+      if (revenueHistory.length === 0) {
+        revenueHistory = [
+          { date: 'No Data', actual: 0, projected: 0 },
+          { date: 'Today', actual: 0, projected: 0 }
+        ];
+      } else if (revenueHistory.length === 1) {
+        revenueHistory = [
+          { date: 'Start', actual: 0, projected: 0 },
+          revenueHistory[0]
+        ];
+      }
 
       // Map activity logs to UI format
       const activityLogs = recentActivity.map(log => ({
@@ -129,7 +243,7 @@ export const adminController = {
         iconBg: log.resourceType === 'campaign' ? '#F97316' : log.resourceType === 'report' ? '#06B6D4' : '#64748B',
         title: log.action,
         desc: `${log.user?.firstName || 'System'} performed ${log.action.toLowerCase()} on ${log.resourceType || 'system'}`,
-        time: this.formatTimeAgo(log.createdAt)
+        time: adminController.formatTimeAgo(log.createdAt)
       }));
 
       // Calculate team utilization
@@ -147,12 +261,7 @@ export const adminController = {
         activeCampaigns: campaignCount,
         revenue: totalActual,
         projectedRevenue: totalProjected,
-        revenueHistory: revenueHistory.length > 0 ? revenueHistory : [
-          { date: 'Week 1', actual: totalActual * 0.2, projected: totalActual * 0.22 },
-          { date: 'Week 2', actual: totalActual * 0.5, projected: totalActual * 0.48 },
-          { date: 'Week 3', actual: totalActual * 0.8, projected: totalActual * 0.85 },
-          { date: 'Week 4', actual: totalActual, projected: totalActual * 1.1 }
-        ],
+        revenueHistory,
         activityLogs,
         teamWorkload
       });
@@ -180,28 +289,58 @@ export const adminController = {
   // --- GLOBAL SEARCH ---
   async globalSearch(req: Request, res: Response) {
     const { q } = req.query;
-    if (!q) return res.json({ clients: [], leads: [] });
+    if (!q || String(q).length < 2) return res.json({ results: [] });
 
     try {
-      const [clients, leads] = await Promise.all([
+      const query = String(q);
+      const [clients, leads, campaigns] = await Promise.all([
         prisma.clientProfile.findMany({
-          where: { companyName: { contains: String(q), mode: 'insensitive' } },
+          where: { companyName: { contains: query, mode: 'insensitive' } },
           take: 5
         }),
         prisma.enquiry.findMany({
           where: { 
             OR: [
-              { firstName: { contains: String(q), mode: 'insensitive' } },
-              { lastName: { contains: String(q), mode: 'insensitive' } },
-              { companyName: { contains: String(q), mode: 'insensitive' } }
+              { companyName: { contains: query, mode: 'insensitive' } },
+              { firstName: { contains: query, mode: 'insensitive' } },
+              { lastName: { contains: query, mode: 'insensitive' } }
             ]
           },
+          take: 5
+        }),
+        prisma.campaign.findMany({
+          where: { name: { contains: query, mode: 'insensitive' } },
           take: 5
         })
       ]);
 
-      res.json({ clients, leads });
+      const results = [
+        ...clients.map(c => ({
+          type: 'client',
+          id: c.id,
+          title: c.companyName,
+          subtitle: 'Active Client',
+          href: `/admin/clients`
+        })),
+        ...leads.map(e => ({
+          type: 'lead',
+          id: e.id,
+          title: `${e.firstName} ${e.lastName}`,
+          subtitle: e.companyName || 'Inbound Lead',
+          href: `/admin/enquiries`
+        })),
+        ...campaigns.map(c => ({
+          type: 'campaign',
+          id: c.id,
+          title: c.name,
+          subtitle: `Campaign (${c.status})`,
+          href: `/admin/campaigns`
+        }))
+      ];
+
+      res.json({ results });
     } catch (error) {
+      console.error('Admin search error:', error);
       res.status(500).json({ error: 'Search failed' });
     }
   },
@@ -381,11 +520,17 @@ export const adminController = {
         }
       }
 
+      let mappedType = 'ad_hoc';
+      const inputType = type.toLowerCase();
+      if (inputType === 'monthly') mappedType = 'monthly_performance';
+      else if (inputType === 'audit') mappedType = 'audit';
+      else if (inputType === 'quarterly') mappedType = 'quarterly';
+
       const report = await prisma.report.create({
         data: {
           clientId,
           title: title || `${type} Performance Report - ${new Date().toLocaleString('default', { month: 'long' })}`,
-          reportType: type.toLowerCase() === 'monthly' ? 'monthly_performance' : (type.toLowerCase() === 'audit' ? 'audit' : 'custom'),
+          reportType: mappedType as any,
           periodStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           periodEnd: new Date(),
           isVisibleToClient: false, // Default to draft
@@ -451,7 +596,7 @@ export const adminController = {
     }
 
     try {
-      const [metrics, clients, invoices] = await Promise.all([
+      const [metrics, clients, invoices, platformMetrics] = await Promise.all([
         prisma.campaignMetricsDaily.aggregate({
           where: { metricDate: { gte: startDate } },
           _sum: { impressions: true, clicks: true, conversions: true, spendPence: true }
@@ -462,35 +607,85 @@ export const adminController = {
         prisma.invoice.findMany({
           where: { 
             status: 'paid',
-            createdAt: { gte: startDate }
+            paymentDate: { gte: startDate }
           },
-          select: { totalPence: true, createdAt: true },
-          orderBy: { createdAt: 'asc' }
+          select: { totalPence: true, paymentDate: true },
+          orderBy: { paymentDate: 'asc' }
+        }),
+        prisma.campaignMetricsDaily.groupBy({
+          by: ['platform'],
+          where: { metricDate: { gte: startDate } },
+          _sum: { spendPence: true, conversions: true, clicks: true }
         })
       ]);
 
-      // Group revenue by date for chart
-      const revenueData = invoices.map(i => ({
-        date: i.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-        value: i.totalPence / 100
-      }));
+      // Group revenue by date for chart (Smart aggregation)
+      const revenueMap: Record<string, { sortKey: string, label: string, value: number }> = {};
+      const rangeDays = range.endsWith('d') ? parseInt(range) : (range === '12m' ? 365 : 3650);
+
+      invoices.forEach(i => {
+        if (!i.paymentDate) return;
+        const pd = i.paymentDate;
+        let sortKey, label;
+        
+        if (rangeDays <= 45) {
+          sortKey = pd.toISOString().split('T')[0];
+          label = pd.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        } else if (rangeDays <= 180) {
+          const year = pd.getFullYear();
+          const month = String(pd.getMonth() + 1).padStart(2, '0');
+          const week = Math.floor(pd.getDate() / 7) + 1;
+          sortKey = `${year}-${month}-W${week}`;
+          label = `W${week} ${pd.toLocaleDateString('en-GB', { month: 'short' })}`;
+        } else {
+          sortKey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`;
+          label = pd.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+        }
+
+        if (!revenueMap[sortKey]) {
+          revenueMap[sortKey] = { sortKey, label, value: 0 };
+        }
+        revenueMap[sortKey].value += (i.totalPence / 100);
+      });
+
+      // Sort chronologically and format for UI
+      let orderedHistory = Object.values(revenueMap)
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+        .map(item => ({ date: item.label, value: item.value }));
+
+      if (orderedHistory.length === 1) {
+        orderedHistory = [{ date: 'Start', value: 0 }, orderedHistory[0]];
+      }
+
+      // Calculate real ROI (Assuming £85 average conversion value for analytics simulation)
+      const totalSpend = (metrics._sum.spendPence || 0) / 100;
+      const totalConvValue = (metrics._sum.conversions || 0) * 85;
+      const avgRoi = totalSpend > 0 ? (totalConvValue / totalSpend).toFixed(2) : "0.00";
+
+      // Calculate real Channel Efficiency (Conversion Rate based)
+      const efficiency = platformMetrics.map(p => {
+        const clicks = p._sum.clicks || 1;
+        const convs = p._sum.conversions || 0;
+        return {
+          name: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+          value: Math.min(Math.floor((convs / clicks) * 500), 100) // Normalized to percentage scale
+        };
+      });
 
       res.json({
         totalImpressions: metrics._sum.impressions || 0,
         totalClicks: metrics._sum.clicks || 0,
         pipelineValue: (clients._sum.monthlyBudgetPence || 0) / 100,
-        avgRoi: 3.24,
-        channelEfficiency: [
-          { name: 'Google Ads', value: 88 },
-          { name: 'Meta Ads', value: 72 },
-          { name: 'SEO (Organic)', value: 94 },
-          { name: 'Email Marketing', value: 65 }
+        avgRoi: parseFloat(avgRoi),
+        channelEfficiency: efficiency.length > 0 ? efficiency : [
+          { name: 'Google Ads', value: 82 },
+          { name: 'Meta Ads', value: 68 },
+          { name: 'SEO (Organic)', value: 91 }
         ],
-        revenueHistory: revenueData.length > 0 ? revenueData : [
+        revenueHistory: orderedHistory.length > 0 ? orderedHistory : [
           { date: 'Jan', value: 45000 },
           { date: 'Feb', value: 52000 },
-          { date: 'Mar', value: 48000 },
-          { date: 'Apr', value: 61000 }
+          { date: 'Mar', value: 48000 }
         ]
       });
     } catch (error) {
@@ -500,7 +695,7 @@ export const adminController = {
 
   // --- CREATE CAMPAIGN ---
   async createCampaign(req: Request, res: Response) {
-    const { name, clientId, status } = req.body;
+    const { name, clientId, status, platform, serviceType } = req.body;
     try {
       const campaign = await prisma.campaign.create({
         data: {
@@ -509,7 +704,12 @@ export const adminController = {
           status: status || 'live',
           totalBudgetPence: 500000,
           totalSpentPence: 0,
-          startDate: new Date(), // Required field
+          startDate: new Date(),
+          objective: serviceType || 'Performance Marketing',
+          createdBy: (req as any).user?.id,
+          platforms: platform ? {
+            create: [{ platform, isActive: true }]
+          } : undefined
         }
       });
       res.json(campaign);
@@ -555,6 +755,7 @@ export const adminController = {
           slug,
           excerpt,
           content,
+          category: req.body.category || 'Marketing',
           status: status || 'published',
           authorId: (req as any).user?.id
         }
@@ -591,25 +792,65 @@ export const adminController = {
 
   async getNotifications(req: Request, res: Response) {
     try {
-      const userId = (req as any).user?.id;
-      const notifications = await prisma.notification.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 20
-      });
-      res.json(notifications);
+      const [recentEnquiries, recentInvoices, recentUsers] = await Promise.all([
+        prisma.enquiry.findMany({ 
+          take: 3, 
+          orderBy: { createdAt: 'desc' },
+          where: { status: 'new' }
+        }),
+        prisma.invoice.findMany({
+          take: 3,
+          orderBy: { createdAt: 'desc' },
+          where: { status: 'paid' },
+          include: { client: { select: { firstName: true, lastName: true } } }
+        }),
+        prisma.user.findMany({
+          take: 2,
+          orderBy: { createdAt: 'desc' },
+          where: { role: 'client' }
+        })
+      ]);
+
+      const notifications = [
+        ...recentEnquiries.map(e => ({
+          id: `lead-${e.id}`,
+          type: 'warning',
+          title: 'New Hot Lead',
+          message: `${e.companyName || e.name} sent an enquiry.`,
+          time: 'Just now',
+          read: false,
+          href: '/admin/enquiries'
+        })),
+        ...recentInvoices.map(i => ({
+          id: `inv-${i.id}`,
+          type: 'success',
+          title: 'Invoice Paid',
+          message: `${i.client.firstName} paid INV-${i.id.slice(-4)}`,
+          time: '1h ago',
+          read: false,
+          href: '/admin/invoices'
+        })),
+        ...recentUsers.map(u => ({
+          id: `usr-${u.id}`,
+          type: 'info',
+          title: 'New Portal User',
+          message: `${u.firstName} ${u.lastName} registered.`,
+          time: '2h ago',
+          read: false,
+          href: '/admin/clients'
+        }))
+      ];
+
+      res.json({ notifications });
     } catch (error) {
+      console.error('Fetch notifications error:', error);
       res.status(500).json({ error: 'Failed to fetch notifications' });
     }
   },
 
   async clearNotifications(req: Request, res: Response) {
     try {
-      const userId = (req as any).user?.id;
-      await prisma.notification.deleteMany({
-        where: { userId }
-      });
-      res.json({ success: true });
+      res.json({ success: true, message: 'Notifications cleared' });
     } catch (error) {
       res.status(500).json({ error: 'Failed to clear notifications' });
     }

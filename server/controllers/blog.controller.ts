@@ -7,10 +7,10 @@ export const getPublishedBlogPosts = async (req: Request, res: Response, next: N
       where: { status: "published" },
       include: {
         author: { select: { firstName: true, lastName: true } },
-        tags: true,
       },
       orderBy: { createdAt: "desc" },
     });
+    console.log(`[BlogAPI] Found ${posts.length} published posts`);
     res.json({ success: true, items: posts });
   } catch (e) { next(e); }
 };
@@ -22,7 +22,6 @@ export const getBlogPostBySlug = async (req: Request, res: Response, next: NextF
       where: { slug },
       include: {
         author: { select: { firstName: true, lastName: true } },
-        tags: true,
       },
     });
     if (!post) return res.status(404).json({ error: "Post not found" });

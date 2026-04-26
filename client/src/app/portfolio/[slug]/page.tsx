@@ -143,6 +143,9 @@ export default function CaseStudyOverview() {
           </div>
 
           <div className={styles.actionGroup}>
+            <Link href="/roi-calculator" className={styles.btnRoi}>
+              Calculate Your Potential ROI
+            </Link>
             <Link href="/contact" className={styles.btnDark}>
               Request Similar Campaign
             </Link>

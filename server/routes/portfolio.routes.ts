@@ -9,9 +9,9 @@ router.get("/public", portfolioController.getPublishedPortfolioItems);
 router.get("/public/:slug", portfolioController.getPublishedItemBySlug);
 
 // Admin routes
-router.post("/", requireAuth, requireRole("admin", "content_manager"), portfolioController.createItem);
-router.put("/:id", requireAuth, requireRole("admin", "content_manager"), portfolioController.updateItem);
-router.delete("/:id", requireAuth, requireRole("admin", "content_manager"), portfolioController.deleteItem);
-router.post("/:id/generate-description", requireAuth, requireRole("admin", "content_manager"), portfolioController.generateDescription);
+router.post("/", requireAuth, requireRole("admin", "staff"), portfolioController.createItem);
+router.put("/:id", requireAuth, requireRole("admin", "staff"), portfolioController.updateItem);
+router.delete("/:id", requireAuth, requireRole("admin", "staff"), portfolioController.deleteItem);
+router.post("/:id/generate-description", requireAuth, requireRole("admin", "staff"), portfolioController.generateDescription);
 
 export default router;
