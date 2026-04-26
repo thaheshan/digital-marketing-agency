@@ -34,13 +34,13 @@ export const AdminContext = createContext<AdminContextType>({
 export const useAdminContext = () => useContext(AdminContext);
 
 // --- Navigation Configuration ---
-const navGroups = [
+const getNavGroups = (counts: { reports: number; campaigns: number; leads: number }) => [
   {
     label: 'Management',
     items: [
       { icon: LayoutDashboard, label: 'Overview', href: '/admin/dashboard' },
       { icon: TrendingUp, label: 'Analytics', href: '/admin/analytics' },
-      { icon: FileText, label: 'Reports', href: '/admin/reports', badge: '3' }
+      { icon: FileText, label: 'Reports', href: '/admin/reports', badge: counts.reports > 0 ? counts.reports.toString() : undefined }
     ]
   },
   {
@@ -48,7 +48,7 @@ const navGroups = [
     items: [
       { icon: Users, label: 'Clients', href: '/admin/clients' },
       { icon: ClipboardList, label: 'Leads & Enquiries', href: '/admin/enquiries', badge: 'LIVE_LEADS' },
-      { icon: Megaphone, label: 'Active Campaigns', href: '/admin/campaigns' }
+      { icon: Megaphone, label: 'Active Campaigns', href: '/admin/campaigns', badge: counts.campaigns > 0 ? counts.campaigns.toString() : undefined }
     ]
   },
   {
@@ -132,6 +132,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   // Live badge counts
   const [liveLeadCount, setLiveLeadCount] = useState<number | null>(null);
+  const [liveCounts, setLiveCounts] = useState({ reports: 0, campaigns: 0 });
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,21 +161,31 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(statusInterval);
   }, [fetchAgencyStatus]);
 
-  // Fetch live lead count for sidebar badge
+  // Fetch live lead count, report count, and campaign count for sidebar badges
   useEffect(() => {
-    const fetchLeadCount = async () => {
+    const fetchSidebarStats = async () => {
       try {
-        const data = await api.get('/admin/enquiries');
-        const enquiries = data.enquiries || [];
-        const activeCount = enquiries.filter((e: any) =>
-          ['new', 'contacted', 'proposal_sent'].includes(e.status)
+        const [enqData, reportData, campData] = await Promise.all([
+          api.get('/admin/enquiries'),
+          api.get('/admin/reports'),
+          api.get('/admin/campaigns')
+        ]);
+        
+        const enquiries = enqData.enquiries || [];
+        const activeLeadCount = enquiries.filter((e: any) =>
+          ['new', 'contacted', 'qualified'].includes(e.status)
         ).length;
-        setLiveLeadCount(activeCount);
-      } catch {
-        setLiveLeadCount(null);
+        
+        setLiveLeadCount(activeLeadCount);
+        setLiveCounts({
+          reports: reportData.length || 0,
+          campaigns: campData.length || 0
+        });
+      } catch (err) {
+        console.warn('Failed to fetch sidebar stats');
       }
     };
-    fetchLeadCount();
+    fetchSidebarStats();
   }, []);
 
   // --- Search Logic ---
@@ -237,7 +248,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'AD';
-  const pageName = navGroups.flatMap(g => g.items).find(i => pathname.startsWith(i.href))?.label || 'Overview';
+  const currentNavGroups = getNavGroups({ ...liveCounts, leads: liveLeadCount || 0 });
+  const pageName = currentNavGroups.flatMap(g => g.items).find(i => pathname.startsWith(i.href))?.label || 'Overview';
   const isLoginPage = pathname === '/admin/login';
 
   if (isLoginPage) return <RouteGuard>{children}</RouteGuard>;
@@ -262,7 +274,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className={styles.navSection}>
-              {navGroups.map((group, idx) => {
+              {currentNavGroups.map((group, idx) => {
                 // RBAC: Hide System group for staff
                 if (user?.role === 'staff' && group.label === 'System') return null;
 

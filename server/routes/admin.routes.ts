@@ -8,6 +8,9 @@ router.get('/stats', adminController.getDashboardStats);
 
 // Team Management
 router.get('/team', adminController.getTeam);
+router.post('/team', adminController.createTeamMember);
+router.put('/team/:id', adminController.updateTeamMember);
+router.delete('/team/:id', adminController.deleteTeamMember);
 
 // Client Management
 router.get('/clients', adminController.getClients);
@@ -17,12 +20,18 @@ router.put('/clients/:id/status', adminController.toggleClientStatus);
 router.get('/invoices', adminController.getInvoices);
 router.post('/invoices', adminController.createInvoice);
 router.put('/invoices/:id/status', adminController.updateInvoiceStatus);
+router.get('/invoices/:id/pdf', adminController.downloadInvoicePDF);
+router.post('/invoices/:id/send', adminController.sendInvoiceToClient);
+router.delete('/invoices/:id', adminController.cancelInvoice);
 
 // Global Search
 router.get('/search', adminController.globalSearch);
 
 // Campaign Management
 router.get('/campaigns', adminController.getCampaigns);
+router.get('/campaigns/:id', adminController.getCampaignById);
+router.get('/campaigns/:id/performance', adminController.getCampaignPerformance);
+router.put('/campaigns/:id', adminController.updateCampaign);
 
 // Enquiries Management
 router.get('/enquiries', adminController.getEnquiries);
@@ -59,5 +68,9 @@ router.get('/notifications', adminController.getNotifications);
 router.delete('/notifications', adminController.clearNotifications);
 router.get('/status', adminController.getAgencyStatus);
 router.post('/status', adminController.updateAgencyStatus);
+
+// Agency Settings (full CRUD)
+router.get('/settings', adminController.getSettings);
+router.put('/settings', adminController.updateSettings);
 
 export default router;

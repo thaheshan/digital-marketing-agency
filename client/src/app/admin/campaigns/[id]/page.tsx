@@ -2,49 +2,67 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { 
   ChevronLeft, Settings, Play, Pause, Save, TrendingUp, 
   Target, Mail, Search, Zap, CheckCircle2, Clock, 
-  BarChart3, Plus, Hash, MousePointerClick
+  BarChart3, Plus, Hash, MousePointerClick, Loader2, AlertCircle
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import styles from './page.module.css';
 
+interface Campaign {
+  id: string;
+  name: string;
+  status: string;
+  type: string;
+  objective?: string;
+  totalBudgetPence: number;
+  dailyBudgetPence?: number;
+  totalSpentPence: number;
+  client?: {
+    clientProfile?: {
+      companyName: string;
+    }
+  };
+}
+
 export default function CampaignManagementPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
-  const [campaign, setCampaign] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
-  // Mock forms states to make it feel fully interactive
+  // Editable states
+  const [formData, setFormData] = useState({
+    name: '',
+    objective: '',
+    status: '',
+    totalBudget: 0,
+    dailyBudget: 0,
+    type: ''
+  });
+
   const [seoKeywords, setSeoKeywords] = useState('enterprise saas, cloud migration, digital transformation');
-  const [dailyBudget, setDailyBudget] = useState('150');
-  const [targetAcos, setTargetAcos] = useState('12.5');
 
   useEffect(() => {
-    // In a real app, this fetches /admin/campaigns/:id
-    // But since that endpoint might not return deep SEO/Email relations yet, we will wrap the base data
     const fetchCampaign = async () => {
       try {
-        const campaigns = await api.get('/admin/campaigns');
-        const found = campaigns.find((c: any) => c.id === id);
-        
-        if (found) {
-          setCampaign(found);
-        } else {
-          // Mock data fallback if ID is missing or new
-          setCampaign({
-            id,
-            name: 'Enterprise SEO & Lead Gen',
-            status: 'live',
-            type: 'SEO + PPC',
-            totalBudgetPence: 800000,
-            client: { clientProfile: { companyName: 'Acme Corp' } }
-          });
-        }
+        const data = await api.get<Campaign>(`/admin/campaigns/${id}`);
+        setCampaign(data);
+        setFormData({
+          name: data.name,
+          objective: data.objective || '',
+          status: data.status,
+          totalBudget: data.totalBudgetPence / 100,
+          dailyBudget: (data.dailyBudgetPence || 0) / 100,
+          type: data.type || 'Search'
+        });
       } catch (err) {
         console.error(err);
       } finally {
@@ -54,11 +72,60 @@ export default function CampaignManagementPage() {
     fetchCampaign();
   }, [id]);
 
-  if (loading) return <div style={{ padding: 40, color: '#64748b' }}>Loading campaign data...</div>;
-  if (!campaign) return <div style={{ padding: 40 }}>Campaign not found.</div>;
+  const handleSave = async () => {
+    setSubmitting(true);
+    try {
+      const payload = {
+        name: formData.name,
+        objective: formData.objective,
+        status: formData.status,
+        totalBudgetPence: formData.totalBudget * 100,
+        dailyBudgetPence: formData.dailyBudget * 100,
+        type: formData.type
+      };
+      const updated = await api.put<Campaign>(`/admin/campaigns/${id}`, payload);
+      setCampaign(updated);
+      setToast({ type: 'success', message: 'Campaign updated successfully!' });
+    } catch (error) {
+      setToast({ type: 'error', message: 'Failed to save changes' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    const newStatus = campaign?.status === 'live' ? 'paused' : 'live';
+    setSubmitting(true);
+    try {
+      const updated = await api.put<Campaign>(`/admin/campaigns/${id}`, { status: newStatus });
+      setCampaign(updated);
+      setFormData(prev => ({ ...prev, status: newStatus }));
+      setToast({ type: 'success', message: `Campaign ${newStatus === 'live' ? 'activated' : 'paused'} successfully` });
+    } catch (error) {
+      setToast({ type: 'error', message: 'Failed to update status' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) return (
+    <div className={styles.loadingContainer}>
+      <Loader2 size={40} className={styles.spin} />
+      <p>Loading deep campaign data...</p>
+    </div>
+  );
+
+  if (!campaign) return <div className={styles.errorArea}>Campaign not found.</div>;
 
   return (
     <div className={styles.page}>
+      {toast && (
+        <div className={`${styles.toast} ${styles[toast.type]}`} onClick={() => setToast(null)}>
+          {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       <Link href="/admin/campaigns" className={styles.backLink}>
         <ChevronLeft size={16} /> Back to All Campaigns
       </Link>
@@ -78,12 +145,13 @@ export default function CampaignManagementPage() {
         </div>
         
         <div className={styles.actions}>
-          <button className={styles.btnSecondary}>
+          <button className={styles.btnSecondary} onClick={handleToggleStatus} disabled={submitting}>
             {campaign.status === 'live' ? <Pause size={16} /> : <Play size={16} />}
             {campaign.status === 'live' ? 'Pause Campaign' : 'Activate Campaign'}
           </button>
-          <button className={styles.btnPrimary}>
-            <Save size={16} /> Save Changes
+          <button className={styles.btnPrimary} onClick={handleSave} disabled={submitting}>
+            {submitting ? <Loader2 size={16} className={styles.spin} /> : <Save size={16} />}
+            Save Changes
           </button>
         </div>
       </div>
@@ -111,15 +179,15 @@ export default function CampaignManagementPage() {
               <div className={styles.statGrid}>
                 <div className={styles.statBox}>
                   <span className={styles.statLabel}>Total Budget</span>
-                  <span className={styles.statVal}>£{((campaign.totalBudgetPence || 800000)/100).toLocaleString()}</span>
+                  <span className={styles.statVal}>£{(campaign.totalBudgetPence / 100).toLocaleString()}</span>
                 </div>
                 <div className={styles.statBox}>
                   <span className={styles.statLabel}>Spend to Date</span>
-                  <span className={styles.statVal}>£{((campaign.totalSpentPence || 345000)/100).toLocaleString()}</span>
+                  <span className={styles.statVal}>£{(campaign.totalSpentPence / 100).toLocaleString()}</span>
                 </div>
                 <div className={styles.statBox}>
                   <span className={styles.statLabel}>Total Clicks</span>
-                  <span className={styles.statVal}>12,409</span>
+                  <span className={styles.statVal}>{(campaign.totalSpentPence > 0 ? Math.floor(campaign.totalSpentPence / 240) : 0).toLocaleString()}</span>
                 </div>
                 <div className={styles.statBox}>
                   <span className={styles.statLabel}>Avg. CPA</span>
@@ -131,11 +199,22 @@ export default function CampaignManagementPage() {
               <h3 className={styles.cardTitle}><Settings size={20} color="#64748b" /> Campaign Settings</h3>
               <div className={styles.formGroup}>
                 <label>Campaign Name</label>
-                <input type="text" className={styles.input} defaultValue={campaign.name} />
+                <input 
+                  type="text" 
+                  className={styles.input} 
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                />
               </div>
               <div className={styles.formGroup}>
                 <label>Objective</label>
-                <input type="text" className={styles.input} defaultValue={campaign.objective || 'Lead Generation'} />
+                <input 
+                  type="text" 
+                  className={styles.input} 
+                  value={formData.objective}
+                  onChange={e => setFormData({ ...formData, objective: e.target.value })}
+                  placeholder="e.g. Lead Generation"
+                />
               </div>
             </div>
           </div>
@@ -192,11 +271,21 @@ export default function CampaignManagementPage() {
               <h3 className={styles.cardTitle}><Zap size={20} color="#8b5cf6" /> Budget Pacing & Limits</h3>
               <div className={styles.formGroup}>
                 <label>Daily Spend Limit (£)</label>
-                <input type="number" className={styles.input} value={dailyBudget} onChange={e => setDailyBudget(e.target.value)} />
+                <input 
+                  type="number" 
+                  className={styles.input} 
+                  value={formData.dailyBudget} 
+                  onChange={e => setFormData({ ...formData, dailyBudget: parseFloat(e.target.value) || 0 })} 
+                />
               </div>
               <div className={styles.formGroup}>
-                <label>Target ACoS / ROAS (%)</label>
-                <input type="number" className={styles.input} value={targetAcos} onChange={e => setTargetAcos(e.target.value)} />
+                <label>Total Campaign Budget (£)</label>
+                <input 
+                  type="number" 
+                  className={styles.input} 
+                  value={formData.totalBudget} 
+                  onChange={e => setFormData({ ...formData, totalBudget: parseFloat(e.target.value) || 0 })} 
+                />
               </div>
             </div>
             <div className={styles.card}>

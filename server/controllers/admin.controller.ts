@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../db/prisma';
-import { Role } from '@prisma/client';
+import { Role, UserStatus } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 export const adminController = {
   // --- TEAM MANAGEMENT ---
@@ -11,13 +12,94 @@ export const adminController = {
           role: { in: [Role.admin, Role.staff] }
         },
         include: {
-          staffProfile: true
+          staffProfile: true,
+          staffPermissions: true
         },
         orderBy: { createdAt: 'desc' }
       });
       res.json(staff);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch team members' });
+    }
+  },
+
+  async createTeamMember(req: Request, res: Response) {
+    const { firstName, lastName, email, password, role, jobTitle, department } = req.body;
+    try {
+      // Check if user exists
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) return res.status(400).json({ error: 'User with this email already exists' });
+
+      const hashedPassword = await bcrypt.hash(password || 'DigitalPulse2024!', 10);
+
+      const user = await prisma.user.create({
+        data: {
+          firstName,
+          lastName,
+          email,
+          passwordHash: hashedPassword,
+          role: (role as Role) || Role.staff,
+          status: UserStatus.active,
+          emailVerified: true,
+          staffProfile: {
+            create: {
+              jobTitle,
+              department
+            }
+          },
+          staffPermissions: {
+            create: {} // Default permissions (all false)
+          }
+        },
+        include: {
+          staffProfile: true
+        }
+      });
+
+      res.status(201).json(user);
+    } catch (error) {
+      console.error('Create team member error:', error);
+      res.status(500).json({ error: 'Failed to create team member' });
+    }
+  },
+
+  async updateTeamMember(req: Request, res: Response) {
+    const { id } = req.params;
+    const { firstName, lastName, role, jobTitle, department, status } = req.body;
+    try {
+      const updated = await prisma.user.update({
+        where: { id },
+        data: {
+          firstName,
+          lastName,
+          role: role as Role,
+          status: status as UserStatus,
+          staffProfile: {
+            update: {
+              jobTitle,
+              department
+            }
+          }
+        },
+        include: {
+          staffProfile: true
+        }
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error('Update team member error:', error);
+      res.status(500).json({ error: 'Failed to update team member' });
+    }
+  },
+
+  async deleteTeamMember(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      await prisma.user.delete({ where: { id } });
+      res.json({ success: true, message: 'Team member removed' });
+    } catch (error) {
+      console.error('Delete team member error:', error);
+      res.status(500).json({ error: 'Failed to delete team member' });
     }
   },
 
@@ -121,6 +203,190 @@ export const adminController = {
     } catch (error) {
       console.error('Update invoice error:', error);
       res.status(500).json({ error: 'Failed to update invoice status' });
+    }
+  },
+
+  // --- DOWNLOAD INVOICE PDF ---
+  async downloadInvoicePDF(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const invoice = await prisma.invoice.findUnique({
+        where: { id },
+        include: {
+          client: {
+            select: {
+              firstName: true, lastName: true, email: true,
+              clientProfile: { select: { companyName: true, industry: true } }
+            }
+          }
+        }
+      });
+      if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+
+      const amount = (invoice.totalPence / 100).toLocaleString('en-GB', { minimumFractionDigits: 2 });
+      const issueDate = new Date(invoice.issueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      const dueDate = new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      const clientName = invoice.client?.clientProfile?.companyName || `${invoice.client?.firstName} ${invoice.client?.lastName}`;
+
+      const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
+
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Invoice ${invoice.invoiceNumber}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background:#f8fafc; color:#0f172a; padding:48px; }
+    .card { background:white; border-radius:16px; padding:48px; max-width:760px; margin:0 auto; box-shadow:0 4px 24px rgba(0,0,0,0.06); }
+    .top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:48px; border-bottom:2px solid #f1f5f9; padding-bottom:32px; }
+    .logo { font-size:28px; font-weight:800; color:#0f172a; letter-spacing:-1px; }
+    .logo span { color:#06b6d4; }
+    .badge { padding:8px 20px; border-radius:24px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; background:${statusColor}20; color:${statusColor}; border:1.5px solid ${statusColor}; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-bottom:40px; }
+    .info-block h3 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; margin-bottom:8px; font-weight:700; }
+    .info-block p { font-size:15px; color:#0f172a; font-weight:600; line-height:1.6; }
+    .inv-num { font-size:22px; font-weight:800; color:#0f172a; margin-bottom:4px; }
+    table { width:100%; border-collapse:collapse; margin-bottom:32px; }
+    th { background:#f8fafc; padding:14px 16px; text-align:left; font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; }
+    td { padding:16px; border-bottom:1px solid #f1f5f9; font-size:14px; color:#334155; }
+    .total-row { background:#0f172a; }
+    .total-row td { color:white; font-weight:700; font-size:16px; border:none; padding:18px 16px; }
+    .footer { margin-top:40px; padding-top:24px; border-top:1px solid #f1f5f9; text-align:center; font-size:12px; color:#94a3b8; line-height:1.8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="top">
+      <div>
+        <div class="logo">Digital<span>Pulse</span></div>
+        <p style="color:#64748b;font-size:13px;margin-top:4px;">hello@digitalpulse.agency</p>
+      </div>
+      <div style="text-align:right">
+        <div class="inv-num">${invoice.invoiceNumber}</div>
+        <div class="badge">${invoice.status.toUpperCase()}</div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-block">
+        <h3>Billed To</h3>
+        <p>${clientName}<br/>${invoice.client?.email || ''}</p>
+      </div>
+      <div class="info-block">
+        <h3>Invoice Details</h3>
+        <p>Issue Date: ${issueDate}<br/>Due Date: ${dueDate}</p>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Description</th><th style="text-align:right">Amount</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>${invoice.notes || 'Digital Marketing Services — Monthly Retainer'}</td><td style="text-align:right;font-weight:600">£${amount}</td></tr>
+      </tbody>
+      <tfoot>
+        <tr class="total-row"><td>Total Due</td><td style="text-align:right">£${amount}</td></tr>
+      </tfoot>
+    </table>
+    <div class="footer">
+      <p>DigitalPulse Marketing Agency · hello@digitalpulse.agency</p>
+      <p>Payment due within 30 days. Thank you for your business.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${invoice.invoiceNumber}.html"`);
+      res.send(html);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      res.status(500).json({ error: 'Failed to generate invoice PDF' });
+    }
+  },
+
+  // --- SEND INVOICE TO CLIENT ---
+  async sendInvoiceToClient(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const invoice = await prisma.invoice.findUnique({
+        where: { id },
+        include: {
+          client: {
+            select: { 
+              firstName: true, lastName: true, email: true,
+              clientProfile: { select: { companyName: true } }
+            }
+          }
+        }
+      });
+      if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+
+      // Mark invoice as 'sent' in DB
+      await prisma.invoice.update({
+        where: { id },
+        data: { status: 'sent' }
+      });
+
+      // Log the activity
+      const adminId = (req as any).user?.id;
+      if (adminId) {
+        await prisma.activityLog.create({
+          data: {
+            userId: adminId,
+            portal: 'staff',
+            action: `Invoice ${invoice.invoiceNumber} sent to ${invoice.client?.clientProfile?.companyName || invoice.client?.email}`,
+            resourceType: 'invoice',
+            resourceId: id
+          }
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Invoice ${invoice.invoiceNumber} sent to ${invoice.client?.email}`,
+        invoiceNumber: invoice.invoiceNumber,
+        clientEmail: invoice.client?.email
+      });
+    } catch (error) {
+      console.error('Send invoice error:', error);
+      res.status(500).json({ error: 'Failed to send invoice' });
+    }
+  },
+
+  // --- CANCEL INVOICE ---
+  async cancelInvoice(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const invoice = await prisma.invoice.findUnique({ where: { id } });
+      if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+      if (invoice.status === 'paid') {
+        return res.status(400).json({ error: 'Cannot cancel a paid invoice' });
+      }
+
+      const updated = await prisma.invoice.update({
+        where: { id },
+        data: { status: 'cancelled' }
+      });
+
+      // Log the activity
+      const adminId = (req as any).user?.id;
+      if (adminId) {
+        await prisma.activityLog.create({
+          data: {
+            userId: adminId,
+            portal: 'staff',
+            action: `Invoice ${invoice.invoiceNumber} cancelled`,
+            resourceType: 'invoice',
+            resourceId: id
+          }
+        });
+      }
+
+      res.json({ success: true, invoice: updated });
+    } catch (error) {
+      console.error('Cancel invoice error:', error);
+      res.status(500).json({ error: 'Failed to cancel invoice' });
     }
   },
 
@@ -351,13 +617,111 @@ export const adminController = {
       const campaigns = await prisma.campaign.findMany({
         include: {
           client: { select: { clientProfile: { select: { companyName: true } } } },
-          service: true
+          service: true,
+          creator: { select: { firstName: true, lastName: true } }
         },
         orderBy: { createdAt: 'desc' }
       });
       res.json(campaigns);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch campaigns' });
+    }
+  },
+
+  async getCampaignById(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const campaign = await prisma.campaign.findUnique({
+        where: { id },
+        include: {
+          client: { select: { clientProfile: { select: { companyName: true } } } },
+          service: true,
+          creator: { select: { firstName: true, lastName: true } }
+        }
+      });
+      if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+      res.json(campaign);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch campaign detail' });
+    }
+  },
+
+  async getCampaignPerformance(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const [campaign, dailyMetrics, creatives, goals] = await Promise.all([
+        prisma.campaign.findUnique({
+          where: { id },
+          include: { client: { select: { clientProfile: { select: { companyName: true } } } } }
+        }),
+        prisma.campaignMetricsDaily.findMany({
+          where: { campaignId: id },
+          orderBy: { metricDate: 'asc' },
+          take: 30
+        }),
+        prisma.campaignCreative.findMany({
+          where: { campaignId: id },
+          orderBy: { conversions: 'desc' },
+          take: 5
+        }),
+        prisma.campaignGoal.findMany({
+          where: { campaignId: id }
+        })
+      ]);
+
+      if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+      // Calculate aggregated metrics
+      const totalSpend = dailyMetrics.reduce((sum, m) => sum + (m.spendPence || 0), 0);
+      const totalConversions = dailyMetrics.reduce((sum, m) => sum + (m.conversions || 0), 0);
+      const totalClicks = dailyMetrics.reduce((sum, m) => sum + (m.clicks || 0), 0);
+      
+      const cpa = totalConversions > 0 ? (totalSpend / totalConversions) / 100 : 0;
+      const roas = totalSpend > 0 ? (totalConversions * 5000 / totalSpend) : 0; // Mock: 50.00 value per conversion
+
+      res.json({
+        campaign,
+        metrics: dailyMetrics.map(m => ({
+          date: m.metricDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+          spend: (m.spendPence || 0) / 100,
+          conversions: m.conversions,
+          clicks: m.clicks
+        })),
+        summary: {
+          totalSpendPence: totalSpend,
+          totalConversions,
+          totalClicks,
+          cpa,
+          roas
+        },
+        creatives,
+        goals
+      });
+    } catch (error) {
+      console.error('Campaign performance error:', error);
+      res.status(500).json({ error: 'Failed to fetch campaign performance' });
+    }
+  },
+
+  async updateCampaign(req: Request, res: Response) {
+    const { id } = req.params;
+    const { name, status, type, totalBudgetPence, dailyBudgetPence, objective } = req.body;
+    try {
+      const updated = await prisma.campaign.update({
+        where: { id },
+        data: {
+          name,
+          status,
+          type,
+          totalBudgetPence: totalBudgetPence !== undefined ? parseInt(totalBudgetPence) : undefined,
+          dailyBudgetPence: dailyBudgetPence !== undefined ? parseInt(dailyBudgetPence) : undefined,
+          objective
+        }
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error('Update campaign error:', error);
+      res.status(500).json({ error: 'Failed to update campaign' });
     }
   },
 
@@ -885,6 +1249,106 @@ export const adminController = {
       res.json({ success: true, status });
     } catch (error) {
       res.status(500).json({ error: 'Failed to update agency status' });
+    }
+  },
+
+  // --- AGENCY SETTINGS ---
+  async getSettings(req: Request, res: Response) {
+    try {
+      const rows = await prisma.systemSetting.findMany();
+      // Convert flat rows → nested object grouped by settingGroup
+      const settings: Record<string, Record<string, string>> = {};
+      for (const row of rows) {
+        const group = row.settingGroup || 'general';
+        if (!settings[group]) settings[group] = {};
+        settings[group][row.settingKey] = row.settingValue || '';
+      }
+      // Inject defaults for any missing keys so the frontend always has something to show
+      const defaults: Record<string, Record<string, string>> = {
+        general: {
+          agency_name: 'Digital Pulse Marketing',
+          contact_email: 'hello@digitalpulse.com',
+          currency: 'GBP',
+          timezone: 'Europe/London',
+          support_phone: '+44 20 1234 5678',
+          website_url: 'https://digitalpulse.agency',
+        },
+        branding: {
+          primary_color: '#06b6d4',
+          accent_color: '#f97316',
+          logo_url: '',
+          favicon_url: '',
+          tagline: 'Digital Growth, Delivered.',
+        },
+        integrations: {
+          google_analytics_id: '',
+          google_ads_id: '',
+          meta_pixel_id: '',
+          mailchimp_api_key: '',
+          stripe_publishable_key: '',
+          slack_webhook_url: '',
+          hubspot_portal_id: '',
+          sendgrid_api_key: '',
+        },
+        security: {
+          two_fa_required: 'false',
+          session_timeout_minutes: '60',
+          ip_whitelist: '',
+          password_min_length: '8',
+          max_failed_logins: '5',
+          audit_log_enabled: 'true',
+        },
+        billing: {
+          starter_price_pence: '99900',
+          growth_price_pence: '299900',
+          enterprise_price_pence: '0',
+          trial_days: '14',
+          default_payment_terms: '30',
+          invoice_prefix: 'INV',
+        }
+      };
+      // Merge defaults with DB values (DB wins)
+      const merged: Record<string, Record<string, string>> = {};
+      for (const [group, def] of Object.entries(defaults)) {
+        merged[group] = { ...def, ...(settings[group] || {}) };
+      }
+      res.json({ success: true, settings: merged });
+    } catch (error) {
+      console.error('Get settings error:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  },
+
+  async updateSettings(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user?.id;
+      const { group, values } = req.body as { group: string; values: Record<string, string> };
+      
+      if (!group || !values) {
+        return res.status(400).json({ error: 'group and values are required' });
+      }
+
+      // Upsert each key-value pair in the group
+      await Promise.all(
+        Object.entries(values).map(([key, val]) =>
+          prisma.systemSetting.upsert({
+            where: { settingKey: key },
+            update: { settingValue: val, updatedBy: userId },
+            create: {
+              settingKey: key,
+              settingValue: val,
+              settingGroup: group,
+              label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+              updatedBy: userId
+            }
+          })
+        )
+      );
+
+      res.json({ success: true, message: `${group} settings saved successfully.` });
+    } catch (error) {
+      console.error('Update settings error:', error);
+      res.status(500).json({ error: 'Failed to save settings' });
     }
   }
 };

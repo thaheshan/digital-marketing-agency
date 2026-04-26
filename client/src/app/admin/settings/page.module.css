@@ -1,21 +1,46 @@
 .page {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.35s ease-out;
+  position: relative;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.toast_success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.toast_error   { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+
+/* ── Header ── */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .title {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.04em;
@@ -28,40 +53,82 @@
   font-weight: 500;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lastSaved {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.refreshBtn {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+.refreshBtn:hover { background: #f1f5f9; color: #0f172a; }
+
 .saveBtn {
-  background: #06b6d4;
+  background: #0f172a;
   color: #fff;
   padding: 12px 24px;
   border-radius: 12px;
   border: none;
   font-weight: 700;
+  font-size: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  transition: all 0.2s;
 }
+.saveBtn:hover:not(:disabled) { background: #1e293b; transform: translateY(-1px); }
+.saveBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin { animation: spin 0.8s linear infinite; }
+
+/* ── Layout ── */
 .container {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 40px;
+  grid-template-columns: 260px 1fr;
+  gap: 32px;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 24px;
   padding: 40px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.02);
 }
 
+/* ── Sidebar Tabs ── */
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  border-right: 1px solid #f1f5f9;
+  padding-right: 32px;
 }
 
 .tabBtn {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 13px 16px;
   border: none;
   background: none;
   border-radius: 12px;
@@ -71,29 +138,41 @@
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
+  width: 100%;
+}
+.tabBtn:hover { background: #f8fafc; color: #0f172a; }
+.tabBtn.active { background: #0f172a; color: #fff; }
+
+/* ── Content ── */
+.content { min-height: 480px; }
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 300px;
+  color: #94a3b8;
+  font-size: 15px;
 }
 
-.tabBtn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-}
-
-.tabBtn.active {
-  background: #0f172a;
-  color: #fff;
-}
-
-.content {
-  min-height: 400px;
-}
+.formSection { display: flex; flex-direction: column; }
 
 .sectionTitle {
   font-size: 20px;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 32px;
+  margin-bottom: 8px;
 }
 
+.sectionSub {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 28px;
+}
+
+/* ── Form Fields ── */
 .fieldGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -103,47 +182,118 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: #334155;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
 }
 
 .input {
-  height: 48px;
+  height: 46px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: 14px;
   color: #0f172a;
   outline: none;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
-
 .input:focus {
+  background: white;
   border-color: #06b6d4;
-  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+  box-shadow: 0 0 0 3px rgba(6,182,212,0.1);
 }
 
-.brandingPreview {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-.logoSlot {
+.iconInput {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 0;
+  position: relative;
 }
+.iconInput svg {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  z-index: 1;
+  pointer-events: none;
+}
+.iconInput .input { padding-left: 40px; }
 
+/* ── Secret / Eye Toggle ── */
+.secretWrap {
+  position: relative;
+}
+.secretWrap .input { padding-right: 44px; }
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.eyeBtn:hover { color: #475569; }
+
+/* ── Toggle Switch ── */
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 16px;
+}
+.toggleLabel { font-size: 14px; color: #334155; font-weight: 500; }
+.toggle {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: #e2e8f0;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+.toggle.toggleOn { background: #06b6d4; }
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.toggle.toggleOn .toggleThumb { transform: translateX(22px); }
+
+/* ── Branding ── */
+.brandingPreview { display: flex; align-items: center; gap: 24px; }
+.logoSlot { display: flex; align-items: center; gap: 24px; }
 .logoBox {
   width: 80px;
   height: 80px;
-  background: #1e293b;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -151,43 +301,109 @@
   color: #fff;
   font-size: 24px;
   font-weight: 800;
+  flex-shrink: 0;
+  transition: background 0.3s;
 }
-
 .uploadBtn {
-  padding: 8px 16px;
+  padding: 10px 18px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  color: #475569;
+  transition: all 0.2s;
+}
+.uploadBtn:hover { background: #e2e8f0; }
+.colorPicker { display: flex; align-items: center; gap: 12px; }
+.colorSwatch {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  padding: 2px;
+  background: none;
+  flex-shrink: 0;
 }
 
-.colorPicker {
+/* ── Integrations ── */
+.integrationGroup {
+  margin-bottom: 36px;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+.integrationGroupTitle {
   display: flex;
   align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Security ── */
+.securityCards { display: flex; flex-direction: column; gap: 20px; }
+.secCard {
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+.secCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 20px;
+}
+
+/* ── Billing Plans ── */
+.planGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+.planCard {
+  padding: 24px;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
-
-.colorDot {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+.planName { font-size: 18px; font-weight: 800; color: #0f172a; }
+.planDesc { font-size: 13px; color: #64748b; margin-bottom: 4px; }
+.planPreview {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
 }
 
+/* ── Bottom ── */
 .bottomActions {
-  margin-top: 60px;
+  margin-top: 48px;
   padding-top: 24px;
   border-top: 1px solid #f1f5f9;
 }
+.auditNote { font-size: 12px; color: #94a3b8; }
 
-.hint {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 500;
-}
-
-@media (max-width: 1024px) {
+/* ── Responsive ── */
+@media (max-width: 1100px) {
   .container { grid-template-columns: 1fr; }
+  .sidebar { flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid #f1f5f9; padding-right: 0; padding-bottom: 20px; }
   .fieldGrid { grid-template-columns: 1fr; }
+  .planGrid { grid-template-columns: 1fr; }
 }
