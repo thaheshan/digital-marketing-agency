@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api } from '@/lib/api';
 
 export type LeadStatus = 'hot' | 'warm' | 'cold' | 'converted' | 'archived';
-export type EnquiryStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'closed_lost';
+export type EnquiryStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'closed_lost' | 'archived' | 'hot' | 'warm' | 'cold';
 
 export interface ChatMessage {
   from: 'bot' | 'user';

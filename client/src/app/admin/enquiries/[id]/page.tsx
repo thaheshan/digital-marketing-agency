@@ -73,7 +73,7 @@ export default function EnquiryDetailPage() {
           <a href={`mailto:${enquiry.email}`} className={styles.actionBtn}>
             <Mail size={15} /> Email
           </a>
-          <button className={styles.archiveBtn} onClick={() => { updateStatus(enquiry.id, 'closed_lost'); router.push('/admin/enquiries'); }}>
+          <button className={styles.archiveBtn} onClick={() => { updateStatus(enquiry.id, 'archived'); router.push('/admin/enquiries'); }}>
             <Archive size={15} /> Archive
           </button>
           {!converted && enquiry.status !== 'converted' ? (
