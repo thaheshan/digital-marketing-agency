@@ -80,7 +80,7 @@ export default function SettingsPage() {
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await api.get('/admin/settings');
+      const data = await api.get<any>('/admin/settings');
       setSettings(data.settings || {});
       setLastSaved(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
     } catch {

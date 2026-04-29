@@ -141,7 +141,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   // --- External Data Handlers ---
   const fetchAgencyStatus = useCallback(async () => {
     try {
-      const data = await api.get('/admin/status');
+      const data = await api.get<any>('/admin/status');
       setAgencyStatus(data.status || 'Operational');
     } catch { setAgencyStatus('Warning'); }
   }, []);
@@ -150,7 +150,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     if (notifLoading) return;
     setNotifLoading(true);
     try {
-      const data = await api.get('/admin/notifications');
+      const data = await api.get<any>('/admin/notifications');
       setNotifications(data.notifications || []);
     } catch { } finally { setNotifLoading(false); }
   }, []);
@@ -166,9 +166,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     const fetchSidebarStats = async () => {
       try {
         const [enqData, reportData, campData] = await Promise.all([
-          api.get('/admin/enquiries'),
-          api.get('/admin/reports'),
-          api.get('/admin/campaigns')
+          api.get<any>('/admin/enquiries'),
+          api.get<any>('/admin/reports'),
+          api.get<any>('/admin/campaigns')
         ]);
         
         const enquiries = enqData.enquiries || [];
@@ -196,7 +196,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     setSearchLoading(true);
     searchDebounce.current = setTimeout(async () => {
       try {
-        const data = await api.get(`/admin/search?q=${encodeURIComponent(q)}`);
+        const data = await api.get<any>(`/admin/search?q=${encodeURIComponent(q)}`);
         setSearchResults(data.results || []);
       } catch { setSearchResults([]); } finally { setSearchLoading(false); }
     }, 350);

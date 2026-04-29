@@ -73,7 +73,7 @@ export default function TeamPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/admin/team', formData);
+      await api.post<any>('/admin/team', formData);
       setToast({ type: 'success', message: 'Team member added successfully!' });
       setShowAddModal(false);
       resetForm();
@@ -90,7 +90,7 @@ export default function TeamPage() {
     if (!showEditModal) return;
     setSubmitting(true);
     try {
-      await api.put(`/admin/team/${showEditModal.id}`, formData);
+      await api.put<any>(`/admin/team/${showEditModal.id}`, formData);
       setToast({ type: 'success', message: 'Team member updated successfully!' });
       setShowEditModal(null);
       resetForm();
@@ -131,7 +131,7 @@ export default function TeamPage() {
   const handleDeleteMember = async (id: string) => {
     if (!confirm('Are you sure you want to remove this team member?')) return;
     try {
-      await api.delete(`/admin/team/${id}`);
+      await api.delete<any>(`/admin/team/${id}`);
       setToast({ type: 'success', message: 'Member removed successfully' });
       fetchTeam();
     } catch (error) {

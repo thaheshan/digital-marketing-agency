@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
     const fetchAnalytics = async () => {
       setLoading(true);
       try {
-        const result = await api.get(`/admin/analytics?range=${range}`);
+        const result = await api.get<any>(`/admin/analytics?range=${range}`);
         setData(result);
       } catch (err) {
         console.error('Failed to fetch analytics');

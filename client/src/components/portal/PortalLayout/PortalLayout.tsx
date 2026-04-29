@@ -124,8 +124,8 @@ export function PortalLayout({ children }: { children: React.ReactNode }) {
     const fetchStats = async () => {
       try {
         const [campData, reportData] = await Promise.all([
-          api.get('/portal/campaigns'),
-          api.get('/portal/reports')
+          api.get<any>('/portal/campaigns'),
+          api.get<any>('/portal/reports')
         ]);
         setStats({
           campaigns: campData.campaigns?.length || 0,
@@ -207,7 +207,7 @@ export function PortalLayout({ children }: { children: React.ReactNode }) {
     setSearchLoading(true);
     searchDebounce.current = setTimeout(async () => {
       try {
-        const data = await api.get(`/portal/search?q=${encodeURIComponent(q)}`);
+        const data = await api.get<any>(`/portal/search?q=${encodeURIComponent(q)}`);
         setSearchResults(data.results || []);
       } catch { setSearchResults([]); } finally { setSearchLoading(false); }
     }, 350);
@@ -218,7 +218,7 @@ export function PortalLayout({ children }: { children: React.ReactNode }) {
     if (notifLoading) return;
     setNotifLoading(true);
     try {
-      const data = await api.get('/portal/notifications');
+      const data = await api.get<any>('/portal/notifications');
       setNotifications(data.notifications || []);
     } catch { } finally { setNotifLoading(false); }
   }, []);

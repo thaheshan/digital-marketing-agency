@@ -58,7 +58,7 @@ export default function AdminCampaignsPage() {
   const handleOpenPerformance = async (id: string) => {
     setActionLoading(id + '_perf');
     try {
-      const data = await api.get(`/admin/campaigns/${id}/performance`);
+      const data = await api.get<any>(`/admin/campaigns/${id}/performance`);
       setShowPerformanceModal(data);
     } catch (err) {
       setToast({ type: 'error', message: 'Failed to fetch performance data' });

@@ -35,7 +35,7 @@ export default function ClientsPage() {
 
   const fetchClients = async () => {
     try {
-      const data = await api.get('/admin/clients');
+      const data = await api.get<any>('/admin/clients');
       setClients(data);
     } catch (error) {
       console.error('Failed to fetch clients');
@@ -52,7 +52,7 @@ export default function ClientsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/portal/clients', {
+      await api.post<any>('/portal/clients', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
