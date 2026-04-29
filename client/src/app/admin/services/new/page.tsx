@@ -19,7 +19,7 @@ export default function NewServicePage() {
     if (!name || !tagline) return;
     setIsSubmitting(true);
     try {
-      const res = await api.post('/admin/services/create', {
+      const res = await api.post<any>('/admin/services/create', {
         name,
         tagline,
         description,

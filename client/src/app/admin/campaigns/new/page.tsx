@@ -28,7 +28,7 @@ export default function NewCampaignPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const data = await api.get('/admin/clients');
+        const data = await api.get<any>('/admin/clients');
         setClients(data);
       } catch (err) {
         console.error('Failed to fetch clients');
@@ -40,7 +40,7 @@ export default function NewCampaignPage() {
   const handleLaunch = async () => {
     setIsSubmitting(true);
     try {
-      await api.post('/admin/campaigns/create', {
+      await api.post<any>('/admin/campaigns/create', {
         name,
         clientId,
         status: 'live',

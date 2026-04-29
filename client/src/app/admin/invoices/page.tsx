@@ -75,7 +75,7 @@ export default function InvoicesPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [invData, clientData] = await Promise.all([api.get('/admin/invoices'), api.get('/admin/clients')]);
+      const [invData, clientData] = await Promise.all([api.get<any>('/admin/invoices'), api.get<any>('/admin/clients')]);
       setInvoices(invData);
       setClients(clientData);
       if (clientData.length > 0) setFormData(p => p.clientId ? p : { ...p, clientId: clientData[0].userId });
@@ -129,7 +129,7 @@ export default function InvoicesPage() {
     setDropdownOpenId(null);
     setActionLoading(inv.id + '_send');
     try {
-      const res = await api.post(`/admin/invoices/${inv.id}/send`, {});
+      const res = await api.post<any>(`/admin/invoices/${inv.id}/send`, {});
       showToast(res.message || 'Invoice sent to client!', 'success');
       fetchData();
     } catch (err: any) { showToast(err?.message || 'Failed to send invoice.', 'error'); }

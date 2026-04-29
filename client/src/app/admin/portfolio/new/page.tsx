@@ -131,7 +131,7 @@ export default function NewPortfolioPage() {
         ...metrics,
       };
       
-      const res = await api.post('/portfolio/draft/generate-description', data);
+      const res = await api.post<any>('/portfolio/draft/generate-description', data);
       setVariations(res.options || []);
       setSelectedVariation(null);
       setEditedDescription('');
@@ -149,7 +149,7 @@ export default function NewPortfolioPage() {
 
   const handlePublish = async (status: 'published' | 'draft') => {
     try {
-      const res = await api.post('/admin/portfolio/create', {
+      const res = await api.post<any>('/admin/portfolio/create', {
         title,
         clientName,
         description: editedDescription,
