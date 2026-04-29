@@ -206,9 +206,9 @@ export default function AdminDashboard() {
       const from = dateRange.from.toISOString();
       const to = dateRange.to.toISOString();
       const [statsData, leadsData, clientsData] = await Promise.all([
-        api.get(`/admin/stats?from=${from}&to=${to}`),
-        api.get('/admin/enquiries?limit=4&sort=desc'),
-        api.get('/admin/clients')
+        api.get<any>(`/admin/stats?from=${from}&to=${to}`),
+        api.get<any>('/admin/enquiries?limit=4&sort=desc'),
+        api.get<any>('/admin/clients')
       ]);
       setStats(statsData);
       setRecentLeads(leadsData.enquiries || []);
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
   const handleScheduleReview = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/admin/strategy-reviews', {
+      await api.post<any>('/admin/strategy-reviews', {
         clientId: newReview.clientId || clients[0]?.userId,
         title: newReview.title,
         reviewDate: newReview.date,

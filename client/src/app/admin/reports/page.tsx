@@ -35,8 +35,8 @@ export default function AdminReportsPage() {
   const fetchData = async () => {
     try {
       const [reportsData, clientsData] = await Promise.all([
-        api.get('/admin/reports'),
-        api.get('/admin/clients')
+        api.get<any>('/admin/reports'),
+        api.get<any>('/admin/clients')
       ]);
       setReports(reportsData);
       setClients(clientsData);
@@ -56,7 +56,7 @@ export default function AdminReportsPage() {
     try {
       if (clients.length > 0) {
         // MUST use the userId from the ClientProfile
-        await api.post('/admin/reports/generate', { 
+        await api.post<any>('/admin/reports/generate', { 
           clientId: clients[0].userId, 
           type: 'Monthly'
         });
@@ -77,7 +77,7 @@ export default function AdminReportsPage() {
         alert('Please select a client.');
         return;
       }
-      await api.post('/admin/reports/generate', {
+      await api.post<any>('/admin/reports/generate', {
         clientId,
         type: newReport.type,
         title: newReport.title
@@ -291,7 +291,7 @@ export default function AdminReportsPage() {
 
   const handleSend = async (report: any) => {
     try {
-      await api.patch(`/admin/reports/${report.id}/visibility`, { isVisible: true });
+      await api.patch<any>(`/admin/reports/${report.id}/visibility`, { isVisible: true });
       fetchData();
       
       const email = report.client?.email || 'client@example.com';
